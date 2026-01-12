@@ -10,9 +10,8 @@ import {
   TrialEligibilityResult,
   PatientMatchResults,
 } from './results.js';
-import { getDrugInfo, drugsMatch, drugBelongsToClass, findSynonyms } from './drugDatabase.js';
+import { drugsMatch, drugBelongsToClass, findSynonyms } from './drugDatabase.js';
 import {
-  normalizeString,
   arraysOverlap,
   timeframeMatches,
   severityMatches,
@@ -252,9 +251,9 @@ export class ClinicalTrialMatcher {
    * @param {string} clusterCode - Cluster code
    * @param {Object} criterion - Criterion data
    * @param {Object} responses - Patient responses
-   * @returns {Promise<Object>} Evaluation result
+   * @returns {Object} Evaluation result
    */
-  async #evaluateByCluster(clusterCode, criterion, responses) {
+  #evaluateByCluster(clusterCode, criterion, responses) {
     switch (clusterCode) {
       case 'AGE':
         return this.#evaluateAge(criterion, responses.AGE);
@@ -299,10 +298,10 @@ export class ClinicalTrialMatcher {
     // For exclusion criteria: check if patient matches the exclusion condition
     let matches = true;
 
-    if (minAge != null && age < minAge) {
+    if (minAge !== null && minAge !== undefined && age < minAge) {
       matches = false;
     }
-    if (maxAge != null && age > maxAge) {
+    if (maxAge !== null && maxAge !== undefined && age > maxAge) {
       matches = false;
     }
 
@@ -322,19 +321,19 @@ export class ClinicalTrialMatcher {
     let matches = true;
 
     // Check BMI
-    if (criterion.BMI_MIN != null && patientBMI.bmi < criterion.BMI_MIN) {
+    if (criterion.BMI_MIN !== null && criterion.BMI_MIN !== undefined && patientBMI.bmi < criterion.BMI_MIN) {
       matches = false;
     }
-    if (criterion.BMI_MAX != null && patientBMI.bmi > criterion.BMI_MAX) {
+    if (criterion.BMI_MAX !== null && criterion.BMI_MAX !== undefined && patientBMI.bmi > criterion.BMI_MAX) {
       matches = false;
     }
 
     // Check weight
     const weightValue = patientBMI.weight?.value || patientBMI.weight;
-    if (criterion.WEIGHT_MIN != null && weightValue < criterion.WEIGHT_MIN) {
+    if (criterion.WEIGHT_MIN !== null && criterion.WEIGHT_MIN !== undefined && weightValue < criterion.WEIGHT_MIN) {
       matches = false;
     }
-    if (criterion.WEIGHT_MAX != null && weightValue > criterion.WEIGHT_MAX) {
+    if (criterion.WEIGHT_MAX !== null && criterion.WEIGHT_MAX !== undefined && weightValue > criterion.WEIGHT_MAX) {
       matches = false;
     }
 
@@ -419,7 +418,7 @@ export class ClinicalTrialMatcher {
   /**
    * Evaluate treatment history criterion
    */
-  async #evaluateTreatmentHistory(criterion, patientTreatments) {
+  #evaluateTreatmentHistory(criterion, patientTreatments) {
     if (!patientTreatments || !Array.isArray(patientTreatments)) {
       return { matches: false, confidence: 0.5 };
     }
@@ -470,7 +469,7 @@ export class ClinicalTrialMatcher {
   /**
    * Evaluate infection criterion
    */
-  async #evaluateInfection(criterion, patientInfections) {
+  #evaluateInfection(criterion, patientInfections) {
     if (!patientInfections || !Array.isArray(patientInfections)) {
       return { matches: false, confidence: 0.5 };
     }
@@ -526,7 +525,7 @@ export class ClinicalTrialMatcher {
       const comparison = criterion[`${type}_COMPARISON`] || '>=';
       const patientValue = patientMeasurements[type]?.value;
 
-      if (threshold != null && patientValue != null) {
+      if (threshold !== null && threshold !== undefined && patientValue !== null && patientValue !== undefined) {
         if (measurementMeetsThreshold(patientValue, threshold, comparison)) {
           return { matches: true, confidence: 1.0 };
         }
@@ -567,7 +566,7 @@ export class ClinicalTrialMatcher {
     const patientDurationValue = patientDuration.duration;
     const patientUnit = patientDuration.unit || 'months';
 
-    if (minDuration != null && patientDurationValue != null) {
+    if (minDuration !== null && minDuration !== undefined && patientDurationValue !== null && patientDurationValue !== undefined) {
       // Convert both to weeks for comparison
       const criterionTimeframe = { amount: minDuration, unit: minUnit, relation: 'for' };
       const patientTimeframe = { amount: patientDurationValue, unit: patientUnit };
@@ -632,7 +631,7 @@ export class ClinicalTrialMatcher {
     const timeframe = criterion.TIMEFRAME;
     const patientFlareCount = patientFlare.count;
 
-    if (flareCount != null && patientFlareCount != null) {
+    if (flareCount !== null && flareCount !== undefined && patientFlareCount !== null && patientFlareCount !== undefined) {
       if (patientFlareCount >= flareCount) {
         if (timeframe && patientFlare.timeframe) {
           if (timeframeMatches(timeframe, patientFlare.timeframe)) {

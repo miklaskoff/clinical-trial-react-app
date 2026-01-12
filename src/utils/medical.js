@@ -26,7 +26,7 @@ export const SEVERITY_LEVELS = {
  * @returns {number} Duration in weeks
  */
 export function convertToWeeks(timeframe) {
-  if (!timeframe || timeframe.amount == null) {
+  if (!timeframe || timeframe.amount === null || timeframe.amount === undefined) {
     return 0;
   }
 
@@ -109,10 +109,10 @@ export function severityMatches(criterionSeverity, patientSeverity) {
  * @returns {boolean} True if measurement meets threshold
  */
 export function measurementMeetsThreshold(patientValue, threshold, comparison) {
-  if (threshold == null) {
+  if (threshold === null || threshold === undefined) {
     return true;
   }
-  if (patientValue == null) {
+  if (patientValue === null || patientValue === undefined) {
     return false;
   }
 

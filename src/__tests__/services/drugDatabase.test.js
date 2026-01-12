@@ -1,10 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   getDrugInfo,
   drugsMatch,
   drugBelongsToClass,
   findSynonyms,
-  DRUG_DATABASE,
 } from '../../services/matcher/drugDatabase.js';
 
 describe('Drug Database', () => {
