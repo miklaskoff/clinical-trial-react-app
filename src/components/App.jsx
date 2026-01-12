@@ -1,5 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import './App.css';
+
+/**
+ * LocalStorage key for API key
+ */
+const API_KEY_STORAGE_KEY = 'anthropic_api_key';
 
 /**
  * App stages
@@ -12,6 +17,105 @@ const STAGES = {
 };
 
 /**
+ * Generate text report with ineligibility reasons
+ * @param {Object} results - Match results
+ * @returns {string} Text report
+ */
+function generateTextReport(results) {
+  const lines = [];
+  const timestamp = new Date(results.timestamp).toLocaleString();
+  
+  lines.push('═══════════════════════════════════════════════════════════════');
+  lines.push('           CLINICAL TRIAL MATCHING REPORT');
+  lines.push('═══════════════════════════════════════════════════════════════');
+  lines.push(`Generated: ${timestamp}`);
+  lines.push('');
+  
+  // Summary
+  lines.push('SUMMARY');
+  lines.push('───────────────────────────────────────────────────────────────');
+  lines.push(`Total Trials Evaluated: ${results.eligibleTrials.length + results.needsReviewTrials.length + results.ineligibleTrials.length}`);
+  lines.push(`✓ Eligible: ${results.eligibleTrials.length}`);
+  lines.push(`⚠ Needs Review: ${results.needsReviewTrials.length}`);
+  lines.push(`✗ Ineligible: ${results.ineligibleTrials.length}`);
+  lines.push('');
+  
+  // Eligible Trials
+  if (results.eligibleTrials.length > 0) {
+    lines.push('ELIGIBLE TRIALS');
+    lines.push('───────────────────────────────────────────────────────────────');
+    results.eligibleTrials.forEach((trial, idx) => {
+      lines.push(`${idx + 1}. ${trial.nctId} (Confidence: ${(trial.getConfidenceScore() * 100).toFixed(0)}%)`);
+    });
+    lines.push('');
+  }
+  
+  // Needs Review Trials
+  if (results.needsReviewTrials.length > 0) {
+    lines.push('TRIALS NEEDING REVIEW');
+    lines.push('───────────────────────────────────────────────────────────────');
+    results.needsReviewTrials.forEach((trial, idx) => {
+      lines.push(`${idx + 1}. ${trial.nctId}`);
+      if (trial.flaggedCriteria && trial.flaggedCriteria.length > 0) {
+        lines.push('   Flagged criteria:');
+        trial.flaggedCriteria.forEach((c) => {
+          lines.push(`   • ${c.rawText || c.criterionId}`);
+          if (c.aiReasoning) {
+            lines.push(`     AI: ${c.aiReasoning}`);
+          }
+        });
+      }
+    });
+    lines.push('');
+  }
+  
+  // Ineligible Trials with failure reasons
+  if (results.ineligibleTrials.length > 0) {
+    lines.push('INELIGIBLE TRIALS');
+    lines.push('───────────────────────────────────────────────────────────────');
+    results.ineligibleTrials.forEach((trial, idx) => {
+      lines.push(`${idx + 1}. ${trial.nctId}`);
+      
+      // Get failed criteria
+      const failedInclusions = trial.getFailedInclusions ? trial.getFailedInclusions() : [];
+      const matchedExclusions = trial.getMatchedExclusions ? trial.getMatchedExclusions() : [];
+      
+      if (failedInclusions.length > 0) {
+        lines.push('   ✗ Failed inclusion criteria:');
+        failedInclusions.forEach((c) => {
+          const text = c.rawText || c.criterionId;
+          lines.push(`     • ${text}`);
+        });
+      }
+      
+      if (matchedExclusions.length > 0) {
+        lines.push('   ✗ Matched exclusion criteria:');
+        matchedExclusions.forEach((c) => {
+          const text = c.rawText || c.criterionId;
+          lines.push(`     • ${text}`);
+        });
+      }
+      
+      // Fallback to failureReasons if no detailed criteria
+      if (failedInclusions.length === 0 && matchedExclusions.length === 0 && trial.failureReasons) {
+        lines.push('   ✗ Reasons:');
+        trial.failureReasons.forEach((reason) => {
+          lines.push(`     • ${reason}`);
+        });
+      }
+      
+      lines.push('');
+    });
+  }
+  
+  lines.push('═══════════════════════════════════════════════════════════════');
+  lines.push('                    END OF REPORT');
+  lines.push('═══════════════════════════════════════════════════════════════');
+  
+  return lines.join('\n');
+}
+
+/**
  * Main Application Component
  */
 function App() {
@@ -22,6 +126,29 @@ function App() {
   const [matchResults, setMatchResults] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    const savedKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+    if (savedKey) {
+      setApiKey(savedKey);
+    }
+  }, []);
+
+  // Save API key to localStorage when it changes
+  const handleApiKeyChange = useCallback((e) => {
+    const newKey = e.target.value;
+    setApiKey(newKey);
+    if (newKey.trim()) {
+      localStorage.setItem(API_KEY_STORAGE_KEY, newKey);
+    }
+  }, []);
+
+  // Clear saved API key
+  const handleClearApiKey = useCallback(() => {
+    setApiKey('');
+    localStorage.removeItem(API_KEY_STORAGE_KEY);
+  }, []);
 
   /**
    * Handle settings submission
@@ -110,13 +237,28 @@ function App() {
                 <>
                   <div className="form-group">
                     <label htmlFor="apiKey">Anthropic API Key</label>
-                    <input
-                      type="password"
-                      id="apiKey"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="sk-ant-..."
-                    />
+                    <div className="input-with-button">
+                      <input
+                        type="password"
+                        id="apiKey"
+                        value={apiKey}
+                        onChange={handleApiKeyChange}
+                        placeholder="sk-ant-..."
+                      />
+                      {apiKey && (
+                        <button 
+                          type="button" 
+                          onClick={handleClearApiKey}
+                          className="btn btn-small btn-secondary"
+                          title="Clear saved API key"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    {apiKey && (
+                      <small className="hint">✓ API key saved locally</small>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -209,11 +351,83 @@ function App() {
                   ))}
                 </ul>
               )}
+
+              <h3>Ineligible Trials</h3>
+              {matchResults.ineligibleTrials.length === 0 ? (
+                <p>No ineligible trials.</p>
+              ) : (
+                <ul>
+                  {matchResults.ineligibleTrials.slice(0, 10).map((trial) => (
+                    <li key={trial.nctId} className="trial-card ineligible">
+                      <strong>{trial.nctId}</strong>
+                      <div className="failure-reasons">
+                        {trial.getFailedInclusions && trial.getFailedInclusions().length > 0 && (
+                          <div className="failed-inclusions">
+                            <small>Failed inclusions:</small>
+                            <ul>
+                              {trial.getFailedInclusions().slice(0, 3).map((c, i) => (
+                                <li key={i}>{c.rawText || c.criterionId}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {trial.getMatchedExclusions && trial.getMatchedExclusions().length > 0 && (
+                          <div className="matched-exclusions">
+                            <small>Matched exclusions:</small>
+                            <ul>
+                              {trial.getMatchedExclusions().slice(0, 3).map((c, i) => (
+                                <li key={i}>{c.rawText || c.criterionId}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {matchResults.ineligibleTrials.length > 10 && (
+                <p className="more-trials">
+                  ...and {matchResults.ineligibleTrials.length - 10} more ineligible trials
+                </p>
+              )}
             </div>
 
-            <button onClick={handleReset} className="btn btn-primary">
-              Start New Match
-            </button>
+            <div className="results-actions">
+              <button onClick={handleReset} className="btn btn-primary">
+                Start New Match
+              </button>
+              <button 
+                onClick={() => {
+                  const report = generateTextReport(matchResults);
+                  const blob = new Blob([report], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `clinical-trial-report-${new Date().toISOString().split('T')[0]}.txt`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="btn btn-secondary"
+              >
+                Download Text Report
+              </button>
+              <button 
+                onClick={() => {
+                  const json = JSON.stringify(matchResults.toJSON ? matchResults.toJSON() : matchResults, null, 2);
+                  const blob = new Blob([json], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `clinical-trial-results-${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="btn btn-secondary"
+              >
+                Download JSON
+              </button>
+            </div>
           </section>
         )}
       </main>

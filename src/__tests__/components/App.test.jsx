@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../../components/App';
@@ -6,6 +6,11 @@ import App from '../../components/App';
 describe('App Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   describe('Initial Render', () => {
@@ -25,6 +30,44 @@ describe('App Component', () => {
       render(<App />);
       const checkbox = screen.getByLabelText(/Enable AI Semantic Matching/i);
       expect(checkbox).toBeChecked();
+    });
+  });
+
+  describe('API Key Persistence', () => {
+    it('should load saved API key from localStorage', () => {
+      localStorage.setItem('anthropic_api_key', 'sk-ant-test-key');
+      render(<App />);
+      
+      const apiKeyInput = screen.getByLabelText(/Anthropic API Key/i);
+      expect(apiKeyInput).toHaveValue('sk-ant-test-key');
+    });
+
+    it('should save API key to localStorage when changed', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+      
+      const apiKeyInput = screen.getByLabelText(/Anthropic API Key/i);
+      await user.type(apiKeyInput, 'sk-ant-new-key');
+      
+      expect(localStorage.getItem('anthropic_api_key')).toBe('sk-ant-new-key');
+    });
+
+    it('should clear API key from localStorage when cleared', async () => {
+      const user = userEvent.setup();
+      localStorage.setItem('anthropic_api_key', 'sk-ant-test-key');
+      render(<App />);
+      
+      const clearButton = screen.getByRole('button', { name: /Clear/i });
+      await user.click(clearButton);
+      
+      expect(localStorage.getItem('anthropic_api_key')).toBeNull();
+    });
+
+    it('should show hint when API key is saved', () => {
+      localStorage.setItem('anthropic_api_key', 'sk-ant-test-key');
+      render(<App />);
+      
+      expect(screen.getByText(/API key saved locally/i)).toBeInTheDocument();
     });
   });
 
