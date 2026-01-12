@@ -109,8 +109,8 @@ describe('App Component', () => {
       const submitButton = screen.getByRole('button', { name: /Start Questionnaire/i });
       await user.click(submitButton);
 
-      // Should move to questionnaire
-      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Patient Questionnaire');
+      // Should move to questionnaire - check for questionnaire title
+      expect(screen.getByText(/Clinical Trial Eligibility Questionnaire/i)).toBeInTheDocument();
     });
   });
 

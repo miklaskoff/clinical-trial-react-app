@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import ClinicalTrialEligibilityQuestionnaire from '../ClinicalTrialEligibilityQuestionnaire';
 import './App.css';
 
 /**
@@ -285,26 +286,11 @@ function App() {
 
         {stage === STAGES.QUESTIONNAIRE && (
           <section className="questionnaire-panel">
-            <h2>Patient Questionnaire</h2>
-            <p>Questionnaire component will be rendered here.</p>
-            {/* TODO: Implement PatientQuestionnaire component */}
-            <button
-              onClick={() =>
-                handleQuestionnaireSubmit({
-                  responses: {
-                    AGE: { age: 35 },
-                    BMI: { bmi: 24.5 },
-                    CMB: [],
-                    PTH: [],
-                  },
-                })
-              }
-              className="btn btn-primary"
-            >
-              Submit Test Data
-            </button>
-            <button onClick={handleReset} className="btn btn-secondary">
-              Back to Settings
+            <ClinicalTrialEligibilityQuestionnaire 
+              onSubmit={handleQuestionnaireSubmit} 
+            />
+            <button onClick={handleReset} className="btn btn-secondary back-btn">
+              ← Back to Settings
             </button>
           </section>
         )}

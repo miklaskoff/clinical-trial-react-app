@@ -322,6 +322,16 @@
   margin-left: 0;
 }
 
+/* Back button */
+.back-btn {
+  margin-top: 1rem;
+}
+
+/* Questionnaire panel full width */
+.questionnaire-panel {
+  max-width: 100%;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .app-main {
