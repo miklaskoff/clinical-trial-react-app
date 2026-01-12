@@ -20,8 +20,8 @@ import React, { useState, useEffect } from 'react';
 // ==============================================================================
 // IMPORT SLOT-FILLED DATABASE
 // ==============================================================================
-const SLOT_FILLED_DATABASE = require('./improved_slot_filled_database.json');
-const MEDICATION_DATABASE = require('./COMPLETE_GOOGLE_DOC_DATABASE.js');
+import SLOT_FILLED_DATABASE from './improved_slot_filled_database.json';
+import MEDICATION_DATABASE from './COMPLETE_GOOGLE_DOC_DATABASE.js';
 
 // ==============================================================================
 // UTILITY FUNCTIONS

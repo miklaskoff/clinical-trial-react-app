@@ -18,6 +18,100 @@ const STAGES = {
 };
 
 /**
+ * Generate narrative patient description from responses
+ * @param {Object} patientResponse - Patient response object
+ * @returns {string} Narrative description
+ */
+function generatePatientNarrative(patientResponse) {
+  const lines = [];
+  const responses = patientResponse.responses || patientResponse;
+  
+  // Age
+  if (responses.AGE) {
+    const age = responses.AGE.age || responses.AGE;
+    lines.push(`• Age: ${age} years old`);
+  }
+  
+  // BMI/Weight
+  if (responses.BMI) {
+    const bmi = responses.BMI.bmi || responses.BMI;
+    const weight = responses.BMI.weight;
+    const height = responses.BMI.height;
+    let bmiLine = `• BMI: ${bmi}`;
+    if (weight) bmiLine += `, Weight: ${weight.value || weight} ${weight.unit || 'kg'}`;
+    if (height) bmiLine += `, Height: ${height.value || height} ${height.unit || 'cm'}`;
+    lines.push(bmiLine);
+  }
+  
+  // Comorbidities
+  if (responses.CMB && responses.CMB.length > 0) {
+    lines.push(`• Comorbid conditions: ${responses.CMB.length} reported`);
+    responses.CMB.forEach((c) => {
+      const condition = c.CONDITION_TYPE || c.condition || c;
+      const severity = c.SEVERITY || c.severity || '';
+      lines.push(`  - ${condition}${severity ? ` (${severity})` : ''}`);
+    });
+  } else {
+    lines.push('• No comorbid conditions reported');
+  }
+  
+  // Treatment History
+  if (responses.PTH && responses.PTH.length > 0) {
+    lines.push(`• Previous treatments: ${responses.PTH.length} reported`);
+    responses.PTH.forEach((t) => {
+      const treatment = t.TREATMENT_TYPE || t.treatment || t;
+      const pattern = t.TREATMENT_PATTERN || t.pattern || '';
+      lines.push(`  - ${treatment}${pattern ? ` (${pattern})` : ''}`);
+    });
+  } else {
+    lines.push('• No previous psoriasis treatments reported');
+  }
+  
+  // Infections
+  if (responses.AIC && responses.AIC.length > 0) {
+    lines.push(`• Infections: ${responses.AIC.length} reported`);
+    responses.AIC.forEach((i) => {
+      const infection = i.INFECTION_TYPE || i.infection || i;
+      lines.push(`  - ${infection}`);
+    });
+  } else {
+    lines.push('• No active infections reported');
+  }
+  
+  // Psoriasis Type
+  if (responses.NPV) {
+    const type = responses.NPV.type || responses.NPV.PSORIASIS_TYPE || responses.NPV;
+    lines.push(`• Psoriasis type: ${type}`);
+  }
+  
+  // Disease Duration
+  if (responses.CPD) {
+    const duration = responses.CPD.duration || responses.CPD.DURATION || responses.CPD;
+    const unit = responses.CPD.unit || responses.CPD.DURATION_UNIT || 'months';
+    lines.push(`• Disease duration: ${duration} ${unit}`);
+  }
+  
+  // Severity
+  if (responses.SEV) {
+    lines.push('• Severity scores:');
+    if (responses.SEV.PASI) lines.push(`  - PASI: ${responses.SEV.PASI}`);
+    if (responses.SEV.BSA) lines.push(`  - BSA: ${responses.SEV.BSA}%`);
+    if (responses.SEV.PGA) lines.push(`  - PGA: ${responses.SEV.PGA}`);
+    if (responses.SEV.DLQI) lines.push(`  - DLQI: ${responses.SEV.DLQI}`);
+  }
+  
+  // Affected Areas
+  if (responses.AAO) {
+    const areas = responses.AAO.areas || responses.AAO.ANATOMICAL_LOCATION || [];
+    if (areas.length > 0) {
+      lines.push(`• Affected areas: ${areas.join(', ')}`);
+    }
+  }
+  
+  return lines.join('\n');
+}
+
+/**
  * Generate text report with ineligibility reasons
  * @param {Object} results - Match results
  * @returns {string} Text report
@@ -32,8 +126,26 @@ function generateTextReport(results) {
   lines.push(`Generated: ${timestamp}`);
   lines.push('');
   
+  // Patient Profile (Narrative)
+  lines.push('PATIENT PROFILE');
+  lines.push('───────────────────────────────────────────────────────────────');
+  if (results.patientResponse) {
+    lines.push(generatePatientNarrative(results.patientResponse));
+  } else {
+    lines.push('Patient data not available');
+  }
+  lines.push('');
+  
+  // Patient Response JSON
+  lines.push('PATIENT RESPONSE (JSON)');
+  lines.push('───────────────────────────────────────────────────────────────');
+  if (results.patientResponse) {
+    lines.push(JSON.stringify(results.patientResponse, null, 2));
+  }
+  lines.push('');
+  
   // Summary
-  lines.push('SUMMARY');
+  lines.push('MATCHING SUMMARY');
   lines.push('───────────────────────────────────────────────────────────────');
   lines.push(`Total Trials Evaluated: ${results.eligibleTrials.length + results.needsReviewTrials.length + results.ineligibleTrials.length}`);
   lines.push(`✓ Eligible: ${results.eligibleTrials.length}`);
@@ -396,7 +508,7 @@ function App() {
                 }}
                 className="btn btn-secondary"
               >
-                Download Text Report
+                📄 Download Text Report
               </button>
               <button 
                 onClick={() => {
@@ -411,7 +523,22 @@ function App() {
                 }}
                 className="btn btn-secondary"
               >
-                Download JSON
+                📊 Download Results JSON
+              </button>
+              <button 
+                onClick={() => {
+                  const json = JSON.stringify(matchResults.patientResponse, null, 2);
+                  const blob = new Blob([json], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `patient-response-${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="btn btn-secondary"
+              >
+                🧑‍⚕️ Download Patient JSON
               </button>
             </div>
           </section>

@@ -853,7 +853,6 @@ const DRUG_CLASSIFICATION = {
   
 };
 
-// Export if needed
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { DRUG_CLASSIFICATION };
-}
+// ES Module export
+export { DRUG_CLASSIFICATION };
+export default { DRUG_CLASSIFICATION };
