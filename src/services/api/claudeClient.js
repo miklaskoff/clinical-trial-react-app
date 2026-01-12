@@ -4,12 +4,15 @@
  * @module services/api/claudeClient
  */
 
+import { AIResponseCache } from '../cache/AIResponseCache.js';
+
 /**
  * @typedef {Object} SemanticMatchResult
  * @property {boolean} match - Whether terms match semantically
  * @property {number} confidence - Confidence score (0.0 - 1.0)
  * @property {string} reasoning - Explanation of the match
  * @property {boolean} [error] - Whether an error occurred
+ * @property {boolean} [fromCache] - Whether result came from cache
  */
 
 /**
@@ -25,14 +28,21 @@ export class ClaudeAPIClient {
    * Create Claude API client
    * @param {string} apiKey - Anthropic API key
    * @param {string} [model='claude-sonnet-4-5-20250929'] - Model to use
+   * @param {Object} [cacheOptions] - Cache configuration
    */
-  constructor(apiKey, model = 'claude-sonnet-4-5-20250929') {
+  constructor(apiKey, model = 'claude-sonnet-4-5-20250929', cacheOptions = {}) {
     if (!apiKey) {
       throw new Error('Anthropic API key is required');
     }
     this.#apiKey = apiKey;
     this.#model = model;
-    this.#cache = new Map();
+    // Use persistent AIResponseCache
+    this.#cache = new AIResponseCache({
+      maxSize: cacheOptions.maxSize || 500,
+      ttlMinutes: cacheOptions.ttlMinutes || 120, // 2 hours default
+      storageKey: 'claude_semantic_cache',
+      ...cacheOptions,
+    });
   }
 
   /**
@@ -160,10 +170,10 @@ Respond ONLY with valid JSON in this exact format:
    * @returns {Promise<SemanticMatchResult>} Match result
    */
   async semanticMatch(patientTerm, criterionTerm, context = 'medical term') {
-    // Check cache first
-    const cacheKey = this.#getCacheKey(patientTerm, criterionTerm);
-    if (this.#cache.has(cacheKey)) {
-      return this.#cache.get(cacheKey);
+    // Check cache first (using AIResponseCache)
+    const cachedResult = this.#cache.get(patientTerm, criterionTerm, context);
+    if (cachedResult) {
+      return { ...cachedResult, fromCache: true };
     }
 
     try {
@@ -173,7 +183,7 @@ Respond ONLY with valid JSON in this exact format:
 
       // Cache successful results
       if (!result.error) {
-        this.#cache.set(cacheKey, result);
+        this.#cache.set(patientTerm, criterionTerm, result, context);
       }
 
       return result;
@@ -210,11 +220,11 @@ Respond ONLY with valid JSON in this exact format:
   }
 
   /**
-   * Get cache size
-   * @returns {number} Number of cached items
+   * Get cache statistics
+   * @returns {Object} Cache stats
    */
-  getCacheSize() {
-    return this.#cache.size;
+  getCacheStats() {
+    return this.#cache.getStats();
   }
 
   /**

@@ -2,16 +2,19 @@
 
 React application for matching patients with clinical trials using **hybrid AI + rule-based matching**.
 
-[![Tests](https://img.shields.io/badge/tests-106%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-138%20passing-brightgreen)](#testing)
 [![Version](https://img.shields.io/badge/version-4.0.0-blue)](#)
 [![React](https://img.shields.io/badge/react-18.3.1-61dafb)](#tech-stack)
 
 ## ✨ Features
 
 - **Hybrid Matching Engine** - Three-pass strategy: Exact → Rule-based → AI semantic
-- **Claude API Integration** - Anthropic Claude for semantic analysis
-- **106 Unit Tests** - Comprehensive test coverage with Vitest
-- **Modern Stack** - React 18, Vite, ESLint 9, Prettier
+- **Claude API Integration** - Anthropic Claude for semantic analysis with caching
+- **AI Response Caching** - LRU cache with TTL and localStorage persistence
+- **138 Unit Tests** - Comprehensive test coverage with Vitest
+- **E2E Tests** - Playwright integration for full flow testing
+- **Confidence Breakdown** - Detailed explanation of match confidence per criterion
+- **Modern Stack** - React 18, Vite 6, ESLint 9, Prettier
 - **TDD Workflow** - Test-driven development enforced
 
 ## 🚀 Quick Start
@@ -19,6 +22,7 @@ React application for matching patients with clinical trials using **hybrid AI +
 ### Prerequisites
 - Node.js 18+ 
 - npm 9+
+- Anthropic API Key (for AI matching)
 
 ### Installation
 
@@ -38,12 +42,23 @@ npm run dev
 
 Open browser at `http://localhost:3000`
 
+### For Colleagues (Quick Setup)
+
+```bash
+git clone <repository-url>
+cd clinical-trial-react-app
+npm install
+npm run dev
+# Open http://localhost:3000
+# Enter your Anthropic API key in settings
+```
+
 ## 📂 Project Structure
 
 ```
 clinical-trial-react-app/
 ├── src/
-│   ├── __tests__/           # All tests (106)
+│   ├── __tests__/           # All tests (138)
 │   │   ├── components/      # Component tests
 │   │   ├── services/        # Service tests
 │   │   └── utils/           # Utility tests
@@ -51,14 +66,17 @@ clinical-trial-react-app/
 │   │   └── App.jsx          # Main app component
 │   ├── services/            # Business logic
 │   │   ├── api/             # Claude API client
+│   │   ├── cache/           # AI response caching
 │   │   └── matcher/         # Matching engine
 │   ├── utils/               # Utility functions
 │   ├── data/                # Database JSON
 │   └── styles/              # CSS files
+├── e2e/                     # Playwright E2E tests
 ├── docs/                    # Documentation
 ├── package.json
 ├── vite.config.js
 ├── vitest.config.js
+├── playwright.config.js
 └── eslint.config.js
 ```
 
@@ -76,6 +94,10 @@ npm run test:coverage
 
 # CI mode (no watch)
 npm run test:ci
+
+# E2E tests (requires Playwright browsers)
+npm run test:e2e:install   # Install browsers (once)
+npm run test:e2e           # Run E2E tests
 ```
 
 ### Test Coverage
@@ -83,17 +105,19 @@ npm run test:ci
 | Module | Tests |
 |--------|-------|
 | Utils (string, array, medical) | 52 |
-| Services (matcher, drugs, results) | 44 |
-| Components (App) | 10 |
-| **Total** | **106** |
+| Services (matcher, drugs, results, cache, claude) | 72 |
+| Components (App) | 14 |
+| **Total** | **138** |
 
 ## 🔧 Scripts
 
 ```bash
-npm run dev          # Start dev server
+npm run dev          # Start dev server (port 3000)
 npm run build        # Production build
 npm run preview      # Preview build
-npm test             # Run tests
+npm test             # Run tests (watch mode)
+npm run test:ci      # Run tests (CI mode)
+npm run test:e2e     # Run E2E tests
 npm run lint         # Lint code
 npm run format       # Format code
 ```

@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.1] - 2026-01-12
+
+### Added
+
+- **AI Response Caching System**
+  - `AIResponseCache` class with LRU eviction (max 100 entries)
+  - TTL-based expiration (default 24 hours)
+  - localStorage persistence with automatic restore
+  - Hit/miss statistics tracking
+  - Automatic cleanup of expired entries
+
+- **E2E Testing with Playwright**
+  - Added `playwright.config.js` configuration
+  - Added `e2e/app.spec.js` with 8 test cases
+  - Tests: app load, settings, API key persistence, navigation
+  - Scripts: `test:e2e`, `test:e2e:ui`, `test:e2e:install`
+
+- **Confidence Breakdown UI**
+  - Shows `patientValue` for each criterion
+  - Shows `confidenceReason` explaining match logic
+  - Adjustable confidence threshold sliders
+
+- **32 New Tests**
+  - AIResponseCache tests (16 tests)
+  - ClaudeAPIClient tests (12 tests)
+  - Additional App component tests (4 tests)
+  - **Total: 138 tests passing**
+
+### Changed
+
+- `ClaudeAPIClient` now uses `AIResponseCache` instead of simple Map
+- Cache responses include `fromCache: true` flag
+- `getCacheStats()` method added to API client
+- Test coverage configuration updated
+
+### Removed
+
+- Legacy files cleanup:
+  - `CompleteIntegrationExample.jsx`
+  - `EnhancedCompleteIntegrationExample.jsx`
+  - `EnhancedIntegrationStyles.css`
+  - `ClinicalTrialQuestionnaire.jsx`
+  - `SYSTEM_DOCUMENTATION.md`
+  - `test_inclusion_criteria.js`
+  - `server.log`
+  - Multiple outdated documentation files
+
+---
+
 ## [4.0.0] - 2026-01-12
 
 ### 🔄 Major Refactoring Release
