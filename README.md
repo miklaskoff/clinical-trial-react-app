@@ -1,130 +1,147 @@
-# Clinical Trial Eligibility Questionnaire
+# Clinical Trial Matching System
 
-React application for matching patients against clinical trial eligibility criteria with **AI-powered semantic matching**.
+React application for matching patients with clinical trials using **hybrid AI + rule-based matching**.
 
-## 📦 What's Included
+[![Tests](https://img.shields.io/badge/tests-106%20passing-brightgreen)](#testing)
+[![Version](https://img.shields.io/badge/version-4.0.0-blue)](#)
+[![React](https://img.shields.io/badge/react-18.3.1-61dafb)](#tech-stack)
 
-- **ClinicalTrialQuestionnaire.jsx** - Main questionnaire component with AI integration
-- **aiSemanticMatcher.js** - AI-powered semantic matching engine
-- **improved_slot_filled_database.json** - Database with 19 trials (75 criteria from CMB & PTH clusters)
-- **Adjustable confidence thresholds** - Control matching sensitivity
-- **Complete React setup** - All configuration files included
+## ✨ Features
+
+- **Hybrid Matching Engine** - Three-pass strategy: Exact → Rule-based → AI semantic
+- **Claude API Integration** - Anthropic Claude for semantic analysis
+- **106 Unit Tests** - Comprehensive test coverage with Vitest
+- **Modern Stack** - React 18, Vite, ESLint 9, Prettier
+- **TDD Workflow** - Test-driven development enforced
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (version 14 or higher)
-- npm (comes with Node.js)
+- Node.js 18+ 
+- npm 9+
 
 ### Installation
 
-1. **Extract all files** to a folder (e.g., `clinical-trial-app`)
+```bash
+# Clone/download the project
+cd clinical-trial-react-app
 
-2. **Open terminal** in that folder
+# Install dependencies
+npm install
 
-3. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+# Run tests
+npm test
 
-4. **Start the app:**
-   ```bash
-   npm start
-   ```
+# Start development server
+npm run dev
+```
 
-5. **Open browser** - App will automatically open at `http://localhost:3000`
-
-6. **(Optional) Enable AI Matching:**
-   - Click "⚙️ Show AI Matching Settings"
-   - Check "Enable AI-powered semantic matching"
-   - Enter your OpenAI API key
-   - Adjust confidence thresholds as needed
-   - See [AI_MATCHING_GUIDE.md](AI_MATCHING_GUIDE.md) for details
+Open browser at `http://localhost:3000`
 
 ## 📂 Project Structure
 
 ```
-clinical-trial-app/
-├── public/
-│   └── index.html
-├── src/  (create this folder and place files here)
-│   ├── ClinicalTrialQuestionnaire.jsx
-│   ├── improved_slot_filled_database.json
-│   ├── App.js
-│   ├── App.css
-│   ├── index.js
-│   └── index.css
+clinical-trial-react-app/
+├── src/
+│   ├── __tests__/           # All tests (106)
+│   │   ├── components/      # Component tests
+│   │   ├── services/        # Service tests
+│   │   └── utils/           # Utility tests
+│   ├── components/          # React components
+│   │   └── App.jsx          # Main app component
+│   ├── services/            # Business logic
+│   │   ├── api/             # Claude API client
+│   │   └── matcher/         # Matching engine
+│   ├── utils/               # Utility functions
+│   ├── data/                # Database JSON
+│   └── styles/              # CSS files
+├── docs/                    # Documentation
 ├── package.json
-└── README.md
+├── vite.config.js
+├── vitest.config.js
+└── eslint.config.js
 ```
 
-## 📋 How to Use
+## 🧪 Testing
 
-1. **Fill out the questionnaire** (9 steps):
-   - Step 1: Comorbid Conditions
-   - Step 2: Treatment History
-   - Step 3: Infections
-   - Step 4: Affected Area (BSA, PASI, PGA)
-   - Step 5: Age
-   - Step 6: Psoriasis Type
-   - Step 7: Disease Duration
-   - Step 8: Severity Scores
-   - Step 9: Weight & BMI
-
-2. **Click "Submit & Match Trials"**
-
-3. **Download JSON** - Your responses are automatically downloaded
-
-4. **View Results** - See eligible, needs review, and ineligible trials
-
-## 🤖 AI Semantic Matching
-
-### Features
-- **Hybrid Matching**: Rule-based (exact/substring) + AI semantic analysis
-- **Smart Fallback**: AI only activates when rule-based matching fails
-- **Medical Understanding**: Recognizes synonyms and medical relationships
-- **Confidence Scoring**: 0.0-1.0 scale with adjustable thresholds
-- **Match Type Indicators**: Shows exact, substring, or ai-semantic matches
-- **Cost Optimization**: Caching and batch processing reduce API costs
-
-### Configuration
-Three adjustable confidence thresholds:
-- **Exclude Threshold** (default: 80%) - High confidence matches exclude patient
-- **Review Threshold** (default: 50%) - Moderate matches need manual review
-- **Ignore Threshold** (default: 30%) - Low confidence matches are ignored
-
-### Example Matches
-| Patient Input | Trial Criterion | Match Type | Confidence |
-|---------------|-----------------|------------|------------|
-| "diabetes type 2" | "diabetes mellitus" | AI Semantic | 95% |
-| "hypertension" | "high blood pressure" | AI Semantic | 98% |
-| "depression" | "psychoneuro-related" | AI Semantic | 85% |
-| "Humira" | "adalimumab" | AI Semantic | 99% |
-
-For complete guide, see [AI_MATCHING_GUIDE.md](AI_MATCHING_GUIDE.md)
-
-## 🗄️ Database Status
-
-**Current:** 19 trials, 75 criteria (2 clusters: CMB, PTH only)
-
-**Missing:** 7 clusters not yet added
-
-## 🛠️ Troubleshooting
-
-### "npm: command not found"
-- Install Node.js from https://nodejs.org/
-
-### Port 3000 already in use
 ```bash
-PORT=3001 npm start
+# Run all tests
+npm test
+
+# Run with UI
+npm run test:ui
+
+# Run with coverage
+npm run test:coverage
+
+# CI mode (no watch)
+npm run test:ci
 ```
 
-### Missing dependencies
+### Test Coverage
+
+| Module | Tests |
+|--------|-------|
+| Utils (string, array, medical) | 52 |
+| Services (matcher, drugs, results) | 44 |
+| Components (App) | 10 |
+| **Total** | **106** |
+
+## 🔧 Scripts
+
 ```bash
-rm -rf node_modules
-npm install
+npm run dev          # Start dev server
+npm run build        # Production build
+npm run preview      # Preview build
+npm test             # Run tests
+npm run lint         # Lint code
+npm run format       # Format code
 ```
 
-## 📝 License
+## 📋 How It Works
 
-Research tool - use for research purposes only.
+1. **Patient fills questionnaire** - 10 clusters (AGE, BMI, CMB, etc.)
+2. **System evaluates each trial** - In parallel for performance
+3. **Three-pass matching**:
+   - **Pass 1**: Exact slot comparison (confidence: 1.0)
+   - **Pass 2**: Rule-based heuristics (confidence: 0.7-0.9)
+   - **Pass 3**: Claude AI semantic analysis (if enabled)
+4. **Results categorized**: Eligible / Needs Review / Ineligible
+
+## 🤖 AI Configuration
+
+```javascript
+// Enable AI matching with API key
+const aiConfig = {
+  apiKey: 'sk-ant-...',
+  model: 'claude-sonnet-4-5-20250929',
+  confidenceThresholds: {
+    exclude: 0.8,  // Auto-exclude threshold
+    review: 0.5,   // Manual review threshold
+    ignore: 0.3    // Ignore below this
+  }
+};
+```
+
+## 📚 Documentation
+
+- [Architecture Guide](docs/ARCHITECTURE_AND_MATCHING_GUIDE.md) - System design
+- [Changelog](CHANGELOG.md) - Version history
+- [Copilot Instructions](.github/copilot-instructions.md) - Development rules
+
+## 🛠 Tech Stack
+
+- **React 18.3.1** - UI library
+- **Vite 6** - Build tool
+- **Vitest 2** - Test runner
+- **ESLint 9** - Linting
+- **Prettier 3** - Formatting
+- **Anthropic SDK** - Claude API
+
+## 📄 License
+
+Private project - All rights reserved.
+
+---
+
+**Version 4.0.0** | Updated 2026-01-12

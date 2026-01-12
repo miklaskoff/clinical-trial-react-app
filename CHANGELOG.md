@@ -7,6 +7,101 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.0] - 2026-01-12
+
+### 🔄 Major Refactoring Release
+
+Complete project restructure following TDD principles and modern best practices.
+
+### Added
+
+- **New Build System**
+  - Migrated from Create React App to **Vite** for faster builds
+  - Added **Vitest** as test runner (Jest API compatible)
+  - Added **@testing-library/react** for component testing
+  - Added **MSW** for API mocking support
+  - Configured **ESLint 9** with flat config
+  - Configured **Prettier** for consistent formatting
+  - Added **Husky** + **lint-staged** for pre-commit hooks
+
+- **New Project Structure**
+  ```
+  src/
+  ├── __tests__/           # All tests organized by type
+  │   ├── components/      # Component tests
+  │   ├── services/        # Service tests
+  │   └── utils/           # Utility tests
+  ├── components/          # React components
+  ├── services/            # Business logic
+  │   ├── api/             # API clients
+  │   └── matcher/         # Matching logic
+  ├── utils/               # Utility functions
+  ├── data/                # JSON data
+  └── styles/              # CSS files
+  ```
+
+- **Comprehensive Test Suite (106 tests)**
+  - `string.test.js` - String utility tests (16 tests)
+  - `array.test.js` - Array utility tests (14 tests)
+  - `medical.test.js` - Medical utility tests (22 tests)
+  - `drugDatabase.test.js` - Drug database tests (17 tests)
+  - `results.test.js` - Result classes tests (14 tests)
+  - `ClinicalTrialMatcher.test.js` - Matcher tests (13 tests)
+  - `App.test.jsx` - App component tests (10 tests)
+
+- **New Utility Modules**
+  - `utils/string.js` - String normalization, comparison, truncation
+  - `utils/array.js` - Array overlap, unique, groupBy, chunk
+  - `utils/medical.js` - Timeframe conversion, severity matching, BMI calculation
+
+- **Refactored Services**
+  - `services/api/claudeClient.js` - Claude API wrapper with caching
+  - `services/matcher/ClinicalTrialMatcher.js` - Core matching with parallel evaluation
+  - `services/matcher/drugDatabase.js` - Drug classifications and synonyms
+  - `services/matcher/results.js` - Result classes (CriterionMatchResult, TrialEligibilityResult)
+
+- **Updated Configuration**
+  - `vite.config.js` - Vite configuration with path aliases
+  - `vitest.config.js` - Test configuration with coverage thresholds (80%)
+  - `eslint.config.js` - ESLint flat config for React
+  - `.prettierrc` - Prettier formatting rules
+  - `.env.example` - Environment variables template
+
+- **TDD Workflow in Copilot Instructions**
+  - Mandatory test-first development
+  - Commit only after tests pass
+  - Double verification before commits
+
+### Changed
+
+- **React 18.3.1** (latest stable) - upgraded from 18.2.0
+- **All async operations** now use async/await and Promise.all()
+- **Parallel trial evaluation** for better performance
+- **Private class fields** (#) for encapsulation
+- **JSDoc comments** for better IDE support
+- **Clean separation** of concerns (services/components/utils)
+
+### Removed
+
+- Removed `react-scripts` dependency (replaced by Vite)
+- Removed legacy test file `test_inclusion_criteria.js`
+- Deprecated components moved to legacy (not deleted for reference)
+
+### Performance
+
+- **Parallel matching** - All trials evaluated concurrently
+- **Trial indexing** - Pre-built index for O(1) criterion lookup
+- **API caching** - Reduced duplicate Claude API calls
+- **Dynamic imports** - Lazy loading for reduced bundle size
+
+### Security
+
+- API keys through environment variables only
+- No hardcoded secrets
+- `.env` properly gitignored
+
+---
+
 ## [3.1.0] - 2026-01-12
 
 ### Added
