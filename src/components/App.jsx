@@ -158,7 +158,23 @@ function generateTextReport(results) {
     lines.push('ELIGIBLE TRIALS');
     lines.push('───────────────────────────────────────────────────────────────');
     results.eligibleTrials.forEach((trial, idx) => {
-      lines.push(`${idx + 1}. ${trial.nctId} (Confidence: ${(trial.getConfidenceScore() * 100).toFixed(0)}%)`);
+      const confidence = trial.getConfidenceScore ? trial.getConfidenceScore() : 1.0;
+      lines.push(`${idx + 1}. ${trial.nctId} (Overall Confidence: ${(confidence * 100).toFixed(0)}%)`);
+      
+      // Show confidence breakdown
+      if (trial.matchedCriteria && trial.matchedCriteria.length > 0) {
+        const exactMatches = trial.matchedCriteria.filter(c => c.confidence === 1.0).length;
+        const ruleBased = trial.matchedCriteria.filter(c => c.confidence < 1.0 && c.confidence >= 0.7).length;
+        const aiMatches = trial.matchedCriteria.filter(c => c.requiresAI).length;
+        const lowConf = trial.matchedCriteria.filter(c => c.confidence < 0.7).length;
+        
+        lines.push(`   Criteria breakdown:`);
+        lines.push(`   • Total criteria evaluated: ${trial.matchedCriteria.length}`);
+        if (exactMatches > 0) lines.push(`   • Exact matches (100%): ${exactMatches}`);
+        if (ruleBased > 0) lines.push(`   • Rule-based matches (70-99%): ${ruleBased}`);
+        if (aiMatches > 0) lines.push(`   • AI semantic matches: ${aiMatches}`);
+        if (lowConf > 0) lines.push(`   • Low confidence (<70%): ${lowConf}`);
+      }
     });
     lines.push('');
   }
@@ -187,7 +203,8 @@ function generateTextReport(results) {
     lines.push('INELIGIBLE TRIALS');
     lines.push('───────────────────────────────────────────────────────────────');
     results.ineligibleTrials.forEach((trial, idx) => {
-      lines.push(`${idx + 1}. ${trial.nctId}`);
+      const confidence = trial.getConfidenceScore ? trial.getConfidenceScore() : 0;
+      lines.push(`${idx + 1}. ${trial.nctId} (Confidence: ${(confidence * 100).toFixed(0)}%)`);
       
       // Get failed criteria
       const failedInclusions = trial.getFailedInclusions ? trial.getFailedInclusions() : [];
@@ -197,7 +214,9 @@ function generateTextReport(results) {
         lines.push('   ✗ Failed inclusion criteria:');
         failedInclusions.forEach((c) => {
           const text = c.rawText || c.criterionId;
-          lines.push(`     • ${text}`);
+          const conf = c.confidence ? ` [${(c.confidence * 100).toFixed(0)}% confidence]` : '';
+          const ai = c.requiresAI ? ' [AI]' : '';
+          lines.push(`     • ${text}${conf}${ai}`);
         });
       }
       
@@ -205,7 +224,9 @@ function generateTextReport(results) {
         lines.push('   ✗ Matched exclusion criteria:');
         matchedExclusions.forEach((c) => {
           const text = c.rawText || c.criterionId;
-          lines.push(`     • ${text}`);
+          const conf = c.confidence ? ` [${(c.confidence * 100).toFixed(0)}% confidence]` : '';
+          const ai = c.requiresAI ? ' [AI]' : '';
+          lines.push(`     • ${text}${conf}${ai}`);
         });
       }
       
@@ -239,12 +260,28 @@ function App() {
   const [matchResults, setMatchResults] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Confidence thresholds
+  const [confidenceThresholds, setConfidenceThresholds] = useState({
+    exclude: 0.8,  // High confidence = exclude patient
+    review: 0.5,   // Medium confidence = flag for review
+    ignore: 0.3,   // Low confidence = ignore match
+  });
 
   // Load API key from localStorage on mount
   useEffect(() => {
     const savedKey = localStorage.getItem(API_KEY_STORAGE_KEY);
     if (savedKey) {
       setApiKey(savedKey);
+    }
+    // Load saved thresholds
+    const savedThresholds = localStorage.getItem('confidence_thresholds');
+    if (savedThresholds) {
+      try {
+        setConfidenceThresholds(JSON.parse(savedThresholds));
+      } catch (e) {
+        // ignore
+      }
     }
   }, []);
 
@@ -261,6 +298,15 @@ function App() {
   const handleClearApiKey = useCallback(() => {
     setApiKey('');
     localStorage.removeItem(API_KEY_STORAGE_KEY);
+  }, []);
+
+  // Update confidence threshold
+  const handleThresholdChange = useCallback((key, value) => {
+    setConfidenceThresholds(prev => {
+      const updated = { ...prev, [key]: value };
+      localStorage.setItem('confidence_thresholds', JSON.stringify(updated));
+      return updated;
+    });
   }, []);
 
   /**
@@ -289,7 +335,11 @@ function App() {
       const { ClinicalTrialMatcher } = await import('../services/matcher');
       const database = await import('../data/trials-database.json');
 
-      const aiConfig = useAI && apiKey ? { apiKey, model } : null;
+      const aiConfig = useAI && apiKey ? { 
+        apiKey, 
+        model,
+        confidenceThresholds 
+      } : null;
       const matcher = new ClinicalTrialMatcher(database.default, aiConfig);
 
       const results = await matcher.matchPatient(patientResponse);
@@ -302,7 +352,7 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [useAI, apiKey, model]);
+  }, [useAI, apiKey, model, confidenceThresholds]);
 
   /**
    * Reset application state
@@ -386,6 +436,67 @@ function App() {
                       <option value="claude-opus-4-5-20251101">Claude Opus 4.5</option>
                     </select>
                   </div>
+
+                  <div className="form-group thresholds-group">
+                    <h3>Confidence Thresholds</h3>
+                    <p className="threshold-description">
+                      Adjust how confident the matching must be before taking action.
+                    </p>
+
+                    <div className="threshold-item">
+                      <div className="threshold-header">
+                        <label>
+                          <span className="threshold-badge exclude">Exclude</span>
+                          Exclude Patient (≥ {(confidenceThresholds.exclude * 100).toFixed(0)}%)
+                        </label>
+                        <span className="threshold-value">{(confidenceThresholds.exclude * 100).toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={confidenceThresholds.exclude * 100}
+                        onChange={(e) => handleThresholdChange('exclude', parseInt(e.target.value) / 100)}
+                        className="threshold-slider"
+                      />
+                    </div>
+
+                    <div className="threshold-item">
+                      <div className="threshold-header">
+                        <label>
+                          <span className="threshold-badge review">Review</span>
+                          Flag for Review (≥ {(confidenceThresholds.review * 100).toFixed(0)}%)
+                        </label>
+                        <span className="threshold-value">{(confidenceThresholds.review * 100).toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={confidenceThresholds.review * 100}
+                        onChange={(e) => handleThresholdChange('review', parseInt(e.target.value) / 100)}
+                        className="threshold-slider"
+                      />
+                    </div>
+
+                    <div className="threshold-item">
+                      <div className="threshold-header">
+                        <label>
+                          <span className="threshold-badge ignore">Ignore</span>
+                          Ignore Low Confidence (&lt; {(confidenceThresholds.ignore * 100).toFixed(0)}%)
+                        </label>
+                        <span className="threshold-value">{(confidenceThresholds.ignore * 100).toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={confidenceThresholds.ignore * 100}
+                        onChange={(e) => handleThresholdChange('ignore', parseInt(e.target.value) / 100)}
+                        className="threshold-slider"
+                      />
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -443,8 +554,23 @@ function App() {
                 <ul>
                   {matchResults.eligibleTrials.map((trial) => (
                     <li key={trial.nctId} className="trial-card eligible">
-                      <strong>{trial.nctId}</strong>
-                      <span>Confidence: {(trial.getConfidenceScore() * 100).toFixed(0)}%</span>
+                      <div className="trial-header">
+                        <strong>{trial.nctId}</strong>
+                        <span className="confidence-score">
+                          Confidence: {(trial.getConfidenceScore() * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="confidence-breakdown">
+                        <small>
+                          {trial.matchedCriteria?.length || 0} criteria evaluated
+                          {trial.matchedCriteria?.filter(c => c.confidence === 1.0).length > 0 && 
+                            ` • ${trial.matchedCriteria.filter(c => c.confidence === 1.0).length} exact matches`}
+                          {trial.matchedCriteria?.filter(c => c.confidence < 1.0 && c.confidence >= 0.7).length > 0 && 
+                            ` • ${trial.matchedCriteria.filter(c => c.confidence < 1.0 && c.confidence >= 0.7).length} rule-based`}
+                          {trial.matchedCriteria?.filter(c => c.requiresAI).length > 0 && 
+                            ` • ${trial.matchedCriteria.filter(c => c.requiresAI).length} AI-matched`}
+                        </small>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -457,14 +583,22 @@ function App() {
                 <ul>
                   {matchResults.ineligibleTrials.slice(0, 10).map((trial) => (
                     <li key={trial.nctId} className="trial-card ineligible">
-                      <strong>{trial.nctId}</strong>
+                      <div className="trial-header">
+                        <strong>{trial.nctId}</strong>
+                        <span className="confidence-score">
+                          Confidence: {(trial.getConfidenceScore() * 100).toFixed(0)}%
+                        </span>
+                      </div>
                       <div className="failure-reasons">
                         {trial.getFailedInclusions && trial.getFailedInclusions().length > 0 && (
                           <div className="failed-inclusions">
                             <small>Failed inclusions:</small>
                             <ul>
                               {trial.getFailedInclusions().slice(0, 3).map((c, i) => (
-                                <li key={i}>{c.rawText || c.criterionId}</li>
+                                <li key={i}>
+                                  {c.rawText || c.criterionId}
+                                  <span className="criterion-confidence">({(c.confidence * 100).toFixed(0)}%)</span>
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -474,7 +608,10 @@ function App() {
                             <small>Matched exclusions:</small>
                             <ul>
                               {trial.getMatchedExclusions().slice(0, 3).map((c, i) => (
-                                <li key={i}>{c.rawText || c.criterionId}</li>
+                                <li key={i}>
+                                  {c.rawText || c.criterionId}
+                                  <span className="criterion-confidence">({(c.confidence * 100).toFixed(0)}%)</span>
+                                </li>
                               ))}
                             </ul>
                           </div>
