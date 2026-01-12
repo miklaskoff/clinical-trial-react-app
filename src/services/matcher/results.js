@@ -17,6 +17,8 @@ export class CriterionMatchResult {
    * @param {number} [params.confidence=1.0] - Confidence score (0-1)
    * @param {string} [params.exclusionStrength='exclusion'] - 'inclusion' or 'exclusion'
    * @param {string} [params.rawText=''] - Original criterion text
+   * @param {string} [params.patientValue=''] - Patient's value for this criterion
+   * @param {string} [params.confidenceReason=''] - Why this confidence was assigned
    */
   constructor({
     criterionId,
@@ -27,6 +29,8 @@ export class CriterionMatchResult {
     confidence = 1.0,
     exclusionStrength = 'exclusion',
     rawText = '',
+    patientValue = '',
+    confidenceReason = '',
   }) {
     this.criterionId = criterionId;
     this.nctId = nctId;
@@ -36,6 +40,8 @@ export class CriterionMatchResult {
     this.confidence = Math.max(0, Math.min(1, confidence));
     this.exclusionStrength = exclusionStrength;
     this.rawText = rawText;
+    this.patientValue = patientValue;
+    this.confidenceReason = confidenceReason;
   }
 
   /**
@@ -74,6 +80,8 @@ export class CriterionMatchResult {
       confidence: this.confidence,
       exclusionStrength: this.exclusionStrength,
       rawText: this.rawText,
+      patientValue: this.patientValue,
+      confidenceReason: this.confidenceReason,
       causesIneligibility: this.causesIneligibility(),
     };
   }

@@ -473,6 +473,59 @@
   vertical-align: middle;
 }
 
+/* Criterion detail display */
+.criteria-details {
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  padding-top: 0.75rem;
+}
+
+.criteria-details > small {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.criteria-details ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.criterion-detail {
+  background: rgba(0,0,0,0.03);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.criterion-text {
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 0.35rem;
+}
+
+.criterion-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.patient-value {
+  color: #0369a1;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.confidence-reason {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
 /* Trial card with confidence bar */
 .trial-confidence {
   display: flex;
@@ -512,6 +565,21 @@
   min-width: 40px;
 }
 
+/* Trial header */
+.trial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.confidence-score {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .app-main {
@@ -543,5 +611,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
+  }
+
+  .criterion-detail {
+    padding: 0.5rem;
   }
 }

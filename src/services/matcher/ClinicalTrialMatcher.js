@@ -215,6 +215,8 @@ export class ClinicalTrialMatcher {
     let confidence = 1.0;
     let requiresAI = false;
     let aiReasoning = null;
+    let patientValue = '';
+    let confidenceReason = '';
 
     try {
       // Route to appropriate evaluation method based on cluster
@@ -228,10 +230,13 @@ export class ClinicalTrialMatcher {
       confidence = evalResult.confidence;
       requiresAI = evalResult.requiresAI || false;
       aiReasoning = evalResult.aiReasoning || null;
+      patientValue = evalResult.patientValue || '';
+      confidenceReason = evalResult.confidenceReason || '';
     } catch (error) {
       console.error(`Error evaluating criterion ${criterion.id}:`, error);
       matches = false;
       confidence = 0.5;
+      confidenceReason = 'Error during evaluation';
     }
 
     return new CriterionMatchResult({
@@ -243,6 +248,8 @@ export class ClinicalTrialMatcher {
       confidence,
       exclusionStrength,
       rawText: criterion.raw_text || '',
+      patientValue,
+      confidenceReason,
     });
   }
 
@@ -287,12 +294,27 @@ export class ClinicalTrialMatcher {
    */
   #evaluateAge(criterion, patientAge) {
     if (!patientAge?.age) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'Age not provided',
+        confidenceReason: 'Missing patient age data'
+      };
     }
 
     const age = patientAge.age;
     const minAge = criterion.AGE_MIN;
     const maxAge = criterion.AGE_MAX;
+
+    // Build criterion requirement string
+    let criterionReq = '';
+    if (minAge !== null && minAge !== undefined && maxAge !== null && maxAge !== undefined) {
+      criterionReq = `Required: ${minAge}-${maxAge} years`;
+    } else if (minAge !== null && minAge !== undefined) {
+      criterionReq = `Required: ≥${minAge} years`;
+    } else if (maxAge !== null && maxAge !== undefined) {
+      criterionReq = `Required: ≤${maxAge} years`;
+    }
 
     // For inclusion criteria: check if patient is within range
     // For exclusion criteria: check if patient matches the exclusion condition
@@ -307,7 +329,12 @@ export class ClinicalTrialMatcher {
 
     // If it's an inclusion criterion, matches means patient is eligible
     // If it's exclusion criterion and we matched the range, patient is excluded
-    return { matches, confidence: 1.0 };
+    return { 
+      matches, 
+      confidence: 1.0,
+      patientValue: `Patient age: ${age} years`,
+      confidenceReason: `Exact numeric comparison. ${criterionReq}`
+    };
   }
 
   /**
@@ -315,29 +342,60 @@ export class ClinicalTrialMatcher {
    */
   #evaluateBMI(criterion, patientBMI) {
     if (!patientBMI) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'BMI/weight not provided',
+        confidenceReason: 'Missing patient BMI data'
+      };
     }
 
     let matches = true;
+    const patientValues = [];
+    const requirements = [];
 
     // Check BMI
-    if (criterion.BMI_MIN !== null && criterion.BMI_MIN !== undefined && patientBMI.bmi < criterion.BMI_MIN) {
-      matches = false;
+    if (patientBMI.bmi) {
+      patientValues.push(`BMI: ${patientBMI.bmi}`);
     }
-    if (criterion.BMI_MAX !== null && criterion.BMI_MAX !== undefined && patientBMI.bmi > criterion.BMI_MAX) {
-      matches = false;
+    if (criterion.BMI_MIN !== null && criterion.BMI_MIN !== undefined) {
+      requirements.push(`BMI ≥${criterion.BMI_MIN}`);
+      if (patientBMI.bmi < criterion.BMI_MIN) {
+        matches = false;
+      }
+    }
+    if (criterion.BMI_MAX !== null && criterion.BMI_MAX !== undefined) {
+      requirements.push(`BMI ≤${criterion.BMI_MAX}`);
+      if (patientBMI.bmi > criterion.BMI_MAX) {
+        matches = false;
+      }
     }
 
     // Check weight
     const weightValue = patientBMI.weight?.value || patientBMI.weight;
-    if (criterion.WEIGHT_MIN !== null && criterion.WEIGHT_MIN !== undefined && weightValue < criterion.WEIGHT_MIN) {
-      matches = false;
+    const weightUnit = patientBMI.weight?.unit || 'kg';
+    if (weightValue) {
+      patientValues.push(`Weight: ${weightValue}${weightUnit}`);
     }
-    if (criterion.WEIGHT_MAX !== null && criterion.WEIGHT_MAX !== undefined && weightValue > criterion.WEIGHT_MAX) {
-      matches = false;
+    if (criterion.WEIGHT_MIN !== null && criterion.WEIGHT_MIN !== undefined) {
+      requirements.push(`Weight ≥${criterion.WEIGHT_MIN}kg`);
+      if (weightValue < criterion.WEIGHT_MIN) {
+        matches = false;
+      }
+    }
+    if (criterion.WEIGHT_MAX !== null && criterion.WEIGHT_MAX !== undefined) {
+      requirements.push(`Weight ≤${criterion.WEIGHT_MAX}kg`);
+      if (weightValue > criterion.WEIGHT_MAX) {
+        matches = false;
+      }
     }
 
-    return { matches, confidence: 1.0 };
+    return { 
+      matches, 
+      confidence: 1.0,
+      patientValue: patientValues.join(', ') || 'No BMI/weight data',
+      confidenceReason: `Exact numeric comparison. Required: ${requirements.join(', ') || 'N/A'}`
+    };
   }
 
   /**
@@ -345,10 +403,17 @@ export class ClinicalTrialMatcher {
    */
   async #evaluateComorbidity(criterion, patientComorbidities) {
     if (!patientComorbidities || !Array.isArray(patientComorbidities)) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No comorbidities reported',
+        confidenceReason: 'Missing patient comorbidity data'
+      };
     }
 
     const conditions = criterion.conditions || [criterion];
+    const criterionConditions = conditions.map(c => (c.CONDITION_TYPE || []).join(', ')).join('; ');
+    const patientConditions = patientComorbidities.map(c => (c.CONDITION_TYPE || []).join(', ')).join('; ');
 
     for (const condition of conditions) {
       for (const patientCondition of patientComorbidities) {
@@ -378,13 +443,23 @@ export class ClinicalTrialMatcher {
             }
           }
 
-          return { matches: true, confidence: 0.95 };
+          return { 
+            matches: true, 
+            confidence: 0.95,
+            patientValue: `Patient: ${patientTypes.join(', ')}`,
+            confidenceReason: `Direct match with criterion: ${conditionTypes.join(', ')}. 95% due to possible semantic variations.`
+          };
         }
 
         // Try synonym matching
         const synonyms = findSynonyms(patientTypes[0]);
         if (arraysOverlap(conditionTypes, synonyms)) {
-          return { matches: true, confidence: 0.85 };
+          return { 
+            matches: true, 
+            confidence: 0.85,
+            patientValue: `Patient: ${patientTypes.join(', ')}`,
+            confidenceReason: `Synonym match. Patient term "${patientTypes[0]}" matched via synonym database to "${conditionTypes.join(', ')}". 85% due to indirect match.`
+          };
         }
       }
     }
@@ -407,12 +482,19 @@ export class ClinicalTrialMatcher {
             confidence: aiResult.confidence,
             requiresAI: true,
             aiReasoning: aiResult.reasoning,
+            patientValue: `Patient: ${patientTerm}`,
+            confidenceReason: `AI semantic analysis. Criterion: "${criterionTerm}". ${aiResult.reasoning || ''}`
           };
         }
       }
     }
 
-    return { matches: false, confidence: 0.9 };
+    return { 
+      matches: false, 
+      confidence: 0.9,
+      patientValue: `Patient conditions: ${patientConditions || 'none'}`,
+      confidenceReason: `No match found. Criterion required: ${criterionConditions}. 90% confidence in no-match.`
+    };
   }
 
   /**
@@ -420,10 +502,17 @@ export class ClinicalTrialMatcher {
    */
   #evaluateTreatmentHistory(criterion, patientTreatments) {
     if (!patientTreatments || !Array.isArray(patientTreatments)) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No treatment history reported',
+        confidenceReason: 'Missing patient treatment data'
+      };
     }
 
     const conditions = criterion.conditions || [criterion];
+    const criterionDrugs = conditions.map(c => (c.TREATMENT_TYPE || []).join(', ')).join('; ');
+    const patientDrugs = patientTreatments.map(t => (t.TREATMENT_TYPE || []).join(', ')).join('; ');
 
     for (const condition of conditions) {
       for (const patientTreatment of patientTreatments) {
@@ -439,14 +528,24 @@ export class ClinicalTrialMatcher {
               continue;
             }
           }
-          return { matches: true, confidence: 0.95 };
+          return { 
+            matches: true, 
+            confidence: 0.95,
+            patientValue: `Patient treatments: ${patientTypes.join(', ')}`,
+            confidenceReason: `Direct treatment match with criterion: ${treatmentTypes.join(', ')}. 95% due to possible naming variations.`
+          };
         }
 
         // Drug name match
         for (const criterionDrug of treatmentTypes) {
           for (const patientDrug of patientTypes) {
             if (drugsMatch(criterionDrug, patientDrug)) {
-              return { matches: true, confidence: 0.95 };
+              return { 
+                matches: true, 
+                confidence: 0.95,
+                patientValue: `Patient drug: ${patientDrug}`,
+                confidenceReason: `Drug synonym match. "${patientDrug}" matched to "${criterionDrug}" via drug database.`
+              };
             }
           }
         }
@@ -456,14 +555,24 @@ export class ClinicalTrialMatcher {
         if (drugClass) {
           for (const patientDrug of patientTypes) {
             if (drugBelongsToClass(patientDrug, drugClass)) {
-              return { matches: true, confidence: 0.9 };
+              return { 
+                matches: true, 
+                confidence: 0.9,
+                patientValue: `Patient drug: ${patientDrug}`,
+                confidenceReason: `Drug class match. "${patientDrug}" belongs to class "${drugClass}". 90% due to class-level match.`
+              };
             }
           }
         }
       }
     }
 
-    return { matches: false, confidence: 0.9 };
+    return { 
+      matches: false, 
+      confidence: 0.9,
+      patientValue: `Patient treatments: ${patientDrugs || 'none'}`,
+      confidenceReason: `No match found. Criterion required: ${criterionDrugs}. 90% confidence in no-match.`
+    };
   }
 
   /**
@@ -471,10 +580,17 @@ export class ClinicalTrialMatcher {
    */
   #evaluateInfection(criterion, patientInfections) {
     if (!patientInfections || !Array.isArray(patientInfections)) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No infections reported',
+        confidenceReason: 'Missing patient infection data'
+      };
     }
 
     const conditions = criterion.conditions || [criterion];
+    const criterionInfections = conditions.map(c => (c.INFECTION_TYPE || []).join(', ')).join('; ');
+    const patientInfectionTypes = patientInfections.map(i => (i.INFECTION_TYPE || []).join(', ')).join('; ');
 
     for (const condition of conditions) {
       for (const patientInfection of patientInfections) {
@@ -495,18 +611,33 @@ export class ClinicalTrialMatcher {
             }
           }
 
-          return { matches: true, confidence: 0.95 };
+          return { 
+            matches: true, 
+            confidence: 0.95,
+            patientValue: `Patient infection: ${patientTypes.join(', ')}`,
+            confidenceReason: `Direct infection match with: ${infectionTypes.join(', ')}. 95% due to possible semantic variations.`
+          };
         }
 
         // Try synonym matching
         const synonyms = findSynonyms(patientTypes[0]);
         if (arraysOverlap(infectionTypes, synonyms)) {
-          return { matches: true, confidence: 0.85 };
+          return { 
+            matches: true, 
+            confidence: 0.85,
+            patientValue: `Patient infection: ${patientTypes.join(', ')}`,
+            confidenceReason: `Synonym match for infection type. 85% due to indirect match.`
+          };
         }
       }
     }
 
-    return { matches: false, confidence: 0.9 };
+    return { 
+      matches: false, 
+      confidence: 0.9,
+      patientValue: `Patient infections: ${patientInfectionTypes || 'none'}`,
+      confidenceReason: `No match found. Criterion required: ${criterionInfections}. 90% confidence in no-match.`
+    };
   }
 
   /**
@@ -514,25 +645,49 @@ export class ClinicalTrialMatcher {
    */
   #evaluateMeasurements(criterion, patientMeasurements) {
     if (!patientMeasurements) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No measurements provided',
+        confidenceReason: 'Missing patient measurement data'
+      };
     }
 
     // Check various measurement types
     const measurements = ['BSA', 'PASI', 'IGA', 'DLQI'];
+    const patientValues = [];
+    const requirements = [];
 
     for (const type of measurements) {
       const threshold = criterion[`${type}_THRESHOLD`] || criterion[`${type}_MIN`];
       const comparison = criterion[`${type}_COMPARISON`] || '>=';
       const patientValue = patientMeasurements[type]?.value;
 
-      if (threshold !== null && threshold !== undefined && patientValue !== null && patientValue !== undefined) {
-        if (measurementMeetsThreshold(patientValue, threshold, comparison)) {
-          return { matches: true, confidence: 1.0 };
+      if (patientValue !== null && patientValue !== undefined) {
+        patientValues.push(`${type}: ${patientValue}`);
+      }
+      if (threshold !== null && threshold !== undefined) {
+        requirements.push(`${type} ${comparison} ${threshold}`);
+        
+        if (patientValue !== null && patientValue !== undefined) {
+          if (measurementMeetsThreshold(patientValue, threshold, comparison)) {
+            return { 
+              matches: true, 
+              confidence: 1.0,
+              patientValue: patientValues.join(', '),
+              confidenceReason: `Exact numeric comparison. ${type} ${patientValue} meets ${comparison} ${threshold}`
+            };
+          }
         }
       }
     }
 
-    return { matches: false, confidence: 0.8 };
+    return { 
+      matches: false, 
+      confidence: 0.8,
+      patientValue: patientValues.join(', ') || 'No measurements',
+      confidenceReason: `No measurement threshold met. Required: ${requirements.join(', ') || 'N/A'}. 80% due to possible missing data.`
+    };
   }
 
   /**
@@ -540,17 +695,32 @@ export class ClinicalTrialMatcher {
    */
   #evaluateSeverity(criterion, patientSeverity) {
     if (!patientSeverity) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No severity data provided',
+        confidenceReason: 'Missing patient severity data'
+      };
     }
 
     const requiredSeverity = criterion.SEVERITY || criterion.SEVERITY_MIN;
     const patientSeverityValue = patientSeverity.severity || patientSeverity;
 
     if (severityMatches(requiredSeverity, patientSeverityValue)) {
-      return { matches: true, confidence: 0.9 };
+      return { 
+        matches: true, 
+        confidence: 0.9,
+        patientValue: `Patient severity: ${patientSeverityValue}`,
+        confidenceReason: `Severity match. Required: ${requiredSeverity}. 90% due to subjective severity assessment.`
+      };
     }
 
-    return { matches: false, confidence: 0.9 };
+    return { 
+      matches: false, 
+      confidence: 0.9,
+      patientValue: `Patient severity: ${patientSeverityValue}`,
+      confidenceReason: `Severity mismatch. Required: ${requiredSeverity}, got: ${patientSeverityValue}. 90% confidence in no-match.`
+    };
   }
 
   /**
@@ -558,7 +728,12 @@ export class ClinicalTrialMatcher {
    */
   #evaluateDuration(criterion, patientDuration) {
     if (!patientDuration) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No duration data provided',
+        confidenceReason: 'Missing patient duration data'
+      };
     }
 
     const minDuration = criterion.DURATION_MIN;
@@ -572,11 +747,21 @@ export class ClinicalTrialMatcher {
       const patientTimeframe = { amount: patientDurationValue, unit: patientUnit };
 
       if (timeframeMatches(criterionTimeframe, patientTimeframe)) {
-        return { matches: true, confidence: 1.0 };
+        return { 
+          matches: true, 
+          confidence: 1.0,
+          patientValue: `Patient duration: ${patientDurationValue} ${patientUnit}`,
+          confidenceReason: `Exact duration comparison. Required: ≥${minDuration} ${minUnit}`
+        };
       }
     }
 
-    return { matches: false, confidence: 0.8 };
+    return { 
+      matches: false, 
+      confidence: 0.8,
+      patientValue: `Patient duration: ${patientDurationValue || 'unknown'} ${patientUnit}`,
+      confidenceReason: `Duration insufficient. Required: ≥${minDuration || 'N/A'} ${minUnit}. 80% due to possible unit conversion issues.`
+    };
   }
 
   /**
@@ -584,17 +769,32 @@ export class ClinicalTrialMatcher {
    */
   #evaluateVariant(criterion, patientVariant) {
     if (!patientVariant) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No variant data provided',
+        confidenceReason: 'Missing patient variant data'
+      };
     }
 
     const variants = criterion.VARIANT_TYPE || [];
     const patientVariantType = patientVariant.variant;
 
     if (variants.includes(patientVariantType)) {
-      return { matches: true, confidence: 1.0 };
+      return { 
+        matches: true, 
+        confidence: 1.0,
+        patientValue: `Patient variant: ${patientVariantType}`,
+        confidenceReason: `Exact variant match. Required: ${variants.join(' or ')}`
+      };
     }
 
-    return { matches: false, confidence: 0.9 };
+    return { 
+      matches: false, 
+      confidence: 0.9,
+      patientValue: `Patient variant: ${patientVariantType || 'unknown'}`,
+      confidenceReason: `Variant mismatch. Required: ${variants.join(' or ')}. 90% confidence in no-match.`
+    };
   }
 
   /**
@@ -602,7 +802,12 @@ export class ClinicalTrialMatcher {
    */
   #evaluateBiomarker(criterion, patientBiomarkers) {
     if (!patientBiomarkers) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No biomarker data provided',
+        confidenceReason: 'Missing patient biomarker data'
+      };
     }
 
     const biomarkerType = criterion.BIOMARKER_TYPE;
@@ -612,11 +817,27 @@ export class ClinicalTrialMatcher {
     if (biomarkerType && patientBiomarkers[biomarkerType]) {
       const patientValue = patientBiomarkers[biomarkerType];
       if (measurementMeetsThreshold(patientValue, threshold, comparison)) {
-        return { matches: true, confidence: 1.0 };
+        return { 
+          matches: true, 
+          confidence: 1.0,
+          patientValue: `${biomarkerType}: ${patientValue}`,
+          confidenceReason: `Exact biomarker comparison. ${biomarkerType} ${patientValue} meets ${comparison} ${threshold}`
+        };
       }
+      return {
+        matches: false,
+        confidence: 0.9,
+        patientValue: `${biomarkerType}: ${patientValue}`,
+        confidenceReason: `Biomarker mismatch. Required: ${biomarkerType} ${comparison} ${threshold}`
+      };
     }
 
-    return { matches: false, confidence: 0.8 };
+    return { 
+      matches: false, 
+      confidence: 0.8,
+      patientValue: `${biomarkerType || 'Biomarker'}: not available`,
+      confidenceReason: `Biomarker not found in patient data. 80% due to missing data.`
+    };
   }
 
   /**
@@ -624,7 +845,12 @@ export class ClinicalTrialMatcher {
    */
   #evaluateFlare(criterion, patientFlare) {
     if (!patientFlare) {
-      return { matches: false, confidence: 0.5 };
+      return { 
+        matches: false, 
+        confidence: 0.5,
+        patientValue: 'No flare history provided',
+        confidenceReason: 'Missing patient flare data'
+      };
     }
 
     const flareCount = criterion.FLARE_COUNT;
@@ -635,15 +861,30 @@ export class ClinicalTrialMatcher {
       if (patientFlareCount >= flareCount) {
         if (timeframe && patientFlare.timeframe) {
           if (timeframeMatches(timeframe, patientFlare.timeframe)) {
-            return { matches: true, confidence: 0.95 };
+            return { 
+              matches: true, 
+              confidence: 0.95,
+              patientValue: `Patient flares: ${patientFlareCount} in ${patientFlare.timeframe.amount || ''} ${patientFlare.timeframe.unit || ''}`,
+              confidenceReason: `Flare count match with timeframe. Required: ≥${flareCount} flares. 95% due to timeframe interpretation.`
+            };
           }
         } else {
-          return { matches: true, confidence: 0.9 };
+          return { 
+            matches: true, 
+            confidence: 0.9,
+            patientValue: `Patient flares: ${patientFlareCount}`,
+            confidenceReason: `Flare count match. Required: ≥${flareCount}. 90% due to missing timeframe.`
+          };
         }
       }
     }
 
-    return { matches: false, confidence: 0.8 };
+    return { 
+      matches: false, 
+      confidence: 0.8,
+      patientValue: `Patient flares: ${patientFlareCount || 'unknown'}`,
+      confidenceReason: `Flare count insufficient. Required: ≥${flareCount || 'N/A'}. 80% due to possible missing data.`
+    };
   }
 }
 

@@ -174,9 +174,26 @@ function generateTextReport(results) {
         if (ruleBased > 0) lines.push(`   • Rule-based matches (70-99%): ${ruleBased}`);
         if (aiMatches > 0) lines.push(`   • AI semantic matches: ${aiMatches}`);
         if (lowConf > 0) lines.push(`   • Low confidence (<70%): ${lowConf}`);
+        
+        // Show non-exact criteria with details
+        const nonExact = trial.matchedCriteria.filter(c => c.confidence < 1.0);
+        if (nonExact.length > 0) {
+          lines.push('');
+          lines.push('   Non-exact match details:');
+          nonExact.forEach((c) => {
+            const text = c.rawText || c.criterionId;
+            const conf = `${(c.confidence * 100).toFixed(0)}%`;
+            const ai = c.requiresAI ? ' [AI]' : '';
+            lines.push(`   ┌─ Criterion: ${text}`);
+            lines.push(`   │  Confidence: ${conf}${ai}`);
+            if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
+            if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+            lines.push(`   └────────────────────────────────────`);
+          });
+        }
       }
+      lines.push('');
     });
-    lines.push('');
   }
   
   // Needs Review Trials
@@ -188,14 +205,16 @@ function generateTextReport(results) {
       if (trial.flaggedCriteria && trial.flaggedCriteria.length > 0) {
         lines.push('   Flagged criteria:');
         trial.flaggedCriteria.forEach((c) => {
-          lines.push(`   • ${c.rawText || c.criterionId}`);
-          if (c.aiReasoning) {
-            lines.push(`     AI: ${c.aiReasoning}`);
-          }
+          lines.push(`   ┌─ Criterion: ${c.rawText || c.criterionId}`);
+          lines.push(`   │  Confidence: ${(c.confidence * 100).toFixed(0)}%${c.requiresAI ? ' [AI]' : ''}`);
+          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
+          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+          if (c.aiReasoning) lines.push(`   │  AI Analysis: ${c.aiReasoning}`);
+          lines.push(`   └────────────────────────────────────`);
         });
       }
+      lines.push('');
     });
-    lines.push('');
   }
   
   // Ineligible Trials with failure reasons
@@ -214,9 +233,13 @@ function generateTextReport(results) {
         lines.push('   ✗ Failed inclusion criteria:');
         failedInclusions.forEach((c) => {
           const text = c.rawText || c.criterionId;
-          const conf = c.confidence ? ` [${(c.confidence * 100).toFixed(0)}% confidence]` : '';
+          const conf = `${(c.confidence * 100).toFixed(0)}%`;
           const ai = c.requiresAI ? ' [AI]' : '';
-          lines.push(`     • ${text}${conf}${ai}`);
+          lines.push(`   ┌─ Criterion: ${text}`);
+          lines.push(`   │  Confidence: ${conf}${ai}`);
+          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
+          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+          lines.push(`   └────────────────────────────────────`);
         });
       }
       
@@ -224,9 +247,13 @@ function generateTextReport(results) {
         lines.push('   ✗ Matched exclusion criteria:');
         matchedExclusions.forEach((c) => {
           const text = c.rawText || c.criterionId;
-          const conf = c.confidence ? ` [${(c.confidence * 100).toFixed(0)}% confidence]` : '';
+          const conf = `${(c.confidence * 100).toFixed(0)}%`;
           const ai = c.requiresAI ? ' [AI]' : '';
-          lines.push(`     • ${text}${conf}${ai}`);
+          lines.push(`   ┌─ Criterion: ${text}`);
+          lines.push(`   │  Confidence: ${conf}${ai}`);
+          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
+          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+          lines.push(`   └────────────────────────────────────`);
         });
       }
       
@@ -564,12 +591,31 @@ function App() {
                         <small>
                           {trial.matchedCriteria?.length || 0} criteria evaluated
                           {trial.matchedCriteria?.filter(c => c.confidence === 1.0).length > 0 && 
-                            ` • ${trial.matchedCriteria.filter(c => c.confidence === 1.0).length} exact matches`}
+                            ` • ${trial.matchedCriteria.filter(c => c.confidence === 1.0).length} exact (100%)`}
                           {trial.matchedCriteria?.filter(c => c.confidence < 1.0 && c.confidence >= 0.7).length > 0 && 
-                            ` • ${trial.matchedCriteria.filter(c => c.confidence < 1.0 && c.confidence >= 0.7).length} rule-based`}
+                            ` • ${trial.matchedCriteria.filter(c => c.confidence < 1.0 && c.confidence >= 0.7).length} rule-based (70-99%)`}
                           {trial.matchedCriteria?.filter(c => c.requiresAI).length > 0 && 
                             ` • ${trial.matchedCriteria.filter(c => c.requiresAI).length} AI-matched`}
                         </small>
+                        {/* Show non-100% criteria with details */}
+                        {trial.matchedCriteria?.filter(c => c.confidence < 1.0).length > 0 && (
+                          <div className="criteria-details">
+                            <small>Non-exact matches:</small>
+                            <ul>
+                              {trial.matchedCriteria.filter(c => c.confidence < 1.0).slice(0, 5).map((c, i) => (
+                                <li key={i} className="criterion-detail">
+                                  <div className="criterion-text">{c.rawText || c.criterionId}</div>
+                                  <div className="criterion-info">
+                                    <span className="criterion-confidence">{(c.confidence * 100).toFixed(0)}%</span>
+                                    {c.requiresAI && <span className="criterion-ai">AI</span>}
+                                  </div>
+                                  {c.patientValue && <div className="patient-value">📋 {c.patientValue}</div>}
+                                  {c.confidenceReason && <div className="confidence-reason">💡 {c.confidenceReason}</div>}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </li>
                   ))}
@@ -594,10 +640,15 @@ function App() {
                           <div className="failed-inclusions">
                             <small>Failed inclusions:</small>
                             <ul>
-                              {trial.getFailedInclusions().slice(0, 3).map((c, i) => (
-                                <li key={i}>
-                                  {c.rawText || c.criterionId}
-                                  <span className="criterion-confidence">({(c.confidence * 100).toFixed(0)}%)</span>
+                              {trial.getFailedInclusions().slice(0, 5).map((c, i) => (
+                                <li key={i} className="criterion-detail">
+                                  <div className="criterion-text">{c.rawText || c.criterionId}</div>
+                                  <div className="criterion-info">
+                                    <span className="criterion-confidence">{(c.confidence * 100).toFixed(0)}%</span>
+                                    {c.requiresAI && <span className="criterion-ai">AI</span>}
+                                  </div>
+                                  {c.patientValue && <div className="patient-value">📋 {c.patientValue}</div>}
+                                  {c.confidenceReason && <div className="confidence-reason">💡 {c.confidenceReason}</div>}
                                 </li>
                               ))}
                             </ul>
@@ -607,10 +658,15 @@ function App() {
                           <div className="matched-exclusions">
                             <small>Matched exclusions:</small>
                             <ul>
-                              {trial.getMatchedExclusions().slice(0, 3).map((c, i) => (
-                                <li key={i}>
-                                  {c.rawText || c.criterionId}
-                                  <span className="criterion-confidence">({(c.confidence * 100).toFixed(0)}%)</span>
+                              {trial.getMatchedExclusions().slice(0, 5).map((c, i) => (
+                                <li key={i} className="criterion-detail">
+                                  <div className="criterion-text">{c.rawText || c.criterionId}</div>
+                                  <div className="criterion-info">
+                                    <span className="criterion-confidence">{(c.confidence * 100).toFixed(0)}%</span>
+                                    {c.requiresAI && <span className="criterion-ai">AI</span>}
+                                  </div>
+                                  {c.patientValue && <div className="patient-value">📋 {c.patientValue}</div>}
+                                  {c.confidenceReason && <div className="confidence-reason">💡 {c.confidenceReason}</div>}
                                 </li>
                               ))}
                             </ul>
