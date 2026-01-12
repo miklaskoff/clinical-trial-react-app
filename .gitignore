@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production
+/build
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+server.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Claude Code
+.claude/
+
+# API Keys (never commit)
+*_api_key.txt
+anthropic_key.txt
+
+# Backup files
+*.backup
+*.bak
+improved_slot_filled_database_backup.json
+
+# Temporary files
+.tmp/
+tmp/
+temp/
+*.tmp
+node_modules
