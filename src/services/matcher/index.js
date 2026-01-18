@@ -15,3 +15,4 @@ export {
   isKnownDrug,
   directStringMatch,
 } from './drugDatabase.js';
+export { AIFallbackHandler } from './AIFallbackHandler.js';

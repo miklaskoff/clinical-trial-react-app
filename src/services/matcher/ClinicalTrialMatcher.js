@@ -11,6 +11,7 @@ import {
   PatientMatchResults,
 } from './results.js';
 import { drugsMatch, drugBelongsToClass, findSynonyms, isKnownDrug, directStringMatch } from './drugDatabase.js';
+import { AIFallbackHandler } from './AIFallbackHandler.js';
 import {
   arraysOverlap,
   timeframeMatches,
@@ -31,6 +32,7 @@ import {
 export class ClinicalTrialMatcher {
   #database;
   #aiClient;
+  #aiFallback;
   #confidenceThresholds;
   #trialIndex;
 
@@ -50,6 +52,15 @@ export class ClinicalTrialMatcher {
     // Initialize AI client if config provided
     if (aiConfig?.apiKey) {
       this.#aiClient = new ClaudeAPIClient(aiConfig.apiKey, aiConfig.model);
+      this.#aiFallback = new AIFallbackHandler({ 
+        claudeClient: this.#aiClient, 
+        enabled: true 
+      });
+    } else {
+      this.#aiFallback = new AIFallbackHandler({ 
+        claudeClient: null, 
+        enabled: false 
+      });
     }
 
     // Build trial index for fast lookup
@@ -511,7 +522,7 @@ export class ClinicalTrialMatcher {
    * Uses 3-step cascade: 1) Database match 2) Direct string match 3) AI fallback
    * Unknown drugs are flagged for admin review
    */
-  #evaluateTreatmentHistory(criterion, patientTreatments) {
+  async #evaluateTreatmentHistory(criterion, patientTreatments) {
     if (!patientTreatments || !Array.isArray(patientTreatments)) {
       return { 
         matches: false, 
@@ -524,6 +535,9 @@ export class ClinicalTrialMatcher {
     const conditions = criterion.conditions || [criterion];
     const criterionDrugs = conditions.map(c => (c.TREATMENT_TYPE || []).join(', ')).join('; ');
     const patientDrugs = patientTreatments.map(t => (t.TREATMENT_TYPE || []).join(', ')).join('; ');
+
+    // Collect unknown drugs for potential AI fallback
+    const unknownDrugsForAI = [];
 
     for (const condition of conditions) {
       for (const patientTreatment of patientTreatments) {
@@ -546,6 +560,7 @@ export class ClinicalTrialMatcher {
                   matches: true, 
                   confidence: 0.95,
                   needsAdminReview: false,
+                  matchMethod: 'database',
                   patientValue: `Patient drug: ${patientDrug}`,
                   confidenceReason: `Database match. "${patientDrug}" matched to "${criterionDrug}" via drug database.`
                 };
@@ -559,6 +574,7 @@ export class ClinicalTrialMatcher {
                 matches: true, 
                 confidence: 0.9,
                 needsAdminReview: false,
+                matchMethod: 'database_class',
                 patientValue: `Patient drug: ${patientDrug}`,
                 confidenceReason: `Drug class match. "${patientDrug}" belongs to class "${drugClass}".`
               };
@@ -589,9 +605,34 @@ export class ClinicalTrialMatcher {
               };
             }
             
-            // STEP 3: AI fallback will be handled separately
-            // For now, mark as potential match needing review if AI is enabled
+            // STEP 3: Collect for AI fallback
+            unknownDrugsForAI.push({
+              patientDrug,
+              treatmentTypes,
+              condition,
+              rawText: criterion.raw_text
+            });
           }
+        }
+      }
+    }
+
+    // STEP 3: AI Fallback - only for unknown drugs that didn't match in steps 1-2
+    if (unknownDrugsForAI.length > 0 && this.#aiFallback.isEnabled()) {
+      for (const { patientDrug, treatmentTypes, rawText } of unknownDrugsForAI) {
+        try {
+          const aiResult = await this.#aiFallback.matchTreatmentHistory(
+            patientDrug,
+            treatmentTypes,
+            rawText,
+            criterion
+          );
+          
+          if (aiResult.matches) {
+            return aiResult;
+          }
+        } catch (error) {
+          console.error('AI fallback error for drug:', patientDrug, error);
         }
       }
     }
