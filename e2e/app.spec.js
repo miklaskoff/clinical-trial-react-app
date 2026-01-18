@@ -143,3 +143,120 @@ test.describe('Results Display', () => {
   });
 
 });
+
+test.describe('Admin Dashboard', () => {
+  
+  test('should navigate to admin page', async ({ page }) => {
+    await page.goto('/admin');
+    
+    // Check admin dashboard is visible
+    await expect(page.locator('.drug-review-dashboard, h1:has-text("Drug Review")')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should display stats section', async ({ page }) => {
+    await page.goto('/admin');
+    
+    // Check stats are visible
+    await expect(page.locator('.stats-section, .stat-card')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should show empty state when no pending reviews', async ({ page }) => {
+    // Clear any existing reviews
+    await page.evaluate(() => {
+      localStorage.removeItem('pendingDrugReviews');
+    });
+    
+    await page.goto('/admin');
+    
+    // Should show "No pending reviews" message or empty state
+    await expect(page.locator('.no-reviews, .empty-state, :has-text("No pending reviews")')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should display pending review when one exists', async ({ page }) => {
+    // Add a mock pending review
+    await page.evaluate(() => {
+      const mockReview = {
+        id: 'test-review-123',
+        patientDrug: 'newdrug123',
+        trialId: 'NCT001',
+        clusterId: 'PTH',
+        aiSuggestion: {
+          drugClass: 'TNF_inhibitors',
+          confidence: 0.85,
+          reasoning: 'Test reasoning'
+        },
+        timestamp: Date.now(),
+        status: 'pending'
+      };
+      localStorage.setItem('pendingDrugReviews', JSON.stringify([mockReview]));
+    });
+    
+    await page.goto('/admin');
+    
+    // Should display the review card
+    await expect(page.locator('.review-card, .drug-review-card')).toBeVisible({ timeout: 5000 });
+    
+    // Should show the drug name
+    await expect(page.locator(':has-text("newdrug123")')).toBeVisible();
+  });
+
+  test('should have approve and reject buttons for pending review', async ({ page }) => {
+    // Add a mock pending review
+    await page.evaluate(() => {
+      const mockReview = {
+        id: 'test-review-456',
+        patientDrug: 'testdrug456',
+        trialId: 'NCT002',
+        clusterId: 'CMB',
+        aiSuggestion: {
+          drugClass: 'IL17_inhibitors',
+          confidence: 0.75,
+          reasoning: 'Test reasoning'
+        },
+        timestamp: Date.now(),
+        status: 'pending'
+      };
+      localStorage.setItem('pendingDrugReviews', JSON.stringify([mockReview]));
+    });
+    
+    await page.goto('/admin');
+    
+    // Should have approve and reject buttons
+    await expect(page.locator('button:has-text("Approve"), button:has-text("approve")')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('button:has-text("Reject"), button:has-text("reject")')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should have navigation link back to main app', async ({ page }) => {
+    await page.goto('/admin');
+    
+    // Should have link to go back to main app
+    const homeLink = page.locator('a[href="/"], a:has-text("Home"), a:has-text("Main"), .nav-link');
+    await expect(homeLink.first()).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should navigate from main app to admin via nav link', async ({ page }) => {
+    await page.goto('/');
+    
+    // Find admin link
+    const adminLink = page.locator('a[href="/admin"], a:has-text("Admin")');
+    
+    if (await adminLink.isVisible()) {
+      await adminLink.click();
+      
+      // Should be on admin page
+      await expect(page).toHaveURL(/\/admin/);
+      await expect(page.locator('.drug-review-dashboard, h1:has-text("Drug Review")')).toBeVisible({ timeout: 5000 });
+    }
+  });
+
+  test('should be responsive on mobile viewport', async ({ page }) => {
+    // Set mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 });
+    
+    await page.goto('/admin');
+    
+    // Dashboard should still be visible and functional
+    await expect(page.locator('.drug-review-dashboard, h1:has-text("Drug Review")')).toBeVisible({ timeout: 5000 });
+  });
+
+});
