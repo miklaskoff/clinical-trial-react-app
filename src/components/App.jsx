@@ -373,7 +373,10 @@ function App() {
     try {
       // Dynamically import matcher to reduce initial bundle size
       const { ClinicalTrialMatcher } = await import('../services/matcher');
-      const database = await import('../data/slot-filled-database.json');
+      
+      // Load the complete database with all 11 clusters (770 criteria, 75 trials)
+      // Includes: AGE, BMI, NPV, CPD, SEV, AAO, AIC, CMB, BIO, FLR, PTH
+      const database = await import('../improved_slot_filled_database.json');
 
       const aiConfig = useAI && apiKey ? { 
         apiKey, 
