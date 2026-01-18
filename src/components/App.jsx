@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import ClinicalTrialEligibilityQuestionnaire from '../ClinicalTrialEligibilityQuestionnaire';
+import DrugReviewDashboard from './Admin/DrugReviewDashboard.jsx';
 import './App.css';
 
 /**
@@ -287,6 +288,7 @@ function App() {
   const [matchResults, setMatchResults] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdminRoute, setIsAdminRoute] = useState(false);
   
   // Confidence thresholds
   const [confidenceThresholds, setConfidenceThresholds] = useState({
@@ -294,6 +296,17 @@ function App() {
     review: 0.5,   // Medium confidence = flag for review
     ignore: 0.3,   // Low confidence = ignore match
   });
+
+  // Check if we're on admin route
+  useEffect(() => {
+    const checkRoute = () => {
+      const path = window.location.pathname;
+      setIsAdminRoute(path === '/admin' || path === '/admin/');
+    };
+    checkRoute();
+    window.addEventListener('popstate', checkRoute);
+    return () => window.removeEventListener('popstate', checkRoute);
+  }, []);
 
   // Load API key from localStorage on mount
   useEffect(() => {
@@ -390,11 +403,34 @@ function App() {
     setError(null);
   }, []);
 
+  // Render admin dashboard if on /admin route
+  if (isAdminRoute) {
+    return (
+      <div className="app">
+        <header className="app-header">
+          <h1>Clinical Trial Matching System</h1>
+          <nav className="app-nav">
+            <a href="/" className="nav-link">← Back to Main App</a>
+          </nav>
+        </header>
+        <main className="app-main">
+          <DrugReviewDashboard />
+        </main>
+        <footer className="app-footer">
+          <p>Clinical Trial Matching System v4.0 - Admin Dashboard</p>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>Clinical Trial Matching System</h1>
         <p className="app-subtitle">AI-powered patient-trial matching</p>
+        <nav className="app-nav">
+          <a href="/admin" className="nav-link admin-link">Admin Dashboard</a>
+        </nav>
       </header>
 
       <main className="app-main">
