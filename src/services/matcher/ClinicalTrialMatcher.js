@@ -796,6 +796,7 @@ export class ClinicalTrialMatcher {
 
   /**
    * Evaluate disease duration criterion
+   * Supports both DURATION_MIN/DURATION_UNIT and TIMEFRAME formats
    */
   #evaluateDuration(criterion, patientDuration) {
     if (!patientDuration) {
@@ -807,13 +808,22 @@ export class ClinicalTrialMatcher {
       };
     }
 
-    const minDuration = criterion.DURATION_MIN;
-    const minUnit = criterion.DURATION_UNIT || 'months';
+    // Support both DURATION_MIN/DURATION_UNIT and TIMEFRAME formats
+    let minDuration, minUnit;
+    if (criterion.TIMEFRAME && criterion.TIMEFRAME.amount !== undefined) {
+      minDuration = criterion.TIMEFRAME.amount;
+      minUnit = criterion.TIMEFRAME.unit || 'months';
+    } else {
+      minDuration = criterion.DURATION_MIN;
+      minUnit = criterion.DURATION_UNIT || 'months';
+    }
+
     const patientDurationValue = patientDuration.duration;
     const patientUnit = patientDuration.unit || 'months';
 
     if (minDuration !== null && minDuration !== undefined && patientDurationValue !== null && patientDurationValue !== undefined) {
-      // Convert both to weeks for comparison
+      // Convert both to weeks for comparison using timeframeMatches
+      // For inclusion criteria: patient duration must be >= criterion minimum
       const criterionTimeframe = { amount: minDuration, unit: minUnit, relation: 'for' };
       const patientTimeframe = { amount: patientDurationValue, unit: patientUnit };
 
@@ -822,7 +832,7 @@ export class ClinicalTrialMatcher {
           matches: true, 
           confidence: 1.0,
           patientValue: `Patient duration: ${patientDurationValue} ${patientUnit}`,
-          confidenceReason: `Exact duration comparison. Required: ≥${minDuration} ${minUnit}`
+          confidenceReason: `Duration meets requirement. Required: ≥${minDuration} ${minUnit}`
         };
       }
     }

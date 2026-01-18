@@ -373,7 +373,7 @@ function App() {
     try {
       // Dynamically import matcher to reduce initial bundle size
       const { ClinicalTrialMatcher } = await import('../services/matcher');
-      const database = await import('../data/trials-database.json');
+      const database = await import('../data/slot-filled-database.json');
 
       const aiConfig = useAI && apiKey ? { 
         apiKey, 
