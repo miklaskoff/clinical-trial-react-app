@@ -12,4 +12,6 @@ export {
   drugsMatch,
   drugBelongsToClass,
   findSynonyms,
+  isKnownDrug,
+  directStringMatch,
 } from './drugDatabase.js';

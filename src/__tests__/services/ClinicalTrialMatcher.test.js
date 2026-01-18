@@ -72,6 +72,29 @@ const mockDatabase = {
         ],
         EXCLUSION_STRENGTH: 'exclusion',
       },
+      {
+        id: 'PTH_002',
+        nct_id: 'NCT003',
+        raw_text: 'Previous participation in a piclidenoson (CF101) clinical trial',
+        conditions: [
+          {
+            TREATMENT_TYPE: ['piclidenoson', 'CF101'],
+            TREATMENT_PATTERN: ['previous participation'],
+          },
+        ],
+        EXCLUSION_STRENGTH: 'mandatory_exclude',
+      },
+      {
+        id: 'PTH_003',
+        nct_id: 'NCT004',
+        raw_text: 'Prior use of experimental drug XYZ-999',
+        conditions: [
+          {
+            TREATMENT_TYPE: ['XYZ-999', 'experimental-xyz'],
+          },
+        ],
+        EXCLUSION_STRENGTH: 'mandatory_exclude',
+      },
     ],
   },
 };
@@ -100,9 +123,11 @@ describe('ClinicalTrialMatcher', () => {
   describe('getAllTrialIds', () => {
     it('should return all unique trial IDs', () => {
       const trialIds = matcher.getAllTrialIds();
-      expect(trialIds.size).toBe(2);
+      expect(trialIds.size).toBe(4);
       expect(trialIds.has('NCT001')).toBe(true);
       expect(trialIds.has('NCT002')).toBe(true);
+      expect(trialIds.has('NCT003')).toBe(true);
+      expect(trialIds.has('NCT004')).toBe(true);
     });
   });
 
@@ -192,7 +217,7 @@ describe('ClinicalTrialMatcher', () => {
 
       const results = await matcher.matchPatient(patientResponse);
 
-      expect(results.getTotalTrialsEvaluated()).toBe(2);
+      expect(results.getTotalTrialsEvaluated()).toBe(4);
     });
 
     it('should categorize results correctly', async () => {
@@ -209,7 +234,7 @@ describe('ClinicalTrialMatcher', () => {
 
       expect(results.eligibleTrials.length + 
              results.ineligibleTrials.length + 
-             results.needsReviewTrials.length).toBe(2);
+             results.needsReviewTrials.length).toBe(4);
     });
 
     it('should sort eligible trials by confidence', async () => {
@@ -283,6 +308,119 @@ describe('ClinicalTrialMatcher', () => {
 
       expect(result.matches).toBe(false);
       expect(result.confidence).toBeLessThan(1.0);
+    });
+  });
+
+  describe('Treatment History Matching - 3-Step Cascade', () => {
+    it('should match piclidenoson via database lookup (known drug)', async () => {
+      const patientResponse = {
+        responses: {
+          AGE: { age: 30 },
+          BMI: { bmi: 24.5 },
+          CMB: [],
+          PTH: [
+            {
+              TREATMENT_TYPE: ['piclidenoson'],
+            },
+          ],
+        },
+      };
+
+      const result = await matcher.evaluateTrial('NCT003', patientResponse);
+
+      expect(result.status).toBe('ineligible');
+      // piclidenoson is now in database, so needsAdminReview should be false
+      const pthCriterion = result.matchedCriteria.find(r => r.criterionId === 'PTH_002');
+      expect(pthCriterion).toBeDefined();
+      expect(pthCriterion.matches).toBe(true);
+      expect(pthCriterion.needsAdminReview).toBe(false);
+    });
+
+    it('should match CF101 (brand name of piclidenoson) via database', async () => {
+      const patientResponse = {
+        responses: {
+          AGE: { age: 30 },
+          BMI: { bmi: 24.5 },
+          CMB: [],
+          PTH: [
+            {
+              TREATMENT_TYPE: ['CF101'],
+            },
+          ],
+        },
+      };
+
+      const result = await matcher.evaluateTrial('NCT003', patientResponse);
+
+      expect(result.status).toBe('ineligible');
+    });
+
+    it('should match unknown drug via direct string match and flag for admin review', async () => {
+      const patientResponse = {
+        responses: {
+          AGE: { age: 30 },
+          BMI: { bmi: 24.5 },
+          CMB: [],
+          PTH: [
+            {
+              TREATMENT_TYPE: ['XYZ-999'], // Not in drug database, but in criterion
+            },
+          ],
+        },
+      };
+
+      const result = await matcher.evaluateTrial('NCT004', patientResponse);
+
+      expect(result.status).toBe('ineligible');
+      const pthCriterion = result.matchedCriteria.find(r => r.criterionId === 'PTH_003');
+      expect(pthCriterion).toBeDefined();
+      expect(pthCriterion.matches).toBe(true);
+      expect(pthCriterion.needsAdminReview).toBe(true);
+      expect(pthCriterion.matchMethod).toBe('direct_unverified');
+    });
+
+    it('should include review payload for unknown drugs', async () => {
+      const patientResponse = {
+        responses: {
+          AGE: { age: 30 },
+          BMI: { bmi: 24.5 },
+          CMB: [],
+          PTH: [
+            {
+              TREATMENT_TYPE: ['experimental-xyz'],
+            },
+          ],
+        },
+      };
+
+      const result = await matcher.evaluateTrial('NCT004', patientResponse);
+
+      const pthCriterion = result.matchedCriteria.find(r => r.criterionId === 'PTH_003');
+      expect(pthCriterion.reviewPayload).toBeDefined();
+      expect(pthCriterion.reviewPayload.drugName).toBe('experimental-xyz');
+      expect(pthCriterion.reviewPayload.criterionId).toBe('PTH_003');
+      expect(pthCriterion.reviewPayload.nctId).toBe('NCT004');
+    });
+
+    it('should not match when drug is not in criterion and not in database', async () => {
+      const patientResponse = {
+        responses: {
+          AGE: { age: 30 },
+          BMI: { bmi: 24.5 },
+          CMB: [],
+          PTH: [
+            {
+              TREATMENT_TYPE: ['completely-unknown-drug-12345'],
+            },
+          ],
+        },
+      };
+
+      const result = await matcher.evaluateTrial('NCT003', patientResponse);
+
+      // Should not match PTH_002 because the drug is neither in DB nor in criterion
+      const pthCriterion = result.matchedCriteria.find(r => r.criterionId === 'PTH_002');
+      expect(pthCriterion.matches).toBe(false);
     });
   });
 });

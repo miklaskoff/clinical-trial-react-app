@@ -166,6 +166,26 @@ export const DRUG_DATABASE = {
     class: 'PDE4 inhibitor',
     isBiologic: false,
   },
+
+  // A3 adenosine receptor agonists (investigational)
+  piclidenoson: {
+    brand: 'CF101',
+    class: 'A3 adenosine receptor agonist',
+    mechanism: 'A3AR agonist',
+    isBiologic: false,
+    isImmunomodulator: true,
+    isInvestigational: true,
+    aliases: ['cf101', 'cf-101'],
+  },
+  cf101: {
+    generic: 'piclidenoson',
+    class: 'A3 adenosine receptor agonist',
+    mechanism: 'A3AR agonist',
+    isBiologic: false,
+    isImmunomodulator: true,
+    isInvestigational: true,
+    aliases: ['piclidenoson', 'cf-101'],
+  },
 };
 
 /**
@@ -247,6 +267,58 @@ export function drugsMatch(drug1, drug2) {
   }
 
   return false;
+}
+
+/**
+ * Check if a drug is known in the database
+ * @param {string} drugName - Drug name to check
+ * @returns {boolean} True if drug exists in DRUG_DATABASE
+ */
+export function isKnownDrug(drugName) {
+  if (!drugName) {
+    return false;
+  }
+  const normalized = drugName.toLowerCase().trim();
+  
+  // Direct lookup
+  if (DRUG_DATABASE[normalized]) {
+    return true;
+  }
+  
+  // Check aliases
+  for (const drug of Object.values(DRUG_DATABASE)) {
+    if (drug.aliases?.some(alias => alias.toLowerCase() === normalized)) {
+      return true;
+    }
+    if (drug.brand?.toLowerCase() === normalized) {
+      return true;
+    }
+    if (drug.generic?.toLowerCase() === normalized) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Direct case-insensitive string match between patient drug and criterion drug list
+ * Use when drug is NOT in database but appears directly in criterion TREATMENT_TYPE
+ * @param {string} patientDrug - Drug name from patient
+ * @param {string[]} criterionDrugs - Array of drug names from criterion TREATMENT_TYPE
+ * @returns {boolean} True if patient drug matches any criterion drug (case-insensitive)
+ */
+export function directStringMatch(patientDrug, criterionDrugs) {
+  if (!patientDrug || !Array.isArray(criterionDrugs)) {
+    return false;
+  }
+  
+  const normalizedPatient = patientDrug.toLowerCase().trim();
+  
+  return criterionDrugs.some(drug => {
+    if (!drug) return false;
+    return drug.toLowerCase().trim() === normalizedPatient;
+  });
 }
 
 /**

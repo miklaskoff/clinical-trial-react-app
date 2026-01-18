@@ -19,6 +19,9 @@ export class CriterionMatchResult {
    * @param {string} [params.rawText=''] - Original criterion text
    * @param {string} [params.patientValue=''] - Patient's value for this criterion
    * @param {string} [params.confidenceReason=''] - Why this confidence was assigned
+   * @param {boolean} [params.needsAdminReview=false] - Whether this needs admin review
+   * @param {string} [params.matchMethod=''] - How match was made (database, direct_unverified, ai_fallback)
+   * @param {Object|null} [params.reviewPayload=null] - Data for admin review
    */
   constructor({
     criterionId,
@@ -31,6 +34,9 @@ export class CriterionMatchResult {
     rawText = '',
     patientValue = '',
     confidenceReason = '',
+    needsAdminReview = false,
+    matchMethod = '',
+    reviewPayload = null,
   }) {
     this.criterionId = criterionId;
     this.nctId = nctId;
@@ -42,6 +48,9 @@ export class CriterionMatchResult {
     this.rawText = rawText;
     this.patientValue = patientValue;
     this.confidenceReason = confidenceReason;
+    this.needsAdminReview = needsAdminReview;
+    this.matchMethod = matchMethod;
+    this.reviewPayload = reviewPayload;
   }
 
   /**
@@ -83,6 +92,9 @@ export class CriterionMatchResult {
       patientValue: this.patientValue,
       confidenceReason: this.confidenceReason,
       causesIneligibility: this.causesIneligibility(),
+      needsAdminReview: this.needsAdminReview,
+      matchMethod: this.matchMethod,
+      reviewPayload: this.reviewPayload,
     };
   }
 }

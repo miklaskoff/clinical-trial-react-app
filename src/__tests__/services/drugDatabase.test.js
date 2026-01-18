@@ -4,6 +4,8 @@ import {
   drugsMatch,
   drugBelongsToClass,
   findSynonyms,
+  isKnownDrug,
+  directStringMatch,
 } from '../../services/matcher/drugDatabase.js';
 
 describe('Drug Database', () => {
@@ -100,6 +102,77 @@ describe('Drug Database', () => {
     it('should handle null/empty input', () => {
       expect(findSynonyms(null)).toEqual([]);
       expect(findSynonyms('')).toEqual([]);
+    });
+  });
+
+  describe('isKnownDrug', () => {
+    it('should return true for known drugs', () => {
+      expect(isKnownDrug('humira')).toBe(true);
+      expect(isKnownDrug('adalimumab')).toBe(true);
+      expect(isKnownDrug('cosentyx')).toBe(true);
+    });
+
+    it('should return true for piclidenoson', () => {
+      expect(isKnownDrug('piclidenoson')).toBe(true);
+      expect(isKnownDrug('CF101')).toBe(true);
+      expect(isKnownDrug('cf101')).toBe(true);
+    });
+
+    it('should be case-insensitive', () => {
+      expect(isKnownDrug('HUMIRA')).toBe(true);
+      expect(isKnownDrug('Humira')).toBe(true);
+      expect(isKnownDrug('PICLIDENOSON')).toBe(true);
+    });
+
+    it('should return false for unknown drugs', () => {
+      expect(isKnownDrug('unknowndrug123')).toBe(false);
+      expect(isKnownDrug('xyz-medicine')).toBe(false);
+    });
+
+    it('should handle null/empty input', () => {
+      expect(isKnownDrug(null)).toBe(false);
+      expect(isKnownDrug('')).toBe(false);
+      expect(isKnownDrug(undefined)).toBe(false);
+    });
+
+    it('should find drugs by alias', () => {
+      // methotrexate has alias 'mtx'
+      expect(isKnownDrug('mtx')).toBe(true);
+    });
+  });
+
+  describe('directStringMatch', () => {
+    it('should match exact drug name case-insensitively', () => {
+      expect(directStringMatch('piclidenoson', ['piclidenoson', 'CF101'])).toBe(true);
+      expect(directStringMatch('Piclidenoson', ['piclidenoson', 'CF101'])).toBe(true);
+      expect(directStringMatch('PICLIDENOSON', ['piclidenoson', 'CF101'])).toBe(true);
+    });
+
+    it('should match CF101 variant', () => {
+      expect(directStringMatch('CF101', ['piclidenoson', 'CF101'])).toBe(true);
+      expect(directStringMatch('cf101', ['piclidenoson', 'CF101'])).toBe(true);
+    });
+
+    it('should return false for non-matching drugs', () => {
+      expect(directStringMatch('aspirin', ['piclidenoson', 'CF101'])).toBe(false);
+      expect(directStringMatch('humira', ['piclidenoson', 'CF101'])).toBe(false);
+    });
+
+    it('should handle whitespace', () => {
+      expect(directStringMatch('  piclidenoson  ', ['piclidenoson', 'CF101'])).toBe(true);
+      expect(directStringMatch('piclidenoson', ['  piclidenoson  ', 'CF101'])).toBe(true);
+    });
+
+    it('should handle null/empty input', () => {
+      expect(directStringMatch(null, ['piclidenoson'])).toBe(false);
+      expect(directStringMatch('piclidenoson', null)).toBe(false);
+      expect(directStringMatch('', ['piclidenoson'])).toBe(false);
+      expect(directStringMatch('piclidenoson', [])).toBe(false);
+    });
+
+    it('should handle array with null/undefined elements', () => {
+      expect(directStringMatch('piclidenoson', [null, 'piclidenoson', undefined])).toBe(true);
+      expect(directStringMatch('other', [null, undefined])).toBe(false);
     });
   });
 });

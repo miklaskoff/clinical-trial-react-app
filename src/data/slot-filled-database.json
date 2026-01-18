@@ -1,0 +1,1694 @@
+﻿{
+  "metadata": {
+    "project": "Clinical Trial Eligibility Questionnaire",
+    "version": "2.0_improved",
+    "created_date": "2026-01-10",
+    "last_updated": "2026-01-10",
+    "total_criteria": 403,
+    "total_clusters": 9,
+    "clusters": [
+      {
+        "code": "CMB",
+        "name": "Comorbid Conditions and Risk Factors",
+        "count": 45,
+        "primary_question": "Do you have any other diseases?"
+      },
+      {
+        "code": "PTH",
+        "name": "Psoriasis Treatment History and Restrictions",
+        "count": 30,
+        "primary_question": "Have you ever received any treatment for your disease?"
+      },
+      {
+        "code": "AIC",
+        "name": "Active Infection History Criteria",
+        "count": 84,
+        "primary_question": "Were you diagnosed with any infectious diseases (excluding seasonal flu)?"
+      },
+      {
+        "code": "AAO",
+        "name": "Affected Area and Organs",
+        "count": 66,
+        "primary_question": "How much of your body is affected?"
+      },
+      {
+        "code": "AGE",
+        "name": "Age-Based Eligibility Criteria",
+        "count": 71,
+        "primary_question": "How old are you?"
+      },
+      {
+        "code": "NPV",
+        "name": "Non-Plaque Psoriasis Variants",
+        "count": 32,
+        "primary_question": "What form of psoriasis do you have?"
+      },
+      {
+        "code": "CPD",
+        "name": "Chronic Plaque Psoriasis Duration Criteria",
+        "count": 28,
+        "primary_question": "How long have you had psoriasis or psoriatic arthritis?"
+      },
+      {
+        "code": "SEV",
+        "name": "Severity Scores",
+        "count": 22,
+        "primary_question": "Do you have illness severity scores in your medical records?"
+      },
+      {
+        "code": "BMI",
+        "name": "Weight and Body Mass Index Criteria",
+        "count": 25,
+        "primary_question": "What is your weight and height?"
+      }
+    ]
+  },
+
+
+  "CLUSTER_1_COMORBID_CONDITIONS": {
+    "cluster_name": "Comorbid Conditions and Risk Factors",
+    "cluster_code": "CMB",
+    "total_criteria": 45,
+    "primary_question": "Do you have any other diseases?",
+    "answer_type": "autocomplete",
+    "criteria": [
+      {
+        "id": "CMB_001",
+        "nct_id": "NCT06170840",
+        "raw_text": "Patients with psychoneuro-related diseases or history (such as depression, epilepsy), which affect medication compliance or the researcher's clinical judgment of suicide risk",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["psychoneuro-related disease", "depression", "epilepsy"],
+            "CONDITION_PATTERN": ["current", "history"],
+            "SEVERITY": "affects medication compliance OR suicide risk",
+            "ANATOMICAL_LOCATION": ["neuropsychiatric"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["affects medication compliance", "suicide risk assessment required"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_002",
+        "nct_id": "NCT06170840",
+        "raw_text": "Known malignant tumors or history of malignant tumors (excluding clinically cured skin basal cell carcinoma, skin squamous cell carcinoma, cervical carcinoma in situ)",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["malignant tumor", "cancer"],
+            "CONDITION_PATTERN": ["known", "history"],
+            "SEVERITY": "malignant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": {
+              "excluded_types": [
+                "basal cell carcinoma",
+                "squamous cell carcinoma",
+                "cervical carcinoma in situ"
+              ],
+              "condition": "clinically cured",
+              "anatomical_location": ["skin", "cervix"],
+              "makes_eligible": true
+            }
+          }
+        ],
+        "EXCLUSION_STRENGTH": "conditional_exclude"
+      },
+      {
+        "id": "CMB_003",
+        "nct_id": "NCT06170840",
+        "raw_text": "Peripheral artery disease diagnosed by angiography with stroke (ischemic or hemorrhagic, including transient ischemic attack) should be excluded",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["peripheral artery disease", "stroke"],
+            "CONDITION_PATTERN": ["diagnosed"],
+            "SEVERITY": "none_specified",
+            "STROKE_SUBTYPES": ["ischemic", "hemorrhagic", "transient ischemic attack"],
+            "ANATOMICAL_LOCATION": ["peripheral arteries", "brain"],
+            "TIMEFRAME": null,
+            "DIAGNOSTIC_METHOD": "angiography",
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "AND",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_004",
+        "nct_id": "NCT06170840",
+        "raw_text": "Hospitalization due to cardiovascular events, cardiovascular disease or cardiovascular surgery",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["cardiovascular event", "cardiovascular disease", "cardiovascular surgery"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "requiring hospitalization",
+            "ANATOMICAL_LOCATION": ["cardiovascular"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": ["hospitalization"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "AMBIGUITY_FLAG": true,
+        "AMBIGUITY_NOTE": "Timeframe not specified - unclear if any history or recent history"
+      },
+      {
+        "id": "CMB_005",
+        "nct_id": "NCT06170840",
+        "raw_text": "There are severe arrhythmias that require medication or cardiac assistance, such as degree II type 2 or degree III atrioventricular block, long QT Interval, or long QT block",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["arrhythmia", "atrioventricular block", "long QT syndrome"],
+            "CONDITION_PATTERN": ["current"],
+            "SEVERITY": "severe",
+            "SEVERITY_CLASSIFICATION": ["degree II type 2 AV block", "degree III AV block"],
+            "ANATOMICAL_LOCATION": ["cardiac"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": ["medication", "cardiac assistance"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_006",
+        "nct_id": "NCT06170840",
+        "raw_text": "History of unstable angina pectoris, myocardial infarction, coronary artery bypass grafting or coronary stent implantation",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["unstable angina", "myocardial infarction", "CABG", "coronary stent"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "unstable",
+            "ANATOMICAL_LOCATION": ["cardiac", "coronary arteries"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "AMBIGUITY_FLAG": true,
+        "AMBIGUITY_NOTE": "Timeframe not specified - any history vs recent history unclear"
+      },
+      {
+        "id": "CMB_007",
+        "nct_id": "NCT06170840",
+        "raw_text": "The presence of decompensated cardiac insufficiency (New York Heart Disease Association (NYHA) class III or IV) within 6 months prior to screening",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["cardiac insufficiency", "heart failure"],
+            "CONDITION_PATTERN": ["presence"],
+            "SEVERITY": "decompensated",
+            "SEViERITY_CLASSIFICATION": "NYHA Class III OR IV",
+            "ANATOMICAL_LOCATION": ["cardiac"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 6,
+              "unit": "months",
+              "reference": "screening"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_008",
+        "nct_id": "NCT06170840",
+        "raw_text": "The presence of other systemic autoimmune inflammatory diseases and skin lesions (such as eczema), which may affect the evaluation of treatment outcomes",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["systemic autoimmune disease", "inflammatory disease", "eczema"],
+            "CONDITION_PATTERN": ["presence"],
+            "SEVERITY": "affects treatment evaluation",
+            "ANATOMICAL_LOCATION": ["systemic", "skin"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["affects treatment evaluation"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_009",
+        "nct_id": "NCT06643260",
+        "raw_text": "Significant acute or chronic medical or psychiatric illness that could compromise subject safety, limit the subject's ability to complete the study, and/or compromise the objectives of the study",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["medical illness", "psychiatric illness"],
+            "CONDITION_PATTERN": ["acute", "chronic"],
+            "SEVERITY": "significant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["compromises safety", "limits study completion", "compromises objectives"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_010",
+        "nct_id": "NCT06643260",
+        "raw_text": "Any significant/uncontrolled neuropsychiatric illness judged as clinically significant by the investigator during screening or at Day 1, or any lifetime history of suicidal ideation, suicidal behavior, or suicidal attempts",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["neuropsychiatric illness"],
+            "CONDITION_PATTERN": ["current"],
+            "SEVERITY": "significant OR uncontrolled",
+            "ANATOMICAL_LOCATION": ["neuropsychiatric"],
+            "TIMEFRAME": {
+              "relation": "at",
+              "reference": "screening OR Day 1"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          },
+          {
+            "CONDITION_TYPE": ["suicidal ideation", "suicidal behavior", "suicidal attempts"],
+            "CONDITION_PATTERN": ["lifetime history"],
+            "SEVERITY": "any",
+            "ANATOMICAL_LOCATION": ["psychiatric"],
+            "TIMEFRAME": {
+              "relation": "lifetime"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_011",
+        "nct_id": "NCT06643260",
+        "raw_text": "Active gastrointestinal disease which could interfere with the absorption of oral medication",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["gastrointestinal disease"],
+            "CONDITION_PATTERN": ["active"],
+            "SEVERITY": "interferes with medication absorption",
+            "ANATOMICAL_LOCATION": ["gastrointestinal"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": null,
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["interferes with medication absorption"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_012",
+        "nct_id": "NCT06643260",
+        "raw_text": "A condition which increases proarrhythmic risk, including hypokalemia, hypomagnesemia, or congenital Long QT Syndrome",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["hypokalemia", "hypomagnesemia", "congenital Long QT Syndrome"],
+            "CONDITION_PATTERN": ["current"],
+            "SEVERITY": "increases proarrhythmic risk",
+            "ANATOMICAL_LOCATION": ["cardiac", "electrolyte"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["increases proarrhythmic risk"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_013",
+        "nct_id": "NCT06380153",
+        "raw_text": "History of epileptic seizures",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["epileptic seizures"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["neurological"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": null,
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_014",
+        "nct_id": "NCT06380153",
+        "raw_text": "History of severe gastrointestinal diseases or digestive system surgery within 3 months before screening",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["gastrointestinal disease", "digestive system surgery"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "severe",
+            "ANATOMICAL_LOCATION": ["gastrointestinal", "digestive system"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 3,
+              "unit": "months",
+              "reference": "screening"
+            },
+            "TREATMENT_REQUIREMENT": ["surgery"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_015",
+        "nct_id": "NCT06380153",
+        "raw_text": "History of depression or suicidal tendencies",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["depression", "suicidal tendencies"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["psychiatric"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_016",
+        "nct_id": "NCT06380153",
+        "raw_text": "History of myocardial infarction or other specified cardiovascular events in the 6 months prior to study entry",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["myocardial infarction", "cardiovascular event"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["cardiac", "cardiovascular"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 6,
+              "unit": "months",
+              "reference": "study entry"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_017",
+        "nct_id": "NCT06380153",
+        "raw_text": "Serious acute or chronic diseases of other vital organs within 1 year prior to screening",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["vital organ disease"],
+            "CONDITION_PATTERN": ["acute", "chronic"],
+            "SEVERITY": "serious",
+            "ANATOMICAL_LOCATION": ["vital organs"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 1,
+              "unit": "year",
+              "reference": "screening"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_018",
+        "nct_id": "NCT06380153",
+        "raw_text": "History of obstructive urinary tract diseases",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["obstructive urinary tract disease"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["urinary tract"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": null,
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_019",
+        "nct_id": "NCT06380153",
+        "raw_text": "History of urinary incontinence or anuria",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["urinary incontinence", "anuria"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["urinary"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_020",
+        "nct_id": "NCT06380153",
+        "raw_text": "History of acute kidney failure, kidney transplantation, or need for kidney transplantation or dialysis during the planned trial period",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["acute kidney failure", "kidney transplantation"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["kidney"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": ["transplantation"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          },
+          {
+            "CONDITION_TYPE": ["kidney transplantation", "dialysis"],
+            "CONDITION_PATTERN": ["planned need"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["kidney"],
+            "TIMEFRAME": {
+              "relation": "during",
+              "reference": "trial period"
+            },
+            "TREATMENT_REQUIREMENT": ["transplantation", "dialysis"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_021",
+        "nct_id": "NCT06610890",
+        "raw_text": "Mechanical operators engaged in high-altitude work, motor vehicle driving and other dangerous operations",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["occupational hazard"],
+            "CONDITION_PATTERN": ["current"],
+            "SEVERITY": "dangerous operations",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "OCCUPATIONAL_TYPES": ["high-altitude work", "motor vehicle driving", "dangerous operations"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_022",
+        "nct_id": "NCT06610890",
+        "raw_text": "Patients with a history of asthma or seizures",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["asthma", "seizures"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["respiratory", "neurological"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_023",
+        "nct_id": "NCT06610890",
+        "raw_text": "Patients with clinically significant major diseases or major surgical procedures within 3 months before the trial",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["major disease", "major surgical procedure"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "clinically significant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 3,
+              "unit": "months",
+              "reference": "trial start"
+            },
+            "TREATMENT_REQUIREMENT": ["major surgery"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_024",
+        "nct_id": "NCT06610890",
+        "raw_text": "A history of vomiting, diarrhea, or any physiological condition that could interfere with the test results within 7 days before the test",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["vomiting", "diarrhea", "physiological condition"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "interferes with test results",
+            "ANATOMICAL_LOCATION": ["gastrointestinal"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 7,
+              "unit": "days",
+              "reference": "test"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["interferes with test results"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_025",
+        "nct_id": "NCT06610890",
+        "raw_text": "Patients with any disease that increases the risk of bleeding, such as active or previous history of gastrointestinal ulcer, gastrointestinal bleeding or perforation, ulcerative colitis, or intracranial hemorrhage",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["gastrointestinal ulcer", "gastrointestinal bleeding", "gastrointestinal perforation", "ulcerative colitis", "intracranial hemorrhage"],
+            "CONDITION_PATTERN": ["active", "history"],
+            "SEVERITY": "increases bleeding risk",
+            "ANATOMICAL_LOCATION": ["gastrointestinal", "intracranial"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["increases bleeding risk"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_026",
+        "nct_id": "NCT06610890",
+        "raw_text": "Patients with abnormal clinical manifestations that need to be excluded, including diseases of the nervous system, cardiovascular system, blood and lymphatic system, immune system, kidney, liver, gastrointestinal system, respiratory system, metabolic system, skeletal system and other systems",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["nervous system disease", "cardiovascular disease", "hematological disease", "lymphatic disease", "immune system disease", "kidney disease", "liver disease", "gastrointestinal disease", "respiratory disease", "metabolic disease", "skeletal disease"],
+            "CONDITION_PATTERN": ["abnormal clinical manifestations"],
+            "SEVERITY": "requires exclusion",
+            "ANATOMICAL_LOCATION": ["nervous", "cardiovascular", "hematological", "lymphatic", "immune", "kidney", "liver", "gastrointestinal", "respiratory", "metabolic", "skeletal"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_027",
+        "nct_id": "NCT06477237",
+        "raw_text": "Previously diagnosed with serious mental illness such as anxiety, depression or suicidal tendency",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["anxiety", "depression", "suicidal tendency"],
+            "CONDITION_PATTERN": ["previously diagnosed"],
+            "SEVERITY": "serious",
+            "ANATOMICAL_LOCATION": ["psychiatric"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_028",
+        "nct_id": "NCT06477237",
+        "raw_text": "A history of inflammatory bowel disease or other serious autoimmune disease",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["inflammatory bowel disease", "autoimmune disease"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "serious",
+            "ANATOMICAL_LOCATION": ["gastrointestinal", "systemic"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_029",
+        "nct_id": "NCT06648772",
+        "raw_text": "Any serious disease or medical measure, physical or mental condition that will affect the subject's participation in the trial or pose a significant risk or effect to the subject",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["serious disease", "physical condition", "mental condition"],
+            "CONDITION_PATTERN": ["current"],
+            "SEVERITY": "serious OR significant risk",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["affects trial participation", "poses significant risk"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_030",
+        "nct_id": "NCT06648772",
+        "raw_text": "Cancer (except for non-melanoma skin cancer, localized prostate cancer, ductal carcinoma in situ, stage I uterine cancer, cervical carcinoma in situ, or breast carcinoma in situ that have been treated with curative therapy) within 5 years before the first dose of this study",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["cancer"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "malignant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 5,
+              "unit": "years",
+              "reference": "first dose"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": null,
+            "EXCEPTION_CONDITION": {
+              "excluded_types": [
+                "non-melanoma skin cancer",
+                "localized prostate cancer",
+                "ductal carcinoma in situ",
+                "stage I uterine cancer",
+                "cervical carcinoma in situ",
+                "breast carcinoma in situ"
+              ],
+              "condition": "treated with curative therapy",
+              "makes_eligible": true
+            }
+          }
+        ],
+        "EXCLUSION_STRENGTH": "conditional_exclude"
+      },
+      {
+        "id": "CMB_031",
+        "nct_id": "NCT06648772",
+        "raw_text": "Have undergone a major surgery within 4 weeks prior to the first dose of this study or plan to undergo a major surgery during the study",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["major surgery"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "major",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 4,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "TREATMENT_REQUIREMENT": ["major surgery"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          },
+          {
+            "CONDITION_TYPE": ["major surgery"],
+            "CONDITION_PATTERN": ["planned"],
+            "SEVERITY": "major",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "during",
+              "reference": "study period"
+            },
+            "TREATMENT_REQUIREMENT": ["major surgery"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_032",
+        "nct_id": "NCT06648772",
+        "raw_text": "History of major depressive disorder, suicidality, or suicidal tendency suggested by the C-SSRS at baseline or screening",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["major depressive disorder", "suicidality", "suicidal tendency"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "major",
+            "ANATOMICAL_LOCATION": ["psychiatric"],
+            "TIMEFRAME": {
+              "relation": "at",
+              "reference": "baseline OR screening"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "DIAGNOSTIC_METHOD": "C-SSRS",
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_033",
+        "nct_id": "NCT07013201",
+        "raw_text": "Any clinically significant abnormal finding occurring during the screening period and/or observed at the baseline visit that may put the participant at risk due to their participation in the trial or could influence the participant's ability to complete the trial",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["abnormal finding"],
+            "CONDITION_PATTERN": ["observed"],
+            "SEVERITY": "clinically significant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "during OR at",
+              "reference": "screening period OR baseline"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["puts participant at risk", "influences ability to complete trial"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_034",
+        "nct_id": "NCT07013201",
+        "raw_text": "Any disorder that is not stable and could affect the safety of the participant throughout the trial or impede the participant's ability to complete the trial",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["any disorder"],
+            "CONDITION_PATTERN": ["unstable"],
+            "SEVERITY": "affects safety OR completion",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["affects safety", "impedes completion"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_035",
+        "nct_id": "NCT07013201",
+        "raw_text": "Any documented active or suspected malignancy, or history of malignancy within 5 years prior to screening, except basal cell carcinoma of the skin, localized squamous cell carcinoma of the skin, or in situ carcinoma of the cervix appropriately treated before the baseline visit",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["malignancy", "cancer"],
+            "CONDITION_PATTERN": ["active", "suspected", "history"],
+            "SEVERITY": "malignant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 5,
+              "unit": "years",
+              "reference": "screening"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": {
+              "excluded_types": [
+                "basal cell carcinoma",
+                "localized squamous cell carcinoma",
+                "cervical carcinoma in situ"
+              ],
+              "condition": "appropriately treated before baseline",
+              "anatomical_location": ["skin", "cervix"],
+              "makes_eligible": true
+            }
+          }
+        ],
+        "EXCLUSION_STRENGTH": "conditional_exclude"
+      },
+      {
+        "id": "CMB_036",
+        "nct_id": "NCT07013201",
+        "raw_text": "Major surgery within 8 weeks prior to screening or planned in-patient surgery or hospitalisation during the trial period",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["major surgery"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "major",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 8,
+              "unit": "weeks",
+              "reference": "screening"
+            },
+            "TREATMENT_REQUIREMENT": ["major surgery"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          },
+          {
+            "CONDITION_TYPE": ["in-patient surgery", "hospitalization"],
+            "CONDITION_PATTERN": ["planned"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "during",
+              "reference": "trial period"
+            },
+            "TREATMENT_REQUIREMENT": ["surgery", "hospitalization"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_037",
+        "nct_id": "NCT06628206",
+        "raw_text": "Subject has any clinically significant finding on 12-lead ECG at screening or admission",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["ECG abnormality"],
+            "CONDITION_PATTERN": ["observed"],
+            "SEVERITY": "clinically significant",
+            "ANATOMICAL_LOCATION": ["cardiac"],
+            "TIMEFRAME": {
+              "relation": "at",
+              "reference": "screening OR admission"
+            },
+            "DIAGNOSTIC_METHOD": "12-lead ECG",
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": null,
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_038",
+        "nct_id": "NCT06628206",
+        "raw_text": "Any known history of a rheumatologic, autoimmune or cutaneous disease other than rheumatoid arthritis or psoriatic arthritis",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["rheumatologic disease", "autoimmune disease", "cutaneous disease"],
+            "CONDITION_PATTERN": ["known history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": ["systemic", "skin"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": {
+              "excluded_types": ["rheumatoid arthritis", "psoriatic arthritis"],
+              "makes_eligible": true
+            }
+          }
+        ],
+        "EXCLUSION_STRENGTH": "conditional_exclude"
+      },
+      {
+        "id": "CMB_039",
+        "nct_id": "NCT06628206",
+        "raw_text": "Any known history of malignancy within 5 years other than completely treated non-metastatic basal cell carcinomas or squamous cell carcinomas of the skin or localized carcinoma in situ of the cervix",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["malignancy"],
+            "CONDITION_PATTERN": ["known history"],
+            "SEVERITY": "malignant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 5,
+              "unit": "years"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": null,
+            "EXCEPTION_CONDITION": {
+              "excluded_types": [
+                "non-metastatic basal cell carcinoma",
+                "non-metastatic squamous cell carcinoma",
+                "localized cervical carcinoma in situ"
+              ],
+              "condition": "completely treated",
+              "anatomical_location": ["skin", "cervix"],
+              "makes_eligible": true
+            }
+          }
+        ],
+        "EXCLUSION_STRENGTH": "conditional_exclude"
+      },
+      {
+        "id": "CMB_040",
+        "nct_id": "NCT06628206",
+        "raw_text": "History of clinically significant medical conditions or any other reason that in the opinion of the PI would interfere with subject's participation in this study",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["medical condition"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "clinically significant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["interferes with study participation"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_041",
+        "nct_id": "NCT07038720",
+        "raw_text": "Subject with symptoms of uninduced diarrhea within 3 months prior to screening",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["diarrhea"],
+            "CONDITION_PATTERN": ["symptoms"],
+            "SEVERITY": "uninduced",
+            "ANATOMICAL_LOCATION": ["gastrointestinal"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 3,
+              "unit": "months",
+              "reference": "screening"
+            },
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": null,
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_042",
+        "nct_id": "NCT07038720",
+        "raw_text": "Subject with structural abnormalities of the digestive tract, or previous history of gastrointestinal disease or current clinically significant gastrointestinal disease",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["digestive tract structural abnormality", "gastrointestinal disease"],
+            "CONDITION_PATTERN": ["current", "history"],
+            "SEVERITY": "clinically significant",
+            "ANATOMICAL_LOCATION": ["digestive tract", "gastrointestinal"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_043",
+        "nct_id": "NCT07038720",
+        "raw_text": "History of abdominal surgery affecting the structure and function of the digestive tract",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["abdominal surgery"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "affects digestive tract structure/function",
+            "ANATOMICAL_LOCATION": ["abdomen", "digestive tract"],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": ["surgery"],
+            "LOGICAL_OPERATOR": null,
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["affects digestive tract structure", "affects digestive tract function"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "CMB_044",
+        "nct_id": "NCT07038720",
+        "raw_text": "Subject with previous severe or current chronic diseases of clinical significance, or any other diseases or medical conditions that may affect the study or pose an unacceptable risk to the subject",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["chronic disease", "medical condition"],
+            "CONDITION_PATTERN": ["previous", "current"],
+            "SEVERITY": "severe OR clinically significant",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": null,
+            "TREATMENT_REQUIREMENT": [],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null,
+            "IMPACT": ["affects study", "poses unacceptable risk"]
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "REQUIRES_CLINICAL_JUDGMENT": true
+      },
+      {
+        "id": "CMB_045",
+        "nct_id": "NCT07038720",
+        "raw_text": "Has undergone any surgery in the 3 months prior to screening, or planned to undergo surgery during the study period",
+        "conditions": [
+          {
+            "CONDITION_TYPE": ["any surgery"],
+            "CONDITION_PATTERN": ["history"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 3,
+              "unit": "months",
+              "reference": "screening"
+            },
+            "TREATMENT_REQUIREMENT": ["surgery"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          },
+          {
+            "CONDITION_TYPE": ["any surgery"],
+            "CONDITION_PATTERN": ["planned"],
+            "SEVERITY": "none_specified",
+            "ANATOMICAL_LOCATION": [],
+            "TIMEFRAME": {
+              "relation": "during",
+              "reference": "study period"
+            },
+            "TREATMENT_REQUIREMENT": ["surgery"],
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      }
+    ]
+  },
+
+
+  "CLUSTER_2_TREATMENT_HISTORY": {
+    "cluster_name": "Psoriasis Treatment History and Restrictions",
+    "cluster_code": "PTH",
+    "total_criteria": 30,
+    "primary_question": "Have you ever received any treatment for your disease?",
+    "answer_type": "autocomplete",
+    "criteria": [
+      {
+        "id": "PTH_001",
+        "nct_id": "NCT06170840",
+        "raw_text": "Subjects who are expected to receive additional local therapy, phototherapy, or other systemic therapy other than investigational medication during the trial",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["local therapy", "phototherapy", "systemic therapy"],
+            "TREATMENT_PATTERN": ["expected to receive"],
+            "TIMEFRAME": {
+              "relation": "during",
+              "reference": "trial"
+            },
+            "EXCEPTION": "excluding investigational medication",
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_002",
+        "nct_id": "NCT06643260",
+        "raw_text": "Previous participation in a piclidenoson (CF101) clinical trial",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["piclidenoson", "CF101"],
+            "TREATMENT_PATTERN": ["previous participation"],
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_003",
+        "nct_id": "NCT06643260",
+        "raw_text": "Ongoing or planned use of a concomitant medication that is on the CredibleMeds list of drugs known to cause Torsades des Pointes",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["concomitant medication"],
+            "TREATMENT_PATTERN": ["ongoing", "planned"],
+            "SAFETY_CONCERN": "causes Torsades des Pointes",
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_004",
+        "nct_id": "NCT06610890",
+        "raw_text": "Consuming any foods or drinks rich in caffeine/xanthine or other special ingredients from screening to -2 days of admission, or unable to stop eating the above foods or drinks during the trial",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["caffeine-rich foods", "xanthine-rich foods"],
+            "TREATMENT_PATTERN": ["consuming", "unable to stop"],
+            "TIMEFRAME": {
+              "relation": "from screening to -2 days of admission",
+              "reference": "screening"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_005",
+        "nct_id": "NCT07219420",
+        "raw_text": "Is taking or has ever taken an interleukin 17A/17F inhibitor or has participated in a bimekizumab investigational study",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["IL-17A inhibitor", "IL-17F inhibitor", "bimekizumab"],
+            "TREATMENT_PATTERN": ["currently taking", "ever taken", "participated in study"],
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_006",
+        "nct_id": "NCT07219420",
+        "raw_text": "Is taking or has taken prohibited or restricted medications without meeting the mandatory discontinuation or stability period relative to the Baseline Visit",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["prohibited medication", "restricted medication"],
+            "TREATMENT_PATTERN": ["currently taking", "recently taken"],
+            "WASHOUT_REQUIREMENT": "mandatory discontinuation or stability period",
+            "TIMEFRAME": {
+              "relation": "before",
+              "reference": "Baseline Visit"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_007",
+        "nct_id": "NCT06477237",
+        "raw_text": "Ongoing use of prohibited treatments",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["prohibited treatment"],
+            "TREATMENT_PATTERN": ["ongoing use"],
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_008",
+        "nct_id": "NCT06648772",
+        "raw_text": "Planned initiation or change in the use of an existing medication that can affect the efficacy evaluation for psoriasis",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["medication affecting psoriasis evaluation"],
+            "TREATMENT_PATTERN": ["planned initiation", "planned change"],
+            "TIMEFRAME": {
+              "relation": "during",
+              "reference": "study period"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_009",
+        "nct_id": "NCT06648772",
+        "raw_text": "Prior use of etanercept within 4 weeks before the first dose of this study, or use of adalimumab and/or infliximab within 8 weeks before the first dose of this study, or prior use of another biologic within 12 weeks before the first dose of this study",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["etanercept"],
+            "TREATMENT_PATTERN": ["prior use"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 4,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          },
+          {
+            "TREATMENT_TYPE": ["adalimumab", "infliximab"],
+            "TREATMENT_PATTERN": ["prior use"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 8,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          },
+          {
+            "TREATMENT_TYPE": ["other biologic"],
+            "TREATMENT_PATTERN": ["prior use"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 12,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_010",
+        "nct_id": "NCT07013201",
+        "raw_text": "Previously randomised in a clinical trial with delgocitinib",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["delgocitinib"],
+            "TREATMENT_PATTERN": ["previously randomised"],
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_011",
+        "nct_id": "NCT07013201",
+        "raw_text": "Treatment with any non-marketed drug substance within the last 4 weeks prior to baseline or 5 half-lives, whichever is longer",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["non-marketed drug substance"],
+            "TREATMENT_PATTERN": ["treatment"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 4,
+              "unit": "weeks",
+              "reference": "baseline",
+              "alternative": "5 half-lives, whichever is longer"
+            },
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_012",
+        "nct_id": "NCT07013201",
+        "raw_text": "Treatment with any marketed biological therapy or investigational biologic agents within specified timeframes prior to baseline",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["marketed biological therapy", "investigational biologic"],
+            "TREATMENT_PATTERN": ["treatment"],
+            "TIMEFRAME": {
+              "relation": "within specified timeframes",
+              "reference": "baseline"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "AMBIGUITY_FLAG": true,
+        "AMBIGUITY_NOTE": "Specified timeframes not detailed in raw text"
+      },
+      {
+        "id": "PTH_013",
+        "nct_id": "NCT06628206",
+        "raw_text": "Receipt of excluded therapies including cell depleting therapy, prior tsDMARDs, prior immunomodulatory bDMARDs, or other conventional DMARDs within less than 5 half-lives prior to screening visit",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["cell depleting therapy", "tsDMARDs", "immunomodulatory bDMARDs", "conventional DMARDs"],
+            "TREATMENT_PATTERN": ["receipt"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": "less than 5 half-lives",
+              "reference": "screening visit"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_014",
+        "nct_id": "NCT06842199",
+        "raw_text": "An interval of less than 5 half-lives or 28 days from the last dose of a strong CYP1A2/CYP3A4 inhibitor or inducer, or a plan to use concurrently medications with strong CYP1A2/CYP3A4 inhibitory or inductive effect during study participation",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["CYP1A2 inhibitor", "CYP3A4 inhibitor", "CYP1A2 inducer", "CYP3A4 inducer"],
+            "TREATMENT_PATTERN": ["recent use", "planned concurrent use"],
+            "TIMEFRAME": {
+              "relation": "less than",
+              "amount": "5 half-lives OR 28 days",
+              "reference": "last dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_015",
+        "nct_id": "NCT06672393",
+        "raw_text": "Have received the prohibited treatment during the protocol required washout period",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["prohibited treatment"],
+            "TREATMENT_PATTERN": ["received during washout"],
+            "TIMEFRAME": {
+              "relation": "during",
+              "reference": "washout period"
+            },
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_016",
+        "nct_id": "NCT06143371",
+        "raw_text": "Use of topical treatments: corticosteroids, immunomodulators, anthralin, Vitamin D derivatives, retinoids, or coal tar (used on the body) within 1 week before the first dose of study drug",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["topical corticosteroids", "topical immunomodulators", "anthralin", "Vitamin D derivatives", "topical retinoids", "coal tar"],
+            "TREATMENT_PATTERN": ["use"],
+            "ANATOMICAL_LOCATION": ["body"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 1,
+              "unit": "week",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_017",
+        "nct_id": "NCT06143371",
+        "raw_text": "Use of cyclosporin, interferon, methotrexate, other systemic immunosuppressive or immunomodulating agents, or psoralen plus ultraviolet A within 8 weeks before the first dose of study drug",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["cyclosporin", "interferon", "methotrexate", "systemic immunosuppressive", "immunomodulating agents", "psoralen plus UVA"],
+            "TREATMENT_PATTERN": ["use"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 8,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_018",
+        "nct_id": "NCT06143371",
+        "raw_text": "Use of oral retinoids within 12 weeks before the first dose of study drug",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["oral retinoids"],
+            "TREATMENT_PATTERN": ["use"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 12,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_019",
+        "nct_id": "NCT06143371",
+        "raw_text": "Use of biologic agents known or expected to impact the course of psoriasis or its assessments within 12 weeks or 5 half-lives (whichever is longer) before the first dose of study drug",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["biologic agents"],
+            "TREATMENT_PATTERN": ["use"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": "12 weeks OR 5 half-lives",
+              "reference": "first dose",
+              "comparison": "whichever is longer"
+            },
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_020",
+        "nct_id": "NCT05669833",
+        "raw_text": "Prior exposure to golimumab or another non-TNFi biologic; prior exposure to a TYK2i is acceptable, but cannot be used during course of the study",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["golimumab", "non-TNFi biologic"],
+            "TREATMENT_PATTERN": ["prior exposure"],
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": {
+              "treatment": "TYK2i",
+              "condition": "prior exposure acceptable, but not during study",
+              "makes_eligible": "partially"
+            }
+          }
+        ],
+        "EXCLUSION_STRENGTH": "conditional_exclude"
+      },
+      {
+        "id": "PTH_021",
+        "nct_id": "NCT06641089",
+        "raw_text": "Participants who have ever received biologic immunomodulating agents for psoriatic arthritis or plaque psoriasis whether investigational or approved, except for those targeting TNFα",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["biologic immunomodulating agents"],
+            "TREATMENT_PATTERN": ["ever received"],
+            "INDICATION": ["psoriatic arthritis", "plaque psoriasis"],
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": "OR",
+            "EXCEPTION_CONDITION": {
+              "treatment": "TNFα inhibitors",
+              "makes_eligible": true
+            }
+          }
+        ],
+        "EXCLUSION_STRENGTH": "conditional_exclude"
+      },
+      {
+        "id": "PTH_022",
+        "nct_id": "NCT06077331",
+        "raw_text": "History of lack of response to any therapeutic agent targeted to IL-12, IL-17 or IL-23 at approved doses after at least 3 months of therapy",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["IL-12 inhibitor", "IL-17 inhibitor", "IL-23 inhibitor"],
+            "TREATMENT_PATTERN": ["history of lack of response"],
+            "TIMEFRAME": {
+              "relation": "after",
+              "amount": 3,
+              "unit": "months",
+              "reference": "therapy"
+            },
+            "DOSING": "approved doses",
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_023",
+        "nct_id": "NCT06979453",
+        "raw_text": "Participants must not have received any medication that is specifically prohibited",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["prohibited medication"],
+            "TREATMENT_PATTERN": ["received"],
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "AMBIGUITY_FLAG": true,
+        "AMBIGUITY_NOTE": "Specific prohibited medications not listed"
+      },
+      {
+        "id": "PTH_024",
+        "nct_id": "NCT06979453",
+        "raw_text": "Participants must not have had any prior exposure to deucravacitinib",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["deucravacitinib"],
+            "TREATMENT_PATTERN": ["prior exposure"],
+            "TIMEFRAME": null,
+            "LOGICAL_OPERATOR": null
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_025",
+        "nct_id": "NCT07102888",
+        "raw_text": "Subjects who have received topical medication for psoriasis within 14 days before baseline, or systemic medication or phototherapy for psoriasis within 28 days before baseline, or biological agents for psoriasis within a specified time before baseline",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["topical medication"],
+            "TREATMENT_PATTERN": ["received"],
+            "INDICATION": ["psoriasis"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 14,
+              "unit": "days",
+              "reference": "baseline"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          },
+          {
+            "TREATMENT_TYPE": ["systemic medication", "phototherapy"],
+            "TREATMENT_PATTERN": ["received"],
+            "INDICATION": ["psoriasis"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 28,
+              "unit": "days",
+              "reference": "baseline"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          },
+          {
+            "TREATMENT_TYPE": ["biological agents"],
+            "TREATMENT_PATTERN": ["received"],
+            "INDICATION": ["psoriasis"],
+            "TIMEFRAME": {
+              "relation": "within specified time",
+              "reference": "baseline"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "AMBIGUITY_FLAG": true,
+        "AMBIGUITY_NOTE": "Specified time for biological agents not detailed"
+      },
+      {
+        "id": "PTH_026",
+        "nct_id": "NCT06723171",
+        "raw_text": "Has received within 2 weeks of the first dose any prescribed anticoagulant, including but not limited to coumarins, factor Xa inhibitors, heparins, and direct thrombin inhibitors",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["anticoagulant", "coumarins", "factor Xa inhibitor", "heparins", "direct thrombin inhibitor"],
+            "TREATMENT_PATTERN": ["received"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 2,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_027",
+        "nct_id": "NCT06723171",
+        "raw_text": "Has received within 12 weeks or 5 half-lives (whichever is longer) of the first dose other biologic therapy or experimental antibody, any agent that modulates T-cells",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["biologic therapy", "experimental antibody", "T-cell modulating agent"],
+            "TREATMENT_PATTERN": ["received"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": "12 weeks OR 5 half-lives",
+              "reference": "first dose",
+              "comparison": "whichever is longer"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_028",
+        "nct_id": "NCT06723171",
+        "raw_text": "Has received within 2 weeks of the first dose any topical medications for psoriasis or other conditions that could impact assessment of psoriasis",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["topical medications"],
+            "TREATMENT_PATTERN": ["received"],
+            "INDICATION": ["psoriasis", "conditions impacting psoriasis assessment"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 2,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_029",
+        "nct_id": "NCT06723171",
+        "raw_text": "Has received within 4 weeks of the first dose any systemic immunosuppressives for the treatment of psoriasis or psoriatic arthritis, or any other indications that could impact the assessment of psoriasis",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["systemic immunosuppressives"],
+            "TREATMENT_PATTERN": ["received"],
+            "INDICATION": ["psoriasis", "psoriatic arthritis", "conditions impacting psoriasis assessment"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 4,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      },
+      {
+        "id": "PTH_030",
+        "nct_id": "NCT06723171",
+        "raw_text": "Has received within 12 weeks of the first dose any prior biologic for the treatment of psoriasis, psoriatic arthritis, or any other indications that could impact the assessment of psoriasis",
+        "conditions": [
+          {
+            "TREATMENT_TYPE": ["biologic"],
+            "TREATMENT_PATTERN": ["received"],
+            "INDICATION": ["psoriasis", "psoriatic arthritis", "conditions impacting psoriasis assessment"],
+            "TIMEFRAME": {
+              "relation": "within",
+              "amount": 12,
+              "unit": "weeks",
+              "reference": "first dose"
+            },
+            "LOGICAL_OPERATOR": "OR"
+          }
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude"
+      }
+    ]
+  }
+}

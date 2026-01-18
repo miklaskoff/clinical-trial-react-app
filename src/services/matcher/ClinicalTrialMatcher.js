@@ -10,7 +10,7 @@ import {
   TrialEligibilityResult,
   PatientMatchResults,
 } from './results.js';
-import { drugsMatch, drugBelongsToClass, findSynonyms } from './drugDatabase.js';
+import { drugsMatch, drugBelongsToClass, findSynonyms, isKnownDrug, directStringMatch } from './drugDatabase.js';
 import {
   arraysOverlap,
   timeframeMatches,
@@ -217,6 +217,9 @@ export class ClinicalTrialMatcher {
     let aiReasoning = null;
     let patientValue = '';
     let confidenceReason = '';
+    let needsAdminReview = false;
+    let matchMethod = '';
+    let reviewPayload = null;
 
     try {
       // Route to appropriate evaluation method based on cluster
@@ -232,6 +235,9 @@ export class ClinicalTrialMatcher {
       aiReasoning = evalResult.aiReasoning || null;
       patientValue = evalResult.patientValue || '';
       confidenceReason = evalResult.confidenceReason || '';
+      needsAdminReview = evalResult.needsAdminReview || false;
+      matchMethod = evalResult.matchMethod || '';
+      reviewPayload = evalResult.reviewPayload || null;
     } catch (error) {
       console.error(`Error evaluating criterion ${criterion.id}:`, error);
       matches = false;
@@ -250,6 +256,9 @@ export class ClinicalTrialMatcher {
       rawText: criterion.raw_text || '',
       patientValue,
       confidenceReason,
+      needsAdminReview,
+      matchMethod,
+      reviewPayload,
     });
   }
 
@@ -499,6 +508,8 @@ export class ClinicalTrialMatcher {
 
   /**
    * Evaluate treatment history criterion
+   * Uses 3-step cascade: 1) Database match 2) Direct string match 3) AI fallback
+   * Unknown drugs are flagged for admin review
    */
   #evaluateTreatmentHistory(criterion, patientTreatments) {
     if (!patientTreatments || !Array.isArray(patientTreatments)) {
@@ -516,52 +527,70 @@ export class ClinicalTrialMatcher {
 
     for (const condition of conditions) {
       for (const patientTreatment of patientTreatments) {
-        // Check treatment type match
         const treatmentTypes = condition.TREATMENT_TYPE || [];
         const patientTypes = patientTreatment.TREATMENT_TYPE || [];
 
-        // Direct match
-        if (arraysOverlap(treatmentTypes, patientTypes)) {
-          // Check timeframe if specified
-          if (condition.TIMEFRAME && patientTreatment.TIMEFRAME) {
-            if (!timeframeMatches(condition.TIMEFRAME, patientTreatment.TIMEFRAME)) {
-              continue;
+        for (const patientDrug of patientTypes) {
+          // STEP 1: Check if drug is in database (most reliable)
+          if (isKnownDrug(patientDrug)) {
+            // Use database matching (synonym/class matching)
+            for (const criterionDrug of treatmentTypes) {
+              if (drugsMatch(criterionDrug, patientDrug)) {
+                // Check timeframe if specified
+                if (condition.TIMEFRAME && patientTreatment.TIMEFRAME) {
+                  if (!timeframeMatches(condition.TIMEFRAME, patientTreatment.TIMEFRAME)) {
+                    continue;
+                  }
+                }
+                return { 
+                  matches: true, 
+                  confidence: 0.95,
+                  needsAdminReview: false,
+                  patientValue: `Patient drug: ${patientDrug}`,
+                  confidenceReason: `Database match. "${patientDrug}" matched to "${criterionDrug}" via drug database.`
+                };
+              }
             }
-          }
-          return { 
-            matches: true, 
-            confidence: 0.95,
-            patientValue: `Patient treatments: ${patientTypes.join(', ')}`,
-            confidenceReason: `Direct treatment match with criterion: ${treatmentTypes.join(', ')}. 95% due to possible naming variations.`
-          };
-        }
 
-        // Drug name match
-        for (const criterionDrug of treatmentTypes) {
-          for (const patientDrug of patientTypes) {
-            if (drugsMatch(criterionDrug, patientDrug)) {
-              return { 
-                matches: true, 
-                confidence: 0.95,
-                patientValue: `Patient drug: ${patientDrug}`,
-                confidenceReason: `Drug synonym match. "${patientDrug}" matched to "${criterionDrug}" via drug database.`
-              };
-            }
-          }
-        }
-
-        // Drug class match
-        const drugClass = condition.TREATMENT_PATTERN?.[0] || '';
-        if (drugClass) {
-          for (const patientDrug of patientTypes) {
-            if (drugBelongsToClass(patientDrug, drugClass)) {
+            // Check drug class match
+            const drugClass = condition.TREATMENT_PATTERN?.[0] || '';
+            if (drugClass && drugBelongsToClass(patientDrug, drugClass)) {
               return { 
                 matches: true, 
                 confidence: 0.9,
+                needsAdminReview: false,
                 patientValue: `Patient drug: ${patientDrug}`,
-                confidenceReason: `Drug class match. "${patientDrug}" belongs to class "${drugClass}". 90% due to class-level match.`
+                confidenceReason: `Drug class match. "${patientDrug}" belongs to class "${drugClass}".`
               };
             }
+          } else {
+            // STEP 2: Drug NOT in database - try direct string match
+            // This handles cases where criterion explicitly lists the drug name
+            if (directStringMatch(patientDrug, treatmentTypes)) {
+              // Check timeframe if specified
+              if (condition.TIMEFRAME && patientTreatment.TIMEFRAME) {
+                if (!timeframeMatches(condition.TIMEFRAME, patientTreatment.TIMEFRAME)) {
+                  continue;
+                }
+              }
+              return { 
+                matches: true, 
+                confidence: 0.9,
+                needsAdminReview: true,
+                matchMethod: 'direct_unverified',
+                reviewPayload: {
+                  drugName: patientDrug,
+                  criterionId: criterion.id,
+                  nctId: criterion.nct_id,
+                  matchedWith: treatmentTypes.find(t => t.toLowerCase() === patientDrug.toLowerCase())
+                },
+                patientValue: `Patient drug: ${patientDrug}`,
+                confidenceReason: `Direct string match (unverified). "${patientDrug}" matched criterion. Drug not in database - requires admin review.`
+              };
+            }
+            
+            // STEP 3: AI fallback will be handled separately
+            // For now, mark as potential match needing review if AI is enabled
           }
         }
       }
@@ -570,6 +599,7 @@ export class ClinicalTrialMatcher {
     return { 
       matches: false, 
       confidence: 0.9,
+      needsAdminReview: false,
       patientValue: `Patient treatments: ${patientDrugs || 'none'}`,
       confidenceReason: `No match found. Criterion required: ${criterionDrugs}. 90% confidence in no-match.`
     };
