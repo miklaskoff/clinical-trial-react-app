@@ -1,0 +1,420 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-12",
+    "description": "Medication classification database for clinical trial matching"
+  },
+  "drugClasses": [
+    "TNF_inhibitors",
+    "IL17_inhibitors",
+    "IL23_inhibitors",
+    "IL12_23_inhibitors",
+    "TYK2_inhibitors",
+    "JAK_inhibitors",
+    "PDE4_inhibitors",
+    "systemic_immunosuppressants",
+    "systemic_corticosteroids",
+    "A3_adenosine_receptor_agonists",
+    "topical_treatments",
+    "phototherapy",
+    "retinoids",
+    "calcineurin_inhibitors",
+    "vitamin_d_analogs"
+  ],
+  "drugs": {
+    "humira": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["adalimumab", "Humira", "Adalimumab"]
+    },
+    "adalimumab": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["humira", "Humira", "Adalimumab"]
+    },
+    "enbrel": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["etanercept", "Enbrel", "Etanercept"]
+    },
+    "etanercept": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["enbrel", "Enbrel", "Etanercept"]
+    },
+    "remicade": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["infliximab", "Remicade", "Infliximab"]
+    },
+    "infliximab": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["remicade", "Remicade", "Infliximab"]
+    },
+    "cimzia": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["certolizumab", "certolizumab pegol", "Cimzia"]
+    },
+    "certolizumab": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["cimzia", "certolizumab pegol", "Cimzia", "Certolizumab"]
+    },
+    "simponi": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["golimumab", "Simponi", "Golimumab"]
+    },
+    "golimumab": {
+      "drugClass": "TNF_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "TNF-alpha inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["simponi", "Simponi", "Golimumab"]
+    },
+    "cosentyx": {
+      "drugClass": "IL17_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-17A inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["secukinumab", "Cosentyx", "Secukinumab"]
+    },
+    "secukinumab": {
+      "drugClass": "IL17_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-17A inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["cosentyx", "Cosentyx", "Secukinumab"]
+    },
+    "taltz": {
+      "drugClass": "IL17_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-17A inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["ixekizumab", "Taltz", "Ixekizumab"]
+    },
+    "ixekizumab": {
+      "drugClass": "IL17_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-17A inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["taltz", "Taltz", "Ixekizumab"]
+    },
+    "siliq": {
+      "drugClass": "IL17_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-17 receptor inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["brodalumab", "Siliq", "Brodalumab"]
+    },
+    "brodalumab": {
+      "drugClass": "IL17_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-17 receptor inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["siliq", "Siliq", "Brodalumab"]
+    },
+    "bimzelx": {
+      "drugClass": "IL17_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-17A and IL-17F inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["bimekizumab", "Bimzelx", "Bimekizumab"]
+    },
+    "bimekizumab": {
+      "drugClass": "IL17_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-17A and IL-17F inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["bimzelx", "Bimzelx", "Bimekizumab"]
+    },
+    "skyrizi": {
+      "drugClass": "IL23_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-23 p19 inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["risankizumab", "Skyrizi", "Risankizumab"]
+    },
+    "risankizumab": {
+      "drugClass": "IL23_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-23 p19 inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["skyrizi", "Skyrizi", "Risankizumab"]
+    },
+    "tremfya": {
+      "drugClass": "IL23_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-23 p19 inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["guselkumab", "Tremfya", "Guselkumab"]
+    },
+    "guselkumab": {
+      "drugClass": "IL23_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-23 p19 inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["tremfya", "Tremfya", "Guselkumab"]
+    },
+    "ilumya": {
+      "drugClass": "IL23_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-23 p19 inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["tildrakizumab", "Ilumya", "Tildrakizumab"]
+    },
+    "tildrakizumab": {
+      "drugClass": "IL23_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-23 p19 inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["ilumya", "Ilumya", "Tildrakizumab"]
+    },
+    "stelara": {
+      "drugClass": "IL12_23_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-12/23 p40 inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["ustekinumab", "Stelara", "Ustekinumab"]
+    },
+    "ustekinumab": {
+      "drugClass": "IL12_23_inhibitors",
+      "drugType": "biologic",
+      "mechanism": "IL-12/23 p40 inhibitor",
+      "isBiologic": true,
+      "lifetimeExclusion": true,
+      "aliases": ["stelara", "Stelara", "Ustekinumab"]
+    },
+    "sotyktu": {
+      "drugClass": "TYK2_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "Allosteric TYK2 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": true,
+      "aliases": ["deucravacitinib", "Sotyktu", "BMS-986165"]
+    },
+    "deucravacitinib": {
+      "drugClass": "TYK2_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "Allosteric TYK2 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": true,
+      "aliases": ["sotyktu", "Sotyktu", "BMS-986165", "Deucravacitinib"]
+    },
+    "esk-001": {
+      "drugClass": "TYK2_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "Allosteric TYK2 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "company": "Alumis Inc",
+      "developmentStage": "Phase 3",
+      "aliases": ["esk 001", "esk001", "ESK-001", "ESK 001"]
+    },
+    "xeljanz": {
+      "drugClass": "JAK_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "JAK1/3 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["tofacitinib", "Xeljanz", "Tofacitinib"]
+    },
+    "tofacitinib": {
+      "drugClass": "JAK_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "JAK1/3 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["xeljanz", "Xeljanz", "Tofacitinib"]
+    },
+    "rinvoq": {
+      "drugClass": "JAK_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "JAK1 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["upadacitinib", "Rinvoq", "Upadacitinib"]
+    },
+    "upadacitinib": {
+      "drugClass": "JAK_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "JAK1 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["rinvoq", "Rinvoq", "Upadacitinib"]
+    },
+    "olumiant": {
+      "drugClass": "JAK_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "JAK1/2 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["baricitinib", "Olumiant", "Baricitinib"]
+    },
+    "baricitinib": {
+      "drugClass": "JAK_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "JAK1/2 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["olumiant", "Olumiant", "Baricitinib"]
+    },
+    "cibinqo": {
+      "drugClass": "JAK_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "JAK1 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["abrocitinib", "Cibinqo", "Abrocitinib"]
+    },
+    "abrocitinib": {
+      "drugClass": "JAK_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "JAK1 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["cibinqo", "Cibinqo", "Abrocitinib"]
+    },
+    "otezla": {
+      "drugClass": "PDE4_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "PDE4 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["apremilast", "Otezla", "Apremilast"]
+    },
+    "apremilast": {
+      "drugClass": "PDE4_inhibitors",
+      "drugType": "small_molecule",
+      "mechanism": "PDE4 inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["otezla", "Otezla", "Apremilast"]
+    },
+    "methotrexate": {
+      "drugClass": "systemic_immunosuppressants",
+      "drugType": "immunosuppressant",
+      "mechanism": "DMARD/immunosuppressant",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["MTX", "mtx", "Methotrexate"]
+    },
+    "cyclosporine": {
+      "drugClass": "systemic_immunosuppressants",
+      "drugType": "immunosuppressant",
+      "mechanism": "Calcineurin inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["ciclosporin", "Neoral", "Sandimmune", "Cyclosporine"]
+    },
+    "azathioprine": {
+      "drugClass": "systemic_immunosuppressants",
+      "drugType": "immunosuppressant",
+      "mechanism": "Purine synthesis inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["Imuran", "imuran", "Azathioprine"]
+    },
+    "mycophenolate": {
+      "drugClass": "systemic_immunosuppressants",
+      "drugType": "immunosuppressant",
+      "mechanism": "Purine synthesis inhibitor",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["mycophenolic acid", "CellCept", "Mycophenolate"]
+    },
+    "prednisone": {
+      "drugClass": "systemic_corticosteroids",
+      "drugType": "corticosteroid",
+      "mechanism": "Corticosteroid",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["Prednisone"]
+    },
+    "prednisolone": {
+      "drugClass": "systemic_corticosteroids",
+      "drugType": "corticosteroid",
+      "mechanism": "Corticosteroid",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["Prednisolone"]
+    },
+    "methylprednisolone": {
+      "drugClass": "systemic_corticosteroids",
+      "drugType": "corticosteroid",
+      "mechanism": "Corticosteroid",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["Medrol", "medrol", "Methylprednisolone"]
+    },
+    "dexamethasone": {
+      "drugClass": "systemic_corticosteroids",
+      "drugType": "corticosteroid",
+      "mechanism": "Corticosteroid",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["Dexamethasone"]
+    },
+    "hydrocortisone": {
+      "drugClass": "systemic_corticosteroids",
+      "drugType": "corticosteroid",
+      "mechanism": "Corticosteroid",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["Hydrocortisone"]
+    },
+    "piclidenoson": {
+      "drugClass": "A3_adenosine_receptor_agonists",
+      "drugType": "small_molecule",
+      "mechanism": "A3 adenosine receptor agonist",
+      "isBiologic": false,
+      "lifetimeExclusion": false,
+      "aliases": ["cf101", "cf-101", "CF101", "CF-101", "Piclidenoson"]
+    }
+  }
+}

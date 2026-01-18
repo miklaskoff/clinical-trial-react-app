@@ -1,10 +1,19 @@
 /**
  * Drug classification database
  * @module services/matcher/drugDatabase
+ * 
+ * NOTE: This module contains the runtime drug database.
+ * For adding new drugs, prefer editing:
+ *   src/config/drug-classification.json
+ * 
+ * The JSON config is loaded by RulesLoader and merged at runtime.
  */
 
+import { getDrugs as getConfigDrugs, isKnownDrug as configIsKnownDrug } from '../config/RulesLoader.js';
+
 /**
- * Drug aliases and classifications
+ * Drug aliases and classifications (legacy hardcoded entries)
+ * New drugs should be added to src/config/drug-classification.json
  */
 export const DRUG_DATABASE = {
   // TNF Inhibitors
@@ -222,6 +231,7 @@ export const DRUG_CLASS_KEYWORDS = {
 
 /**
  * Get drug info by name
+ * Checks both hardcoded DRUG_DATABASE and external JSON config
  * @param {string} drugName - Drug name (brand or generic)
  * @returns {Object|null} Drug information or null if not found
  */
@@ -230,7 +240,34 @@ export function getDrugInfo(drugName) {
     return null;
   }
   const normalized = drugName.toLowerCase().trim();
-  return DRUG_DATABASE[normalized] || null;
+  
+  // Check hardcoded database first
+  if (DRUG_DATABASE[normalized]) {
+    return DRUG_DATABASE[normalized];
+  }
+  
+  // Check external JSON config
+  try {
+    const configDrugs = getConfigDrugs();
+    if (configDrugs[normalized]) {
+      // Convert JSON format to legacy format for compatibility
+      const config = configDrugs[normalized];
+      return {
+        class: config.drugClass?.replace(/_/g, ' '),
+        isBiologic: config.isBiologic,
+        isTnf: config.drugClass === 'TNF_inhibitors',
+        isIl17: config.drugClass === 'IL17_inhibitors',
+        isIl23: config.drugClass === 'IL23_inhibitors',
+        isIl12: config.drugClass === 'IL12_23_inhibitors',
+        aliases: config.aliases || [],
+        mechanism: config.mechanism,
+      };
+    }
+  } catch {
+    // Config not available, continue with hardcoded only
+  }
+  
+  return null;
 }
 
 /**
@@ -271,8 +308,9 @@ export function drugsMatch(drug1, drug2) {
 
 /**
  * Check if a drug is known in the database
+ * Checks both hardcoded DRUG_DATABASE and external JSON config
  * @param {string} drugName - Drug name to check
- * @returns {boolean} True if drug exists in DRUG_DATABASE
+ * @returns {boolean} True if drug exists in any database
  */
 export function isKnownDrug(drugName) {
   if (!drugName) {
@@ -280,12 +318,12 @@ export function isKnownDrug(drugName) {
   }
   const normalized = drugName.toLowerCase().trim();
   
-  // Direct lookup
+  // Check hardcoded database first (fastest)
   if (DRUG_DATABASE[normalized]) {
     return true;
   }
   
-  // Check aliases
+  // Check aliases in hardcoded database
   for (const drug of Object.values(DRUG_DATABASE)) {
     if (drug.aliases?.some(alias => alias.toLowerCase() === normalized)) {
       return true;
@@ -296,6 +334,15 @@ export function isKnownDrug(drugName) {
     if (drug.generic?.toLowerCase() === normalized) {
       return true;
     }
+  }
+  
+  // Check external JSON config (via RulesLoader)
+  try {
+    if (configIsKnownDrug(drugName)) {
+      return true;
+    }
+  } catch {
+    // Config not available, continue with hardcoded only
   }
   
   return false;
