@@ -1,0 +1,10 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "npx vitest": true,
+        "/^node -c src/__tests__/integration/lungCancerAutocomplete\\.test\\.js 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "Rename-Item": true
+    }
+}

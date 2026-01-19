@@ -267,10 +267,21 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
   const [cmb_conditionInput, setCmb_conditionInput] = useState('');
   const [cmb_conditionDetails, setCmb_conditionDetails] = useState({});
   
-  // Extract unique conditions from database
-  const cmbConditionOptions = mergeSimilarConditions(
-    extractUniqueValues('CLUSTER_1_COMORBID_CONDITIONS', 'CONDITION_TYPE')
-  );
+  // Additional common conditions that should always be in suggestions
+  // (especially cancer types for synonym matching)
+  const ADDITIONAL_CONDITIONS = [
+    'lung cancer', 'breast cancer', 'prostate cancer', 'colon cancer',
+    'colorectal cancer', 'pancreatic cancer', 'ovarian cancer', 'bladder cancer',
+    'kidney cancer', 'liver cancer', 'skin cancer', 'melanoma', 'leukemia',
+    'lymphoma', 'brain cancer', 'thyroid cancer', 'cervical cancer',
+    'cancer', 'malignancy'
+  ];
+  
+  // Extract unique conditions from database and merge with additional ones
+  const cmbConditionOptions = mergeSimilarConditions([
+    ...extractUniqueValues('CLUSTER_1_COMORBID_CONDITIONS', 'CONDITION_TYPE'),
+    ...ADDITIONAL_CONDITIONS
+  ]);
   
   // ===========================================================================
   // CLUSTER 2: PSORIASIS TREATMENT HISTORY (PTH)

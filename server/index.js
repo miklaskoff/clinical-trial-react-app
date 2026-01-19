@@ -69,10 +69,12 @@ app.get('/api/test-error', (req, res, next) => {
 import matchRoutes from './routes/match.js';
 import followupRoutes from './routes/followups.js';
 import adminRoutes from './routes/admin.js';
+import configRoutes from './routes/config.js';
 
 app.use('/api/match', matchRoutes);
 app.use('/api/followups', followupRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/config', configRoutes);
 
 // ============================================
 // ERROR HANDLING

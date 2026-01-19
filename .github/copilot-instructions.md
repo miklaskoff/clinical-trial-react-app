@@ -11,6 +11,122 @@
 5. **Нельзя заканчивать работу** — пока ВСЕ тесты не пройдены
 6. **Каждое изменение = набор тестов** — добавляй в соответствующую тестовую группу
 
+---
+
+## ⚠️ IMPLEMENTATION CONTRACT SYSTEM — КРИТИЧЕСКИ ВАЖНО
+
+### Почему это нужно
+
+Unit тесты с моками могут проходить, но реальная интеграция не работает.
+**Implementation Contract** гарантирует, что каждая фича действительно работает end-to-end.
+
+### Contract Template — ОБЯЗАТЕЛЬНО для каждой фичи
+
+Перед реализацией любой фичи, создай Implementation Contract:
+
+```markdown
+## Feature: [Название]
+
+### Requirement (Что должно работать)
+[Точное описание требования]
+
+### Acceptance Tests (ДОЛЖНЫ ПРОЙТИ перед завершением)
+- Test file: `path/to/integration/test.js`
+- Test 1: [конкретное поведение]
+- Test 2: [конкретное поведение]
+
+### Verification Checklist
+1. [ ] Integration test создан (НЕ unit test с моками)
+2. [ ] Test проверяет РЕАЛЬНОЕ поведение (не мокает тестируемый код)
+3. [ ] Test FAILS изначально (доказывает, что проверяет реальность)
+4. [ ] После реализации test PASSES
+5. [ ] Manual verification в браузере
+6. [ ] Screenshot/evidence собран
+
+### Anti-Patterns (ЗАПРЕЩЕНО)
+- ❌ Мокать тестируемый компонент
+- ❌ Тестировать "component renders" без проверки что именно рендерится
+- ❌ Проверять что функция вызвана, без проверки результата
+- ❌ Считать done когда тесты прошли, без manual verification
+```
+
+### Contract Workflow — ПОРЯДОК ДЕЙСТВИЙ
+
+```
+1. PLAN → Создай Implementation Contract с acceptance tests
+2. VERIFY FAIL → Запусти тесты, убедись что FAIL (иначе тест бесполезен)
+3. IMPLEMENT → Напиши код чтобы тесты прошли
+4. VERIFY PASS → Все тесты проходят
+5. MANUAL TEST → Проверь в браузере/Postman вручную
+6. EVIDENCE → Сделай screenshot или лог как доказательство
+7. COMMIT → Только после всех шагов
+```
+
+### Integration Test Rules — СТРОГО
+
+```javascript
+// ✅ CORRECT - тестирует реальную интеграцию
+it('frontend calls backend for API key storage', async () => {
+  const fetchSpy = vi.spyOn(global, 'fetch');
+  
+  // Действие
+  await user.type(screen.getByLabelText('API Key'), 'sk-test');
+  await user.click(screen.getByText('Save'));
+  
+  // Проверка: fetch вызван с правильным URL
+  expect(fetchSpy).toHaveBeenCalledWith(
+    expect.stringContaining('/api/config/apikey'),
+    expect.any(Object)
+  );
+  
+  // Проверка: localStorage НЕ содержит ключ
+  expect(localStorage.getItem('api_key')).toBeNull();
+});
+
+// ❌ WRONG - мокает то, что тестируем
+it('saves API key', async () => {
+  const mockSave = vi.fn();
+  render(<Settings onSave={mockSave} />);
+  
+  await user.click(screen.getByText('Save'));
+  
+  expect(mockSave).toHaveBeenCalled(); // Ничего не доказывает!
+});
+```
+
+### Verification Commands — ЗАПУСКАТЬ ПЕРЕД COMMIT
+
+```bash
+# 1. Все тесты проходят
+npm test -- --run
+
+# 2. Backend запущен и отвечает
+curl http://localhost:3001/api/health
+
+# 3. Нет прямых вызовов Anthropic из frontend
+grep -r "api.anthropic.com" src/
+# Должен вернуть: ничего
+
+# 4. Нет API ключей в localStorage
+grep -r "localStorage.*api.*key" src/
+# Должен вернуть: ничего (или только чтение для миграции)
+
+# 5. Manual UI verification
+# - Открыть браузер
+# - Пройти по каждому пункту contract
+# - Screenshot как доказательство
+```
+
+### Failure Recovery — ЕСЛИ ТЕСТЫ ПРОШЛИ, НО НЕ РАБОТАЕТ
+
+1. **STOP** — Не продолжай реализацию
+2. **ANALYZE** — Почему тест не поймал проблему?
+3. **FIX TEST** — Добавь проверку реального поведения
+4. **VERIFY FAIL** — Убедись что новый тест FAIL
+5. **FIX CODE** — Исправь реализацию
+6. **VERIFY PASS** — Тест проходит
+7. **MANUAL** — Проверь в браузере
+
 ### Async/Parallel Execution — СТРОГО ОБЯЗАТЕЛЬНО
 
 1. **ВСЁ что может быть async — ДОЛЖНО быть async**

@@ -4,9 +4,9 @@ import DrugReviewDashboard from './Admin/DrugReviewDashboard.jsx';
 import './App.css';
 
 /**
- * LocalStorage key for API key
+ * Backend API URL
  */
-const API_KEY_STORAGE_KEY = 'anthropic_api_key';
+const BACKEND_URL = 'http://localhost:3001';
 
 /**
  * App stages
@@ -308,12 +308,25 @@ function App() {
     return () => window.removeEventListener('popstate', checkRoute);
   }, []);
 
-  // Load API key from localStorage on mount
+  // Check if API key is configured on backend
   useEffect(() => {
-    const savedKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    if (savedKey) {
-      setApiKey(savedKey);
-    }
+    const checkApiKeyStatus = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/config/apikey/status`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.configured) {
+            // API key is configured on server - set a placeholder to indicate configured
+            setApiKey('configured-on-server');
+          }
+        }
+      } catch (error) {
+        // Backend might not be running, that's ok
+        console.log('Backend not available, using local mode');
+      }
+    };
+    checkApiKeyStatus();
+    
     // Load saved thresholds
     const savedThresholds = localStorage.getItem('confidence_thresholds');
     if (savedThresholds) {
@@ -325,19 +338,44 @@ function App() {
     }
   }, []);
 
-  // Save API key to localStorage when it changes
+  // Save API key to backend (NOT localStorage)
   const handleApiKeyChange = useCallback((e) => {
     const newKey = e.target.value;
     setApiKey(newKey);
-    if (newKey.trim()) {
-      localStorage.setItem(API_KEY_STORAGE_KEY, newKey);
+    // Don't save to localStorage - will save to backend on submit
+  }, []);
+
+  // Save API key to backend
+  const saveApiKeyToBackend = useCallback(async (key) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/config/apikey`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: key })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save API key');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to save API key to backend:', error);
+      throw error;
     }
   }, []);
 
-  // Clear saved API key
-  const handleClearApiKey = useCallback(() => {
+  // Clear API key from backend
+  const handleClearApiKey = useCallback(async () => {
+    try {
+      await fetch(`${BACKEND_URL}/api/config/apikey`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Failed to clear API key:', error);
+    }
     setApiKey('');
-    localStorage.removeItem(API_KEY_STORAGE_KEY);
   }, []);
 
   // Update confidence threshold
@@ -352,15 +390,34 @@ function App() {
   /**
    * Handle settings submission
    */
-  const handleSettingsSubmit = useCallback((e) => {
+  const handleSettingsSubmit = useCallback(async (e) => {
     e.preventDefault();
+    
     if (useAI && !apiKey.trim()) {
       setError('Please enter an API key or disable AI matching');
       return;
     }
+    
+    // If using AI and key is not already configured on server, save it
+    if (useAI && apiKey && apiKey !== 'configured-on-server') {
+      try {
+        setIsLoading(true);
+        await saveApiKeyToBackend(apiKey);
+        // Clear the key from state after saving to backend
+        // Keep a flag that it's configured
+        setApiKey('configured-on-server');
+      } catch (err) {
+        setError('Failed to save API key to server: ' + err.message);
+        setIsLoading(false);
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
     setError(null);
     setStage(STAGES.QUESTIONNAIRE);
-  }, [useAI, apiKey]);
+  }, [useAI, apiKey, saveApiKeyToBackend]);
 
   /**
    * Handle questionnaire submission
@@ -431,9 +488,8 @@ function App() {
       <header className="app-header">
         <h1>Clinical Trial Matching System</h1>
         <p className="app-subtitle">AI-powered patient-trial matching</p>
-        <nav className="app-nav">
-          <a href="/admin" className="nav-link admin-link">Admin Dashboard</a>
-        </nav>
+        {/* Admin link removed from patient-facing UI for security */}
+        {/* Access admin via direct URL: /admin */}
       </header>
 
       <main className="app-main">
@@ -470,23 +526,27 @@ function App() {
                       <input
                         type="password"
                         id="apiKey"
-                        value={apiKey}
+                        value={apiKey === 'configured-on-server' ? '' : apiKey}
                         onChange={handleApiKeyChange}
-                        placeholder="sk-ant-..."
+                        placeholder={apiKey === 'configured-on-server' ? '••••••••••••' : 'sk-ant-...'}
+                        disabled={apiKey === 'configured-on-server'}
                       />
                       {apiKey && (
                         <button 
                           type="button" 
                           onClick={handleClearApiKey}
                           className="btn btn-small btn-secondary"
-                          title="Clear saved API key"
+                          title="Clear API key from server"
                         >
                           Clear
                         </button>
                       )}
                     </div>
-                    {apiKey && (
-                      <small className="hint">✓ API key saved locally</small>
+                    {apiKey === 'configured-on-server' && (
+                      <small className="hint">✓ API key stored securely on server</small>
+                    )}
+                    {apiKey && apiKey !== 'configured-on-server' && (
+                      <small className="hint">API key will be stored securely on server when you start</small>
                     )}
                   </div>
 

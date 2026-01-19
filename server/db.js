@@ -182,6 +182,13 @@ export async function initDatabase(dbPath) {
     -- Index for pending reviews
     CREATE INDEX IF NOT EXISTS idx_pending_reviews_status 
     ON pending_reviews(status);
+
+    -- Configuration table for API keys and settings
+    CREATE TABLE IF NOT EXISTS config (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
 
   return dbInstance;
