@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-19",
+    "description": "Severity level mappings for clinical criteria matching"
+  },
+  "levels": {
+    "none": 0,
+    "minimal": 0.5,
+    "mild": 1,
+    "mild-to-moderate": 1.5,
+    "moderate": 2,
+    "moderate-to-severe": 2.5,
+    "severe": 3,
+    "significant": 3,
+    "serious": 4,
+    "major": 4,
+    "critical": 5,
+    "life-threatening": 5
+  },
+  "aliases": {
+    "light": "mild",
+    "minor": "mild",
+    "medium": "moderate",
+    "intermediate": "moderate",
+    "heavy": "severe",
+    "extreme": "critical",
+    "profound": "severe",
+    "marked": "moderate-to-severe",
+    "substantial": "moderate-to-severe"
+  },
+  "thresholdDescriptions": {
+    "mild": "Symptoms present but do not interfere with daily activities",
+    "moderate": "Symptoms interfere with some daily activities",
+    "severe": "Symptoms significantly impair daily activities",
+    "serious": "Potentially life-threatening or requiring hospitalization",
+    "critical": "Immediately life-threatening"
+  }
+}

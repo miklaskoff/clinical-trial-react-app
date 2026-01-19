@@ -1,0 +1,158 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-19",
+    "description": "Medical condition synonyms and drug class keywords for semantic matching"
+  },
+  "conditions": {
+    "depression": [
+      "major depressive disorder",
+      "clinical depression",
+      "mdd",
+      "depressive disorder",
+      "major depression"
+    ],
+    "heart failure": [
+      "cardiac insufficiency",
+      "chf",
+      "congestive heart failure",
+      "heart insufficiency",
+      "cardiac failure"
+    ],
+    "diabetes": [
+      "diabetes mellitus",
+      "dm",
+      "type 2 diabetes",
+      "type 1 diabetes",
+      "t2dm",
+      "t1dm"
+    ],
+    "hypertension": [
+      "high blood pressure",
+      "htn",
+      "elevated blood pressure",
+      "arterial hypertension"
+    ],
+    "cancer": [
+      "malignancy",
+      "malignant neoplasm",
+      "carcinoma",
+      "tumor",
+      "neoplastic disease"
+    ],
+    "tuberculosis": [
+      "tb",
+      "active tb",
+      "latent tb",
+      "mycobacterium tuberculosis"
+    ],
+    "hepatitis": [
+      "hep b",
+      "hep c",
+      "hepatitis b",
+      "hepatitis c",
+      "hbv",
+      "hcv",
+      "viral hepatitis"
+    ],
+    "hiv": [
+      "human immunodeficiency virus",
+      "aids",
+      "hiv positive",
+      "hiv infection"
+    ],
+    "kidney disease": [
+      "renal disease",
+      "ckd",
+      "chronic kidney disease",
+      "renal insufficiency",
+      "kidney failure"
+    ],
+    "liver disease": [
+      "hepatic disease",
+      "liver failure",
+      "hepatic insufficiency",
+      "cirrhosis"
+    ],
+    "psoriasis": [
+      "plaque psoriasis",
+      "psoriatic disease",
+      "chronic plaque psoriasis"
+    ],
+    "psoriatic arthritis": [
+      "psa",
+      "psoriatic arthropathy"
+    ],
+    "inflammatory bowel disease": [
+      "ibd",
+      "crohn's disease",
+      "ulcerative colitis",
+      "crohns"
+    ],
+    "stroke": [
+      "cerebrovascular accident",
+      "cva",
+      "brain attack",
+      "ischemic stroke",
+      "hemorrhagic stroke"
+    ],
+    "myocardial infarction": [
+      "heart attack",
+      "mi",
+      "ami",
+      "acute myocardial infarction"
+    ]
+  },
+  "drugClassKeywords": {
+    "biologics": [
+      "biologic",
+      "biological",
+      "monoclonal antibody",
+      "fusion protein",
+      "mab"
+    ],
+    "tnf": [
+      "tnf",
+      "tumor necrosis factor",
+      "anti-tnf",
+      "tnf-alpha",
+      "tnf inhibitor"
+    ],
+    "il17": [
+      "il-17",
+      "il17",
+      "interleukin-17",
+      "interleukin 17",
+      "anti-il17"
+    ],
+    "il23": [
+      "il-23",
+      "il23",
+      "interleukin-23",
+      "interleukin 23",
+      "anti-il23"
+    ],
+    "jak": [
+      "jak",
+      "janus kinase",
+      "jak inhibitor",
+      "tyk2",
+      "jaki"
+    ],
+    "systemic": [
+      "systemic",
+      "oral",
+      "conventional systemic",
+      "dmard"
+    ]
+  },
+  "anatomicalMappings": {
+    "heart": ["cardiac", "cardiovascular", "coronary"],
+    "liver": ["hepatic", "hepato"],
+    "kidney": ["renal", "nephro"],
+    "brain": ["cerebral", "neuro", "neurological"],
+    "skin": ["dermal", "cutaneous", "dermatological"],
+    "lung": ["pulmonary", "respiratory"],
+    "joint": ["articular", "musculoskeletal"]
+  }
+}

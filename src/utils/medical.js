@@ -4,19 +4,14 @@
  */
 
 import { normalizeString } from './string.js';
+import { getSeverityLevel, getAllSeverityLevels, getTimeConversions } from '../services/config/RulesLoader.js';
 
 /**
  * Severity level hierarchy (higher = more severe)
+ * @deprecated Use getSeverityLevel() from RulesLoader instead
+ * Kept for backward compatibility - now loads from external config
  */
-export const SEVERITY_LEVELS = {
-  mild: 1,
-  moderate: 2,
-  'moderate-to-severe': 2.5,
-  severe: 3,
-  significant: 3,
-  serious: 4,
-  major: 4,
-};
+export const SEVERITY_LEVELS = getAllSeverityLevels();
 
 /**
  * Convert timeframe to weeks for standardized comparison
@@ -32,16 +27,20 @@ export function convertToWeeks(timeframe) {
 
   const amount = parseFloat(timeframe.amount);
   const unit = (timeframe.unit || 'weeks').toLowerCase();
+  
+  // Load time conversions from config
+  const timeConversions = getTimeConversions();
 
+  // Build conversion map (handle singular/plural)
   const conversions = {
-    days: amount / 7,
-    day: amount / 7,
-    weeks: amount,
-    week: amount,
-    months: amount * 4.33,
-    month: amount * 4.33,
-    years: amount * 52,
-    year: amount * 52,
+    days: amount * timeConversions.days,
+    day: amount * timeConversions.days,
+    weeks: amount * timeConversions.weeks,
+    week: amount * timeConversions.weeks,
+    months: amount * timeConversions.months,
+    month: amount * timeConversions.months,
+    years: amount * timeConversions.years,
+    year: amount * timeConversions.years,
   };
 
   return conversions[unit] ?? amount;
@@ -95,8 +94,9 @@ export function severityMatches(criterionSeverity, patientSeverity) {
     return false;
   }
 
-  const criterionLevel = SEVERITY_LEVELS[normalizeString(criterionSeverity)] ?? 2;
-  const patientLevel = SEVERITY_LEVELS[normalizeString(patientSeverity)] ?? 2;
+  // Use externalized severity levels from config
+  const criterionLevel = getSeverityLevel(criterionSeverity) ?? 2;
+  const patientLevel = getSeverityLevel(patientSeverity) ?? 2;
 
   return patientLevel >= criterionLevel;
 }

@@ -18,6 +18,12 @@ import {
   severityMatches,
   measurementMeetsThreshold,
 } from '../../utils/index.js';
+import {
+  getConfidenceThresholds,
+  getConfidenceByMatchType,
+  getMeasurementTypes,
+  isAIEnabledForCluster
+} from '../config/RulesLoader.js';
 
 /**
  * @typedef {Object} AIConfig
@@ -25,6 +31,19 @@ import {
  * @property {string} [model] - Model to use
  * @property {Object} [confidenceThresholds] - Confidence thresholds
  */
+
+/**
+ * Get default confidence thresholds from config
+ * @returns {Object} Default thresholds
+ */
+function getDefaultConfidenceThresholds() {
+  const configThresholds = getConfidenceThresholds();
+  return configThresholds.default || {
+    exclude: 0.8,
+    review: 0.5,
+    ignore: 0.3,
+  };
+}
 
 /**
  * Clinical Trial Matcher class
@@ -43,11 +62,8 @@ export class ClinicalTrialMatcher {
    */
   constructor(database, aiConfig = null) {
     this.#database = database;
-    this.#confidenceThresholds = aiConfig?.confidenceThresholds || {
-      exclude: 0.8,
-      review: 0.5,
-      ignore: 0.3,
-    };
+    // Use externalized config with override from aiConfig
+    this.#confidenceThresholds = aiConfig?.confidenceThresholds || getDefaultConfidenceThresholds();
 
     // Initialize AI client if config provided
     if (aiConfig?.apiKey) {
@@ -252,7 +268,7 @@ export class ClinicalTrialMatcher {
     } catch (error) {
       console.error(`Error evaluating criterion ${criterion.id}:`, error);
       matches = false;
-      confidence = 0.5;
+      confidence = getConfidenceByMatchType('errorFallback');
       confidenceReason = 'Error during evaluation';
     }
 
@@ -305,7 +321,7 @@ export class ClinicalTrialMatcher {
       case 'FLR':
         return this.#evaluateFlare(criterion, responses.FLR);
       default:
-        return { matches: false, confidence: 0.5 };
+        return { matches: false, confidence: getConfidenceByMatchType('unknownCluster') };
     }
   }
 
@@ -316,7 +332,7 @@ export class ClinicalTrialMatcher {
     if (!patientAge?.age) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'Age not provided',
         confidenceReason: 'Missing patient age data'
       };
@@ -351,7 +367,7 @@ export class ClinicalTrialMatcher {
     // If it's exclusion criterion and we matched the range, patient is excluded
     return { 
       matches, 
-      confidence: 1.0,
+      confidence: getConfidenceByMatchType('exactMatch'),
       patientValue: `Patient age: ${age} years`,
       confidenceReason: `Exact numeric comparison. ${criterionReq}`
     };
@@ -364,7 +380,7 @@ export class ClinicalTrialMatcher {
     if (!patientBMI) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'BMI/weight not provided',
         confidenceReason: 'Missing patient BMI data'
       };
@@ -412,7 +428,7 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches, 
-      confidence: 1.0,
+      confidence: getConfidenceByMatchType('exactMatch'),
       patientValue: patientValues.join(', ') || 'No BMI/weight data',
       confidenceReason: `Exact numeric comparison. Required: ${requirements.join(', ') || 'N/A'}`
     };
@@ -425,7 +441,7 @@ export class ClinicalTrialMatcher {
     if (!patientComorbidities || !Array.isArray(patientComorbidities)) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No comorbidities reported',
         confidenceReason: 'Missing patient comorbidity data'
       };
@@ -465,9 +481,9 @@ export class ClinicalTrialMatcher {
 
           return { 
             matches: true, 
-            confidence: 0.95,
+            confidence: getConfidenceByMatchType('directMatch'),
             patientValue: `Patient: ${patientTypes.join(', ')}`,
-            confidenceReason: `Direct match with criterion: ${conditionTypes.join(', ')}. 95% due to possible semantic variations.`
+            confidenceReason: `Direct match with criterion: ${conditionTypes.join(', ')}. High confidence due to exact term match.`
           };
         }
 
@@ -476,9 +492,9 @@ export class ClinicalTrialMatcher {
         if (arraysOverlap(conditionTypes, synonyms)) {
           return { 
             matches: true, 
-            confidence: 0.85,
+            confidence: getConfidenceByMatchType('synonymMatch'),
             patientValue: `Patient: ${patientTypes.join(', ')}`,
-            confidenceReason: `Synonym match. Patient term "${patientTypes[0]}" matched via synonym database to "${conditionTypes.join(', ')}". 85% due to indirect match.`
+            confidenceReason: `Synonym match. Patient term "${patientTypes[0]}" matched via synonym database to "${conditionTypes.join(', ')}". Reduced confidence due to indirect match.`
           };
         }
       }
@@ -511,9 +527,9 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.9,
+      confidence: getConfidenceByMatchType('noMatch'),
       patientValue: `Patient conditions: ${patientConditions || 'none'}`,
-      confidenceReason: `No match found. Criterion required: ${criterionConditions}. 90% confidence in no-match.`
+      confidenceReason: `No match found. Criterion required: ${criterionConditions}. High confidence in no-match.`
     };
   }
 
@@ -526,7 +542,7 @@ export class ClinicalTrialMatcher {
     if (!patientTreatments || !Array.isArray(patientTreatments)) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No treatment history reported',
         confidenceReason: 'Missing patient treatment data'
       };
@@ -558,7 +574,7 @@ export class ClinicalTrialMatcher {
                 }
                 return { 
                   matches: true, 
-                  confidence: 0.95,
+                  confidence: getConfidenceByMatchType('databaseMatch'),
                   needsAdminReview: false,
                   matchMethod: 'database',
                   patientValue: `Patient drug: ${patientDrug}`,
@@ -572,7 +588,7 @@ export class ClinicalTrialMatcher {
             if (drugClass && drugBelongsToClass(patientDrug, drugClass)) {
               return { 
                 matches: true, 
-                confidence: 0.9,
+                confidence: getConfidenceByMatchType('classMatch'),
                 needsAdminReview: false,
                 matchMethod: 'database_class',
                 patientValue: `Patient drug: ${patientDrug}`,
@@ -591,7 +607,7 @@ export class ClinicalTrialMatcher {
               }
               return { 
                 matches: true, 
-                confidence: 0.9,
+                confidence: getConfidenceByMatchType('classMatch'),
                 needsAdminReview: true,
                 matchMethod: 'direct_unverified',
                 reviewPayload: {
@@ -639,10 +655,10 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.9,
+      confidence: getConfidenceByMatchType('noMatch'),
       needsAdminReview: false,
       patientValue: `Patient treatments: ${patientDrugs || 'none'}`,
-      confidenceReason: `No match found. Criterion required: ${criterionDrugs}. 90% confidence in no-match.`
+      confidenceReason: `No match found. Criterion required: ${criterionDrugs}. High confidence in no-match.`
     };
   }
 
@@ -653,7 +669,7 @@ export class ClinicalTrialMatcher {
     if (!patientInfections || !Array.isArray(patientInfections)) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No infections reported',
         confidenceReason: 'Missing patient infection data'
       };
@@ -684,9 +700,9 @@ export class ClinicalTrialMatcher {
 
           return { 
             matches: true, 
-            confidence: 0.95,
+            confidence: getConfidenceByMatchType('directMatch'),
             patientValue: `Patient infection: ${patientTypes.join(', ')}`,
-            confidenceReason: `Direct infection match with: ${infectionTypes.join(', ')}. 95% due to possible semantic variations.`
+            confidenceReason: `Direct infection match with: ${infectionTypes.join(', ')}. High confidence match.`
           };
         }
 
@@ -695,9 +711,9 @@ export class ClinicalTrialMatcher {
         if (arraysOverlap(infectionTypes, synonyms)) {
           return { 
             matches: true, 
-            confidence: 0.85,
+            confidence: getConfidenceByMatchType('synonymMatch'),
             patientValue: `Patient infection: ${patientTypes.join(', ')}`,
-            confidenceReason: `Synonym match for infection type. 85% due to indirect match.`
+            confidenceReason: `Synonym match for infection type. Reduced confidence due to indirect match.`
           };
         }
       }
@@ -705,9 +721,9 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.9,
+      confidence: getConfidenceByMatchType('noMatch'),
       patientValue: `Patient infections: ${patientInfectionTypes || 'none'}`,
-      confidenceReason: `No match found. Criterion required: ${criterionInfections}. 90% confidence in no-match.`
+      confidenceReason: `No match found. Criterion required: ${criterionInfections}. High confidence in no-match.`
     };
   }
 
@@ -718,14 +734,14 @@ export class ClinicalTrialMatcher {
     if (!patientMeasurements) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No measurements provided',
         confidenceReason: 'Missing patient measurement data'
       };
     }
 
-    // Check various measurement types
-    const measurements = ['BSA', 'PASI', 'IGA', 'DLQI', 'PGA'];
+    // Check various measurement types - loaded from config
+    const measurements = getMeasurementTypes('AAO').length > 0 ? getMeasurementTypes('AAO') : ['BSA', 'PASI', 'IGA', 'DLQI', 'PGA'];
     const patientValues = [];
     const requirements = [];
 
@@ -755,7 +771,7 @@ export class ClinicalTrialMatcher {
           if (measurementMeetsThreshold(patientValue, threshold, comparison)) {
             return { 
               matches: true, 
-              confidence: 1.0,
+              confidence: getConfidenceByMatchType('exactMatch'),
               patientValue: patientValues.join(', '),
               confidenceReason: `Exact numeric comparison. ${type} ${patientValue} meets ${comparison} ${threshold}`
             };
@@ -766,9 +782,9 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.8,
+      confidence: getConfidenceByMatchType('partialMatch'),
       patientValue: patientValues.join(', ') || 'No measurements',
-      confidenceReason: `No measurement threshold met. Required: ${requirements.join(', ') || 'N/A'}. 80% due to possible missing data.`
+      confidenceReason: `No measurement threshold met. Required: ${requirements.join(', ') || 'N/A'}. ${Math.round(getConfidenceByMatchType('partialMatch') * 100)}% due to possible missing data.`
     };
   }
 
@@ -840,7 +856,7 @@ export class ClinicalTrialMatcher {
     if (!patientSeverity) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No severity data provided',
         confidenceReason: 'Missing patient severity data'
       };
@@ -879,7 +895,7 @@ export class ClinicalTrialMatcher {
           if (measurementMeetsThreshold(patientValue, threshold, comparison)) {
             return { 
               matches: true, 
-              confidence: 1.0,
+              confidence: getConfidenceByMatchType('exactMatch'),
               patientValue: patientValues.join(', '),
               confidenceReason: `Exact numeric comparison. ${type} ${patientValue} meets ${comparison} ${threshold}`
             };
@@ -895,17 +911,17 @@ export class ClinicalTrialMatcher {
     if (requiredSeverity && severityMatches(requiredSeverity, patientSeverityValue)) {
       return { 
         matches: true, 
-        confidence: 0.9,
+        confidence: getConfidenceByMatchType('noMatch'),
         patientValue: `Patient severity: ${patientSeverityValue}`,
-        confidenceReason: `Severity match. Required: ${requiredSeverity}. 90% due to subjective severity assessment.`
+        confidenceReason: `Severity match. Required: ${requiredSeverity}. ${Math.round(getConfidenceByMatchType('noMatch') * 100)}% due to subjective severity assessment.`
       };
     }
 
     return { 
       matches: false, 
-      confidence: 0.8,
+      confidence: getConfidenceByMatchType('partialMatch'),
       patientValue: patientValues.join(', ') || 'No severity scores',
-      confidenceReason: `No severity threshold met. Required: ${requirements.join(', ') || 'N/A'}. 80% due to possible missing data.`
+      confidenceReason: `No severity threshold met. Required: ${requirements.join(', ') || 'N/A'}. ${Math.round(getConfidenceByMatchType('partialMatch') * 100)}% due to possible missing data.`
     };
   }
 
@@ -917,7 +933,7 @@ export class ClinicalTrialMatcher {
     if (!patientDuration) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No duration data provided',
         confidenceReason: 'Missing patient duration data'
       };
@@ -945,7 +961,7 @@ export class ClinicalTrialMatcher {
       if (timeframeMatches(criterionTimeframe, patientTimeframe)) {
         return { 
           matches: true, 
-          confidence: 1.0,
+          confidence: getConfidenceByMatchType('exactMatch'),
           patientValue: `Patient duration: ${patientDurationValue} ${patientUnit}`,
           confidenceReason: `Duration meets requirement. Required: ≥${minDuration} ${minUnit}`
         };
@@ -954,9 +970,9 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.8,
+      confidence: getConfidenceByMatchType('partialMatch'),
       patientValue: `Patient duration: ${patientDurationValue || 'unknown'} ${patientUnit}`,
-      confidenceReason: `Duration insufficient. Required: ≥${minDuration || 'N/A'} ${minUnit}. 80% due to possible unit conversion issues.`
+      confidenceReason: `Duration insufficient. Required: ≥${minDuration || 'N/A'} ${minUnit}. ${Math.round(getConfidenceByMatchType('partialMatch') * 100)}% due to possible unit conversion issues.`
     };
   }
 
@@ -967,7 +983,7 @@ export class ClinicalTrialMatcher {
     if (!patientVariant) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No variant data provided',
         confidenceReason: 'Missing patient variant data'
       };
@@ -979,7 +995,7 @@ export class ClinicalTrialMatcher {
     if (variants.includes(patientVariantType)) {
       return { 
         matches: true, 
-        confidence: 1.0,
+        confidence: getConfidenceByMatchType('exactMatch'),
         patientValue: `Patient variant: ${patientVariantType}`,
         confidenceReason: `Exact variant match. Required: ${variants.join(' or ')}`
       };
@@ -987,9 +1003,9 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.9,
+      confidence: getConfidenceByMatchType('noMatch'),
       patientValue: `Patient variant: ${patientVariantType || 'unknown'}`,
-      confidenceReason: `Variant mismatch. Required: ${variants.join(' or ')}. 90% confidence in no-match.`
+      confidenceReason: `Variant mismatch. Required: ${variants.join(' or ')}. ${Math.round(getConfidenceByMatchType('noMatch') * 100)}% confidence in no-match.`
     };
   }
 
@@ -1000,7 +1016,7 @@ export class ClinicalTrialMatcher {
     if (!patientBiomarkers) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No biomarker data provided',
         confidenceReason: 'Missing patient biomarker data'
       };
@@ -1015,14 +1031,14 @@ export class ClinicalTrialMatcher {
       if (measurementMeetsThreshold(patientValue, threshold, comparison)) {
         return { 
           matches: true, 
-          confidence: 1.0,
+          confidence: getConfidenceByMatchType('exactMatch'),
           patientValue: `${biomarkerType}: ${patientValue}`,
           confidenceReason: `Exact biomarker comparison. ${biomarkerType} ${patientValue} meets ${comparison} ${threshold}`
         };
       }
       return {
         matches: false,
-        confidence: 0.9,
+        confidence: getConfidenceByMatchType('noMatch'),
         patientValue: `${biomarkerType}: ${patientValue}`,
         confidenceReason: `Biomarker mismatch. Required: ${biomarkerType} ${comparison} ${threshold}`
       };
@@ -1030,9 +1046,9 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.8,
+      confidence: getConfidenceByMatchType('partialMatch'),
       patientValue: `${biomarkerType || 'Biomarker'}: not available`,
-      confidenceReason: `Biomarker not found in patient data. 80% due to missing data.`
+      confidenceReason: `Biomarker not found in patient data. ${Math.round(getConfidenceByMatchType('partialMatch') * 100)}% due to missing data.`
     };
   }
 
@@ -1043,7 +1059,7 @@ export class ClinicalTrialMatcher {
     if (!patientFlare) {
       return { 
         matches: false, 
-        confidence: 0.5,
+        confidence: getConfidenceByMatchType('missingData'),
         patientValue: 'No flare history provided',
         confidenceReason: 'Missing patient flare data'
       };
@@ -1059,17 +1075,17 @@ export class ClinicalTrialMatcher {
           if (timeframeMatches(timeframe, patientFlare.timeframe)) {
             return { 
               matches: true, 
-              confidence: 0.95,
+              confidence: getConfidenceByMatchType('directMatch'),
               patientValue: `Patient flares: ${patientFlareCount} in ${patientFlare.timeframe.amount || ''} ${patientFlare.timeframe.unit || ''}`,
-              confidenceReason: `Flare count match with timeframe. Required: ≥${flareCount} flares. 95% due to timeframe interpretation.`
+              confidenceReason: `Flare count match with timeframe. Required: ≥${flareCount} flares. ${Math.round(getConfidenceByMatchType('directMatch') * 100)}% due to timeframe interpretation.`
             };
           }
         } else {
           return { 
             matches: true, 
-            confidence: 0.9,
+            confidence: getConfidenceByMatchType('noMatch'),
             patientValue: `Patient flares: ${patientFlareCount}`,
-            confidenceReason: `Flare count match. Required: ≥${flareCount}. 90% due to missing timeframe.`
+            confidenceReason: `Flare count match. Required: ≥${flareCount}. ${Math.round(getConfidenceByMatchType('noMatch') * 100)}% due to missing timeframe.`
           };
         }
       }
@@ -1077,9 +1093,9 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.8,
+      confidence: getConfidenceByMatchType('partialMatch'),
       patientValue: `Patient flares: ${patientFlareCount || 'unknown'}`,
-      confidenceReason: `Flare count insufficient. Required: ≥${flareCount || 'N/A'}. 80% due to possible missing data.`
+      confidenceReason: `Flare count insufficient. Required: ≥${flareCount || 'N/A'}. ${Math.round(getConfidenceByMatchType('partialMatch') * 100)}% due to possible missing data.`
     };
   }
 }

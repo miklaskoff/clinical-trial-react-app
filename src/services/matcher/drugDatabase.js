@@ -6,10 +6,19 @@
  * For adding new drugs, prefer editing:
  *   src/config/drug-classification.json
  * 
- * The JSON config is loaded by RulesLoader and merged at runtime.
+ * For adding medical synonyms, prefer editing:
+ *   src/config/medical-synonyms.json
+ * 
+ * The JSON configs are loaded by RulesLoader and merged at runtime.
  */
 
-import { getDrugs as getConfigDrugs, isKnownDrug as configIsKnownDrug } from '../config/RulesLoader.js';
+import { 
+  getDrugs as getConfigDrugs, 
+  isKnownDrug as configIsKnownDrug,
+  getConditionSynonyms,
+  findConditionSynonyms,
+  getDrugClassKeywords
+} from '../config/RulesLoader.js';
 
 /**
  * Drug aliases and classifications (legacy hardcoded entries)
@@ -199,8 +208,11 @@ export const DRUG_DATABASE = {
 
 /**
  * Medical synonym dictionary
+ * @deprecated Use getConditionSynonyms() from RulesLoader instead
+ * Kept for backward compatibility - now loads from external config and merges with legacy
  */
 export const MEDICAL_SYNONYMS = {
+  // Legacy hardcoded entries (kept for backward compatibility)
   depression: ['major depressive disorder', 'clinical depression', 'depressive episode', 'mdd'],
   'heart failure': ['cardiac insufficiency', 'congestive heart failure', 'chf', 'cardiac failure'],
   'myocardial infarction': ['heart attack', 'mi', 'cardiac infarction', 'ami', 'acute mi'],
@@ -216,17 +228,24 @@ export const MEDICAL_SYNONYMS = {
   'rheumatoid arthritis': ['ra', 'rheumatoid disease'],
   "crohn's disease": ['crohns', 'inflammatory bowel disease', 'ibd'],
   'ulcerative colitis': ['uc', 'inflammatory bowel disease', 'ibd'],
+  // Merge with external config at runtime
+  ...getConditionSynonyms()
 };
 
 /**
  * Drug class keywords for matching
+ * @deprecated Use getDrugClassKeywords() from RulesLoader instead
+ * Kept for backward compatibility - now loads from external config and merges with legacy
  */
 export const DRUG_CLASS_KEYWORDS = {
+  // Legacy hardcoded entries
   biologics: ['biologic', 'monoclonal antibody', 'fusion protein', 'mab'],
   tnf: ['tnf', 'tumor necrosis factor', 'anti-tnf', 'tnf inhibitor', 'tnf-alpha'],
   il17: ['il-17', 'il17', 'interleukin-17', 'interleukin 17'],
   il23: ['il-23', 'il23', 'interleukin-23', 'interleukin 23'],
   il12: ['il-12', 'il12', 'interleukin-12', 'interleukin 12'],
+  // Merge with external config at runtime
+  ...getDrugClassKeywords()
 };
 
 /**
@@ -411,6 +430,7 @@ export function drugBelongsToClass(drugName, drugClass) {
 
 /**
  * Find synonym matches
+ * Uses externalized config from RulesLoader with fallback to legacy MEDICAL_SYNONYMS
  * @param {string} term - Term to find synonyms for
  * @returns {string[]} Array of synonyms (including original term)
  */
@@ -420,6 +440,14 @@ export function findSynonyms(term) {
   }
 
   const normalizedTerm = term.toLowerCase().trim();
+  
+  // First try the externalized config (via RulesLoader)
+  const configSynonyms = findConditionSynonyms(term);
+  if (configSynonyms.length > 1) {
+    return [...new Set(configSynonyms)];
+  }
+  
+  // Fall back to legacy MEDICAL_SYNONYMS
   const synonyms = [normalizedTerm];
 
   // Check if term is a key

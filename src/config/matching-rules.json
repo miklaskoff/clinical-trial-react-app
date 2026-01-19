@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-19",
+    "description": "Externalized matching rules for clinical trial eligibility evaluation"
+  },
+  "confidenceThresholds": {
+    "default": {
+      "exclude": 0.8,
+      "review": 0.5,
+      "ignore": 0.3
+    },
+    "byMatchType": {
+      "exactMatch": 1.0,
+      "directMatch": 0.95,
+      "databaseMatch": 0.95,
+      "classMatch": 0.9,
+      "synonymMatch": 0.85,
+      "noMatch": 0.9,
+      "missingData": 0.5,
+      "partialMatch": 0.8,
+      "errorFallback": 0.5,
+      "unknownCluster": 0.5
+    },
+    "ai": {
+      "confidenceCap": 0.9,
+      "unavailableFallback": 0.5,
+      "errorFallback": 0.5
+    }
+  },
+  "clusterRouting": [
+    "AGE",
+    "BMI",
+    "CMB",
+    "PTH",
+    "AIC",
+    "AAO",
+    "SEV",
+    "CPD",
+    "NPV",
+    "BIO",
+    "FLR"
+  ],
+  "measurementTypes": {
+    "AAO": ["BSA", "PASI", "IGA", "DLQI", "PGA"],
+    "SEV": ["PASI", "PGA", "IGA", "DLQI", "PHQ"]
+  },
+  "timeConversions": {
+    "days": 0.142857,
+    "weeks": 1,
+    "months": 4.33,
+    "years": 52
+  },
+  "clusterConfig": {
+    "AGE": {
+      "aiEnabled": false,
+      "description": "Age eligibility criteria"
+    },
+    "BMI": {
+      "aiEnabled": false,
+      "description": "BMI and weight criteria"
+    },
+    "CMB": {
+      "aiEnabled": true,
+      "description": "Comorbidities and medical conditions"
+    },
+    "PTH": {
+      "aiEnabled": true,
+      "description": "Previous treatment history"
+    },
+    "AIC": {
+      "aiEnabled": true,
+      "description": "Active infections and contraindications"
+    },
+    "AAO": {
+      "aiEnabled": false,
+      "description": "Assessment and outcome measures"
+    },
+    "SEV": {
+      "aiEnabled": true,
+      "description": "Disease severity scores"
+    },
+    "CPD": {
+      "aiEnabled": false,
+      "description": "Chronic psoriasis duration"
+    },
+    "NPV": {
+      "aiEnabled": false,
+      "description": "Naive/prior/vehicle treatment status"
+    },
+    "BIO": {
+      "aiEnabled": false,
+      "description": "Biologic naive status"
+    },
+    "FLR": {
+      "aiEnabled": false,
+      "description": "Flare/active disease status"
+    }
+  }
+}
