@@ -1,18 +1,27 @@
 # Copilot Instructions — Clinical Trial Matching System
 
-## ⚠️ MANDATORY DEVELOPMENT RULES
+## ⚠️ MANDATORY DEVELOPMENT RULES — КРИТИЧЕСКИ ВАЖНО
 
-### TDD (Test-Driven Development) — ОБЯЗАТЕЛЬНО
+### TDD (Test-Driven Development) — СТРОГО ОБЯЗАТЕЛЬНО
 
-1. **Перед каждым изменением** — напиши тест
-2. **После каждого изменения** — запусти ВСЕ тесты
-3. **Тесты не прошли?** — НЕ КОММИТЬ. Исправь код
-4. **Тесты прошли?** — Проверь результат ДВАЖДЫ, потом коммить
+1. **ПЕРЕД каждым изменением** — СНАЧАЛА напиши тест
+2. **После каждого изменения** — запусти ВСЕ тесты (`npm test`)
+3. **Тесты не прошли?** — ❌ НЕ КОММИТЬ. Исправь код до прохождения
+4. **Тесты прошли?** — Проверь результат **ДВАЖДЫ**, потом коммить
+5. **Нельзя заканчивать работу** — пока ВСЕ тесты не пройдены
+6. **Каждое изменение = набор тестов** — добавляй в соответствующую тестовую группу
 
-### Git Workflow — ОБЯЗАТЕЛЬНО
+### Async/Parallel Execution — СТРОГО ОБЯЗАТЕЛЬНО
+
+1. **ВСЁ что может быть async — ДОЛЖНО быть async**
+2. **Все операции с БД** — оптимизированы, с индексами, выполняются параллельно
+3. **Используй Promise.all()** — везде где возможно параллельное выполнение
+4. **Никаких синхронных операций** — если есть async альтернатива
+
+### Git Workflow — СТРОГО ОБЯЗАТЕЛЬНО
 
 ```bash
-# Каждое УСПЕШНОЕ изменение (тесты прошли, проверено 2 раза):
+# ТОЛЬКО после: тесты прошли + проверено 2 раза + всё работает
 git add -A
 git commit -m "feat/fix/refactor: краткое описание"
 ```
@@ -21,19 +30,45 @@ git commit -m "feat/fix/refactor: краткое описание"
 
 1. **Async/Await** — ВСЕ асинхронные операции через async/await
 2. **Параллельное выполнение** — используй Promise.all() где возможно
-3. **Никаких секретов в коде** — API ключи только через .env
+3. **Никаких секретов в коде** — API ключи только через .env (backend)
 4. **Тесты на каждую функцию** — минимум unit test
 5. **TypeScript types** — предпочтительны JSDoc или .d.ts файлы
+6. **База данных** — SQLite с индексами, async операции
+
+### Database Optimization Rules
+
+```javascript
+// ✅ CORRECT - async with indexes
+const db = new Database('data.db');
+db.exec(`
+  CREATE TABLE IF NOT EXISTS cache (
+    id TEXT PRIMARY KEY,
+    data TEXT,
+    expires_at INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS idx_expires ON cache(expires_at);
+`);
+
+// ✅ CORRECT - parallel queries
+const [drugs, cache] = await Promise.all([
+  db.getAllAsync('SELECT * FROM approved_drugs'),
+  db.getAsync('SELECT * FROM followup_cache WHERE drug_class = ?', [drugClass])
+]);
+
+// ❌ WRONG - sequential queries
+const drugs = await db.getAllAsync('SELECT * FROM approved_drugs');
+const cache = await db.getAsync('SELECT * FROM followup_cache WHERE drug_class = ?', [drugClass]);
+```
 
 ---
 
 ## Project Overview
 
 **Name**: Clinical Trial Patient Matching System  
-**Type**: React Web Application  
+**Type**: Full-Stack Web Application (React + Express Backend)  
 **Purpose**: Match patients with clinical trials using hybrid AI + rule-based matching  
-**Tech Stack**: React 19, Node.js, Anthropic Claude API, Vitest/Testing Library  
-**Version**: 4.0 (Full Refactor)
+**Tech Stack**: React 19, Node.js/Express, SQLite, Anthropic Claude API, Vitest  
+**Version**: 5.0 (Full Backend Integration)
 
 ---
 
@@ -43,62 +78,76 @@ git commit -m "feat/fix/refactor: краткое описание"
 clinical-trial-react-app/
 ├── .github/
 │   └── copilot-instructions.md      # THIS FILE
-├── public/
-│   └── index.html
-├── src/
-│   ├── __tests__/                   # All tests
-│   │   ├── components/              # Component tests
-│   │   ├── services/                # Service tests
-│   │   └── utils/                   # Utility tests
-│   ├── components/                  # React components
+├── server/                          # EXPRESS BACKEND
+│   ├── index.js                     # Entry point
+│   ├── db.js                        # SQLite setup + schema
+│   ├── .env                         # ANTHROPIC_API_KEY, ADMIN_PASSWORD
+│   ├── routes/
+│   │   ├── match.js                 # /api/match
+│   │   ├── followups.js             # /api/followups/generate
+│   │   └── admin.js                 # /api/admin/*
+│   ├── services/
+│   │   ├── ClaudeClient.js          # Anthropic SDK wrapper
+│   │   ├── FollowUpGenerator.js     # AI question generation
+│   │   └── DrugCategoryResolver.js  # Drug → category mapping
+│   ├── middleware/
+│   │   └── rateLimiter.js           # Rate limiting
+│   ├── data/
+│   │   └── clinical-trials.db       # SQLite database
+│   └── __tests__/                   # Backend tests
+│       ├── routes/
+│       ├── services/
+│       └── middleware/
+├── src/                             # REACT FRONTEND
+│   ├── __tests__/                   # Frontend tests
+│   │   ├── components/
+│   │   ├── services/
+│   │   └── utils/
+│   ├── components/
 │   │   ├── App.jsx
+│   │   ├── Admin/
 │   │   ├── Settings/
 │   │   ├── Questionnaire/
-│   │   ├── Results/
-│   │   └── common/                  # Reusable
-│   ├── services/                    # Business logic
-│   │   ├── matcher/                 # Matching logic
-│   │   │   ├── ClinicalTrialMatcher.js
-│   │   │   ├── EnhancedAIMatchingEngine.js
-│   │   │   └── index.js
-│   │   └── api/                     # API clients
-│   │       └── claudeClient.js
-│   ├── hooks/                       # Custom React hooks
-│   ├── utils/                       # Utilities
-│   ├── types/                       # TypeScript types / JSDoc
-│   ├── data/                        # JSON data
-│   │   └── trials-database.json
-│   ├── styles/                      # CSS
-│   └── index.jsx                    # Entry point
+│   │   └── Results/
+│   ├── services/
+│   │   ├── api/
+│   │   │   ├── backendClient.js     # Calls Express backend
+│   │   │   └── claudeClient.js      # Legacy (for reference)
+│   │   └── matcher/
+│   │       ├── ClinicalTrialMatcher.js
+│   │       └── drugDatabase.js
+│   ├── data/
+│   │   └── improved_slot_filled_database.json
+│   └── utils/
 ├── docs/
-│   └── ARCHITECTURE_AND_MATCHING_GUIDE.md  # CANONICAL DOC
-├── .env.example                     # Env variables template
-├── .gitignore
+│   └── ARCHITECTURE_AND_MATCHING_GUIDE.md
 ├── package.json
-├── vite.config.js                   # Vite config
-├── vitest.config.js                 # Vitest config
+├── vite.config.js
+├── vitest.config.js
 ├── CHANGELOG.md
 └── README.md
 ```
 
 ---
 
-## Tech Stack (v4.0)
+## Tech Stack (v5.0)
 
 ### Frontend
 - **React 19** — latest version
-- **Vite** — fast build (replaces CRA)
+- **Vite** — fast build
 - **CSS Modules** or **Tailwind CSS**
+
+### Backend
+- **Node.js + Express** — REST API server
+- **SQLite (better-sqlite3)** — persistent storage with async wrapper
+- **Anthropic SDK** — Claude API (API key secured on server)
+- **express-rate-limit** — rate limiting for admin routes
 
 ### Testing
 - **Vitest** — fast test runner (Jest API compatible)
 - **@testing-library/react** — component testing
-- **@testing-library/user-event** — user interaction simulation
-- **MSW** — API mocking
-
-### Backend/Services
-- **Node.js** (ES Modules)
-- **Anthropic SDK** — official Claude API SDK
+- **supertest** — backend API testing
+- **MSW** — API mocking for frontend
 
 ### Code Quality
 - **ESLint** — linting
@@ -316,6 +365,6 @@ When asked about overall architecture, always reference the canonical document.
 
 ---
 
-**Version**: 4.0 (2026-01-12)  
-**Status**: Refactoring in Progress 🔄
+**Version**: 5.0 (2026-01-19)  
+**Status**: Backend Integration in Progress 🔄
 
