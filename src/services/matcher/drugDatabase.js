@@ -223,7 +223,19 @@ export const MEDICAL_SYNONYMS = {
   'hepatitis c': ['hep c', 'hcv', 'hepatitis c infection', 'hepatitis c virus'],
   hypertension: ['high blood pressure', 'htn', 'elevated blood pressure'],
   hyperlipidemia: ['high cholesterol', 'dyslipidemia', 'elevated lipids'],
-  cancer: ['malignancy', 'malignant tumor', 'malignant neoplasm', 'carcinoma'],
+  // Cancer and malignancy synonyms - expanded for better matching
+  cancer: ['malignancy', 'malignant tumor', 'malignant neoplasm', 'carcinoma', 'neoplasm', 'tumor', 'oncological condition'],
+  malignancy: ['cancer', 'malignant tumor', 'malignant neoplasm', 'carcinoma', 'neoplasm'],
+  // Specific cancer types that should match "malignancy" exclusions
+  'lung cancer': ['cancer', 'malignancy', 'pulmonary cancer', 'lung carcinoma', 'lung malignancy', 'nsclc', 'sclc'],
+  'breast cancer': ['cancer', 'malignancy', 'breast carcinoma', 'breast malignancy'],
+  'prostate cancer': ['cancer', 'malignancy', 'prostate carcinoma', 'prostate malignancy'],
+  'colon cancer': ['cancer', 'malignancy', 'colorectal cancer', 'colon carcinoma', 'bowel cancer'],
+  'colorectal cancer': ['cancer', 'malignancy', 'colon cancer', 'rectal cancer', 'bowel cancer'],
+  'skin cancer': ['cancer', 'malignancy', 'melanoma', 'basal cell carcinoma', 'squamous cell carcinoma'],
+  melanoma: ['cancer', 'malignancy', 'skin cancer', 'malignant melanoma'],
+  lymphoma: ['cancer', 'malignancy', 'lymphatic cancer', 'hodgkin lymphoma', 'non-hodgkin lymphoma'],
+  leukemia: ['cancer', 'malignancy', 'blood cancer', 'leukemic condition'],
   psoriasis: ['plaque psoriasis', 'psoriatic disease'],
   'rheumatoid arthritis': ['ra', 'rheumatoid disease'],
   "crohn's disease": ['crohns', 'inflammatory bowel disease', 'ibd'],
@@ -431,6 +443,7 @@ export function drugBelongsToClass(drugName, drugClass) {
 /**
  * Find synonym matches
  * Uses externalized config from RulesLoader with fallback to legacy MEDICAL_SYNONYMS
+ * Supports partial matching for compound terms (e.g., "lung cancer" → "cancer" synonyms)
  * @param {string} term - Term to find synonyms for
  * @returns {string[]} Array of synonyms (including original term)
  */
@@ -450,14 +463,31 @@ export function findSynonyms(term) {
   // Fall back to legacy MEDICAL_SYNONYMS
   const synonyms = [normalizedTerm];
 
-  // Check if term is a key
+  // Check if term is a key (exact match)
   if (MEDICAL_SYNONYMS[normalizedTerm]) {
     synonyms.push(...MEDICAL_SYNONYMS[normalizedTerm]);
   }
 
-  // Check if term is a synonym value
+  // Check if term is a synonym value (exact match)
   for (const [key, values] of Object.entries(MEDICAL_SYNONYMS)) {
     if (values.includes(normalizedTerm)) {
+      synonyms.push(key);
+      synonyms.push(...values);
+    }
+  }
+
+  // Partial matching: check if term CONTAINS a key word (e.g., "lung cancer" contains "cancer")
+  // This helps match specific conditions to general exclusion criteria
+  for (const [key, values] of Object.entries(MEDICAL_SYNONYMS)) {
+    if (normalizedTerm.includes(key) && key !== normalizedTerm) {
+      synonyms.push(key);
+      synonyms.push(...values);
+    }
+  }
+
+  // Partial matching: check if any key CONTAINS the term
+  for (const [key, values] of Object.entries(MEDICAL_SYNONYMS)) {
+    if (key.includes(normalizedTerm) && key !== normalizedTerm) {
       synonyms.push(key);
       synonyms.push(...values);
     }

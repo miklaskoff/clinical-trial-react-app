@@ -487,28 +487,38 @@ export class ClinicalTrialMatcher {
           };
         }
 
-        // Try synonym matching
-        const synonyms = findSynonyms(patientTypes[0]);
-        if (arraysOverlap(conditionTypes, synonyms)) {
-          return { 
-            matches: true, 
-            confidence: getConfidenceByMatchType('synonymMatch'),
-            patientValue: `Patient: ${patientTypes.join(', ')}`,
-            confidenceReason: `Synonym match. Patient term "${patientTypes[0]}" matched via synonym database to "${conditionTypes.join(', ')}". Reduced confidence due to indirect match.`
-          };
+        // Try synonym matching for ALL patient types, not just the first one
+        for (const patientType of patientTypes) {
+          const synonyms = findSynonyms(patientType);
+          if (arraysOverlap(conditionTypes, synonyms)) {
+            return { 
+              matches: true, 
+              confidence: getConfidenceByMatchType('synonymMatch'),
+              patientValue: `Patient: ${patientTypes.join(', ')}`,
+              confidenceReason: `Synonym match. Patient term "${patientType}" matched via synonym database to "${conditionTypes.join(', ')}". Reduced confidence due to indirect match.`
+            };
+          }
         }
       }
     }
 
     // Try AI matching if available and no match found
+    // Check ALL conditions and comorbidities, not just the first ones
     if (this.#aiClient && conditions.length > 0 && patientComorbidities.length > 0) {
-      const patientTerm = patientComorbidities[0].CONDITION_TYPE?.[0] || '';
-      const criterionTerm = conditions[0].CONDITION_TYPE?.[0] || '';
+      // Collect all patient condition terms
+      const patientTerms = patientComorbidities
+        .flatMap(c => c.CONDITION_TYPE || [])
+        .filter(Boolean);
+      
+      // Collect all criterion condition terms
+      const criterionTerms = conditions
+        .flatMap(c => c.CONDITION_TYPE || [])
+        .filter(Boolean);
 
-      if (patientTerm && criterionTerm) {
+      if (patientTerms.length > 0 && criterionTerms.length > 0) {
         const aiResult = await this.#aiClient.semanticMatch(
-          patientTerm,
-          criterionTerm,
+          patientTerms.join(', '),
+          criterionTerms.join(', '),
           'medical condition'
         );
 
@@ -518,8 +528,8 @@ export class ClinicalTrialMatcher {
             confidence: aiResult.confidence,
             requiresAI: true,
             aiReasoning: aiResult.reasoning,
-            patientValue: `Patient: ${patientTerm}`,
-            confidenceReason: `AI semantic analysis. Criterion: "${criterionTerm}". ${aiResult.reasoning || ''}`
+            patientValue: `Patient: ${patientTerms.join(', ')}`,
+            confidenceReason: `AI semantic analysis. Criterion: "${criterionTerms.join(', ')}". ${aiResult.reasoning || ''}`
           };
         }
       }
@@ -706,15 +716,17 @@ export class ClinicalTrialMatcher {
           };
         }
 
-        // Try synonym matching
-        const synonyms = findSynonyms(patientTypes[0]);
-        if (arraysOverlap(infectionTypes, synonyms)) {
-          return { 
-            matches: true, 
-            confidence: getConfidenceByMatchType('synonymMatch'),
-            patientValue: `Patient infection: ${patientTypes.join(', ')}`,
-            confidenceReason: `Synonym match for infection type. Reduced confidence due to indirect match.`
-          };
+        // Try synonym matching for ALL patient types, not just the first one
+        for (const patientType of patientTypes) {
+          const synonyms = findSynonyms(patientType);
+          if (arraysOverlap(infectionTypes, synonyms)) {
+            return { 
+              matches: true, 
+              confidence: getConfidenceByMatchType('synonymMatch'),
+              patientValue: `Patient infection: ${patientTypes.join(', ')}`,
+              confidenceReason: `Synonym match for infection type. Reduced confidence due to indirect match.`
+            };
+          }
         }
       }
     }

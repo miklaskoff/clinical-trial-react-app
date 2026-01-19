@@ -103,6 +103,36 @@ describe('Drug Database', () => {
       expect(findSynonyms(null)).toEqual([]);
       expect(findSynonyms('')).toEqual([]);
     });
+
+    it('should find malignancy synonyms for cancer', () => {
+      const synonyms = findSynonyms('cancer');
+      expect(synonyms).toContain('cancer');
+      expect(synonyms).toContain('malignancy');
+      expect(synonyms).toContain('carcinoma');
+    });
+
+    it('should find cancer synonyms for specific cancer types like lung cancer', () => {
+      const synonyms = findSynonyms('lung cancer');
+      expect(synonyms).toContain('lung cancer');
+      expect(synonyms).toContain('cancer');
+      expect(synonyms).toContain('malignancy');
+    });
+
+    it('should match breast cancer to malignancy', () => {
+      const synonyms = findSynonyms('breast cancer');
+      expect(synonyms).toContain('malignancy');
+    });
+
+    it('should match melanoma to cancer and malignancy', () => {
+      const synonyms = findSynonyms('melanoma');
+      expect(synonyms).toContain('cancer');
+      expect(synonyms).toContain('malignancy');
+    });
+
+    it('should match leukemia to malignancy', () => {
+      const synonyms = findSynonyms('leukemia');
+      expect(synonyms).toContain('malignancy');
+    });
   });
 
   describe('isKnownDrug', () => {
