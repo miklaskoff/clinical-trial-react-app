@@ -725,18 +725,29 @@ export class ClinicalTrialMatcher {
     }
 
     // Check various measurement types
-    const measurements = ['BSA', 'PASI', 'IGA', 'DLQI'];
+    const measurements = ['BSA', 'PASI', 'IGA', 'DLQI', 'PGA'];
     const patientValues = [];
     const requirements = [];
 
+    // First try structured threshold fields
     for (const type of measurements) {
-      const threshold = criterion[`${type}_THRESHOLD`] || criterion[`${type}_MIN`];
-      const comparison = criterion[`${type}_COMPARISON`] || '>=';
-      const patientValue = patientMeasurements[type]?.value;
+      let threshold = criterion[`${type}_THRESHOLD`] || criterion[`${type}_MIN`];
+      let comparison = criterion[`${type}_COMPARISON`] || '>=';
+      const patientValue = patientMeasurements[type]?.value ?? patientMeasurements[type];
+
+      // If no structured threshold, try parsing from raw_text
+      if ((threshold === null || threshold === undefined) && criterion.raw_text) {
+        const parsed = this.#parseThresholdFromRawText(criterion.raw_text, type);
+        if (parsed) {
+          threshold = parsed.value;
+          comparison = parsed.operator;
+        }
+      }
 
       if (patientValue !== null && patientValue !== undefined) {
         patientValues.push(`${type}: ${patientValue}`);
       }
+      
       if (threshold !== null && threshold !== undefined) {
         requirements.push(`${type} ${comparison} ${threshold}`);
         
@@ -762,7 +773,68 @@ export class ClinicalTrialMatcher {
   }
 
   /**
+   * Parse threshold from raw_text for a specific measurement type
+   * Examples:
+   * - "BSA involvement ≥10%" → { value: 10, operator: '>=' }
+   * - "PASI score ≥12" → { value: 12, operator: '>=' }
+   * - "BSA covered 2% to 20%" → { value: 2, max: 20, operator: 'between' }
+   */
+  #parseThresholdFromRawText(rawText, measurementType) {
+    if (!rawText || !measurementType) return null;
+    
+    const text = rawText.toLowerCase();
+    const type = measurementType.toLowerCase();
+    
+    // Check if this criterion mentions this measurement type
+    if (!text.includes(type)) return null;
+    
+    // Pattern: "BSA ≥10%" or "BSA involvement ≥10%" or "BSA >= 10"
+    // Use [^0-9]* to match any non-digit characters between type and number
+    // Match ≥, >=, >, or just spaces before the number
+    const gtePattern = new RegExp(type + '[^0-9]*[≥>]+=?\\s*(\\d+(?:\\.\\d+)?)', 'i');
+    const gteMatch = rawText.match(gtePattern);
+    if (gteMatch) {
+      return { value: parseFloat(gteMatch[1]), operator: '>=' };
+    }
+    
+    // Pattern: "BSA ≤10%" or "BSA <= 10"
+    const ltePattern = new RegExp(type + '[^0-9]*[≤<]+=?\\s*(\\d+(?:\\.\\d+)?)', 'i');
+    const lteMatch = rawText.match(ltePattern);
+    if (lteMatch) {
+      return { value: parseFloat(lteMatch[1]), operator: '<=' };
+    }
+    
+    // Pattern: "BSA of at least 10" or "BSA at least 10%"
+    const atLeastPattern = new RegExp(type + '[^0-9]*at\\s+least\\s+(\\d+(?:\\.\\d+)?)', 'i');
+    const atLeastMatch = rawText.match(atLeastPattern);
+    if (atLeastMatch) {
+      return { value: parseFloat(atLeastMatch[1]), operator: '>=' };
+    }
+    
+    // Pattern: "BSA minimum 10" or "minimum BSA of 10"
+    const minPattern = new RegExp('(?:' + type + '[^0-9]*minimum|minimum[^0-9]*' + type + ')[^0-9]*(\\d+(?:\\.\\d+)?)', 'i');
+    const minMatch = rawText.match(minPattern);
+    if (minMatch) {
+      return { value: parseFloat(minMatch[1]), operator: '>=' };
+    }
+    
+    // Pattern: "BSA covered 2% to 20%" or "BSA between 2 and 20"
+    const rangePattern = new RegExp(type + '[^0-9]*(\\d+(?:\\.\\d+)?)[^0-9]*(?:to|and|-)\\s*(\\d+(?:\\.\\d+)?)', 'i');
+    const rangeMatch = rawText.match(rangePattern);
+    if (rangeMatch) {
+      return { 
+        value: parseFloat(rangeMatch[1]), 
+        max: parseFloat(rangeMatch[2]), 
+        operator: 'between' 
+      };
+    }
+    
+    return null;
+  }
+
+  /**
    * Evaluate severity criterion
+   * Handles PASI, PGA, IGA, DLQI, PHQ-9 scores
    */
   #evaluateSeverity(criterion, patientSeverity) {
     if (!patientSeverity) {
@@ -774,10 +846,53 @@ export class ClinicalTrialMatcher {
       };
     }
 
+    // Check various severity score types
+    const scoreTypes = ['PASI', 'PGA', 'IGA', 'DLQI', 'PHQ'];
+    const patientValues = [];
+    const requirements = [];
+
+    for (const type of scoreTypes) {
+      // Try structured field first
+      let threshold = criterion[`${type}_THRESHOLD`] || criterion[`${type}_MIN`];
+      let comparison = criterion[`${type}_COMPARISON`] || '>=';
+      
+      // Get patient value (handle both object and direct value formats)
+      const patientValue = patientSeverity[type]?.value ?? patientSeverity[type] ?? patientSeverity[type.toLowerCase()]?.value ?? patientSeverity[type.toLowerCase()];
+
+      // If no structured threshold, try parsing from raw_text
+      if ((threshold === null || threshold === undefined) && criterion.raw_text) {
+        const parsed = this.#parseThresholdFromRawText(criterion.raw_text, type);
+        if (parsed) {
+          threshold = parsed.value;
+          comparison = parsed.operator;
+        }
+      }
+
+      if (patientValue !== null && patientValue !== undefined) {
+        patientValues.push(`${type}: ${patientValue}`);
+      }
+      
+      if (threshold !== null && threshold !== undefined) {
+        requirements.push(`${type} ${comparison} ${threshold}`);
+        
+        if (patientValue !== null && patientValue !== undefined) {
+          if (measurementMeetsThreshold(patientValue, threshold, comparison)) {
+            return { 
+              matches: true, 
+              confidence: 1.0,
+              patientValue: patientValues.join(', '),
+              confidenceReason: `Exact numeric comparison. ${type} ${patientValue} meets ${comparison} ${threshold}`
+            };
+          }
+        }
+      }
+    }
+
+    // Fallback to generic severity matching if no specific scores matched
     const requiredSeverity = criterion.SEVERITY || criterion.SEVERITY_MIN;
     const patientSeverityValue = patientSeverity.severity || patientSeverity;
 
-    if (severityMatches(requiredSeverity, patientSeverityValue)) {
+    if (requiredSeverity && severityMatches(requiredSeverity, patientSeverityValue)) {
       return { 
         matches: true, 
         confidence: 0.9,
@@ -788,9 +903,9 @@ export class ClinicalTrialMatcher {
 
     return { 
       matches: false, 
-      confidence: 0.9,
-      patientValue: `Patient severity: ${patientSeverityValue}`,
-      confidenceReason: `Severity mismatch. Required: ${requiredSeverity}, got: ${patientSeverityValue}. 90% confidence in no-match.`
+      confidence: 0.8,
+      patientValue: patientValues.join(', ') || 'No severity scores',
+      confidenceReason: `No severity threshold met. Required: ${requirements.join(', ') || 'N/A'}. 80% due to possible missing data.`
     };
   }
 
