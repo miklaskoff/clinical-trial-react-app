@@ -7,6 +7,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.0.0] - 2026-01-20
+
+### 🔄 Major Backend Integration Release
+
+Full Node.js/Express backend with SQLite persistence, secured API key, and admin functionality.
+
+### Added
+
+- **Express Backend Server** (`server/`)
+  - Node.js + Express REST API on port 3001
+  - SQLite database with `better-sqlite3` for persistence
+  - Custom `AsyncDatabase` wrapper for async/await operations
+  - Helmet security headers, CORS configuration
+  - Comprehensive error handling
+
+- **Database Schema** (`server/db.js`)
+  - `approved_drugs` - Admin-approved drugs with classes
+  - `followup_cache` - Cached AI follow-up questions (24h TTL)
+  - `rate_limits` - Rate limiting tracking per IP/endpoint
+  - `pending_reviews` - Drug reviews awaiting admin approval
+  - Optimized indexes for all tables
+
+- **API Endpoints**
+  - `POST /api/match` - AI-powered patient-trial matching
+  - `POST /api/match/batch` - Batch matching for multiple criteria
+  - `POST /api/followups/generate` - AI-generated follow-up questions by drug
+  - `POST /api/admin/login` - Password authentication with tokens
+  - `GET/POST/DELETE /api/admin/drugs` - Drug CRUD operations
+  - `GET/POST /api/admin/pending` - Pending review management
+  - `POST /api/admin/pending/:id/approve` - Approve pending drugs
+  - `GET /api/admin/stats` - Dashboard statistics
+
+- **Rate Limiting** (`server/middleware/rateLimiter.js`)
+  - SQLite-backed rate limiting with window-based tracking
+  - 5 requests/minute for login (prevents brute force)
+  - 100 requests/minute for admin operations
+  - Standard rate limit headers (X-RateLimit-*)
+
+- **Services**
+  - `ClaudeClient.js` - Anthropic SDK wrapper with memory caching
+  - `DrugCategoryResolver.js` - Drug → therapeutic class mapping
+  - `FollowUpGenerator.js` - AI-driven follow-up question generation
+
+- **Frontend BackendClient** (`src/services/api/backendClient.js`)
+  - Full API client for Express backend communication
+  - Authentication token management
+  - Health check, match, follow-ups, admin methods
+  - Error handling with graceful fallbacks
+
+- **Backend Tests** (39 tests in `server/__tests__/`)
+  - `db.test.js` - Database operations (11 tests)
+  - `server.test.js` - Express server (5 tests)
+  - `routes/match.test.js` - Match endpoints (5 tests)
+  - `routes/followups.test.js` - Follow-up endpoints (8 tests)
+  - `routes/admin.test.js` - Admin endpoints (10 tests)
+
+### Fixed
+
+- **Lung cancer exclusion bug** - "lung cancer" now correctly matches "malignancy" exclusion
+  - Added 10+ specific cancer type synonyms
+  - Each cancer type maps to 'cancer' and 'malignancy'
+  - `findSynonyms()` now supports partial matching
+
+- **AI fallback first-element bug** - Now checks ALL condition types
+  - Changed from `patientTypes[0]` to iterating all types
+  - AI matching uses `flatMap` to collect all terms
+  - Fixed for both comorbidity and infection evaluations
+
+### Changed
+
+- **API Key Security** - Moved from frontend to backend-only `.env`
+- **Follow-up Questions** - Now AI-generated based on drug class, cached 24h
+- **Medical Synonyms** - Expanded with cancer types, melanoma, lymphoma, leukemia
+- **Project Structure** - Added `server/` directory for backend
+
+### Developer Experience
+
+- **Strict TDD Rules** in copilot-instructions.md:
+  - Tests BEFORE code changes
+  - All tests must pass before commit
+  - Async/await everywhere possible
+  - Parallel DB operations with Promise.all()
+  - Database indexes required
+
+### Test Summary
+
+- **Frontend**: 290 tests passing (16 test files)
+- **Backend**: 39 tests passing (5 test files)
+- **Total**: 329 tests
+
+---
+
 ## [4.0.1] - 2026-01-12
 
 ### Added

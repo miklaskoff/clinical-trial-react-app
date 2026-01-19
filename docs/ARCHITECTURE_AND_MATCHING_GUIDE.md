@@ -19,16 +19,88 @@ If there is a conflict, THIS document takes precedence.
 
 
 **Name**: Clinical Trial Patient Matching System
-**Type**: React Web Application
+**Type**: Full-Stack Web Application (React + Express Backend)
 **Purpose**: Match patients with suitable clinical trials using hybrid AI + rule-based matching
-**Tech Stack**: React 18, Anthropic Claude API, Slot-Filled Database Architecture
-**Version**: 3.1 (with Inclusion Criteria Support)
+**Tech Stack**: React 19, Node.js/Express, SQLite, Anthropic Claude API
+**Version**: 5.0 (with Full Backend Integration)
 
 
 ---
 
 
 ## Architecture Overview
+
+
+### System Architecture (v5.0)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        FRONTEND (React)                         │
+│  Port 5173 (Vite dev server)                                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │ Questionnaire │  │   Matcher    │  │   BackendClient      │  │
+│  │  (10 clusters)│  │ (rule-based) │  │  (API communication) │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ HTTP (REST API)
+┌─────────────────────────────────────────────────────────────────┐
+│                       BACKEND (Express)                         │
+│  Port 3001                                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │ /api/match   │  │/api/followups│  │   /api/admin/*       │  │
+│  │  (AI match)  │  │ (AI Q gen)   │  │  (auth + CRUD)       │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+│                              │                                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │ ClaudeClient │  │FollowUpGen  │  │   Rate Limiter       │  │
+│  │ (Anthropic)  │  │ (caching)   │  │   (SQLite-backed)    │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      DATABASE (SQLite)                          │
+│  server/data/clinical-trials.db                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │approved_drugs│  │followup_cache│  │    rate_limits       │  │
+│  │pending_reviews│ │              │  │                      │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+
+### Backend Components (NEW in v5.0)
+
+
+1. **Express Server** (`server/index.js`)
+   - REST API on port 3001
+   - Helmet security headers
+   - CORS for frontend origins
+   - Error handling middleware
+
+
+2. **Database** (`server/db.js`)
+   - SQLite with AsyncDatabase wrapper
+   - 4 tables: approved_drugs, followup_cache, rate_limits, pending_reviews
+   - Indexes for performance
+   - WAL mode for concurrent access
+
+
+3. **Routes**
+   - `/api/match` - AI-powered semantic matching
+   - `/api/followups` - AI-generated follow-up questions
+   - `/api/admin/*` - Authentication + drug management
+
+
+4. **Services**
+   - `ClaudeClient.js` - Anthropic SDK wrapper with caching
+   - `DrugCategoryResolver.js` - Drug → therapeutic class
+   - `FollowUpGenerator.js` - AI question generation
+
+
+5. **Middleware**
+   - `rateLimiter.js` - SQLite-backed rate limiting
 
 
 ### Core Components
