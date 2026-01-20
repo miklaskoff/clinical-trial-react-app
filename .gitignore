@@ -47,6 +47,7 @@ ehthumbs.db
 # API Keys (never commit)
 *_api_key.txt
 anthropic_key.txt
+.env
 
 # Backup files
 *.backup
@@ -59,3 +60,13 @@ tmp/
 temp/
 *.tmp
 node_modules
+
+# Test artifacts
+test-output.txt
+test-results/
+/coverage/
+/lcov-report/
+
+# Server data (SQLite DB regenerated)
+server/data/*.db
+server/data/*.db-journal

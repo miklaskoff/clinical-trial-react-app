@@ -1,20 +1,20 @@
 # Clinical Trial Matching System
 
-React application for matching patients with clinical trials using **hybrid AI + rule-based matching**.
+React + Express application for matching patients with clinical trials using **hybrid AI + rule-based matching**.
 
-[![Tests](https://img.shields.io/badge/tests-138%20passing-brightgreen)](#testing)
-[![Version](https://img.shields.io/badge/version-4.0.0-blue)](#)
-[![React](https://img.shields.io/badge/react-18.3.1-61dafb)](#tech-stack)
+[![Tests](https://img.shields.io/badge/tests-382%20passing-brightgreen)](#testing)
+[![Version](https://img.shields.io/badge/version-5.0.0-blue)](#)
+[![React](https://img.shields.io/badge/react-19-61dafb)](#tech-stack)
 
 ## ✨ Features
 
 - **Hybrid Matching Engine** - Three-pass strategy: Exact → Rule-based → AI semantic
-- **Claude API Integration** - Anthropic Claude for semantic analysis with caching
-- **AI Response Caching** - LRU cache with TTL and localStorage persistence
-- **138 Unit Tests** - Comprehensive test coverage with Vitest
+- **Full Backend** - Express.js server with SQLite database (API key secured on server)
+- **AI Follow-up Questions** - Dynamically generated based on drug class and condition type
+- **382 Tests** - Frontend (328) + Backend (54) with Vitest
 - **E2E Tests** - Playwright integration for full flow testing
-- **Confidence Breakdown** - Detailed explanation of match confidence per criterion
-- **Modern Stack** - React 18, Vite 6, ESLint 9, Prettier
+- **Admin Panel** - Drug approval, pending reviews, statistics
+- **Modern Stack** - React 19, Node.js/Express, Vite 6, SQLite
 - **TDD Workflow** - Test-driven development enforced
 
 ## 🚀 Quick Start
@@ -27,57 +27,69 @@ React application for matching patients with clinical trials using **hybrid AI +
 ### Installation
 
 ```bash
-# Clone/download the project
+# Clone the repository
+git clone https://github.com/miklaskoff/clinical-trial-react-app.git
 cd clinical-trial-react-app
 
-# Install dependencies
+# Install frontend dependencies
 npm install
 
-# Run tests
-npm test
+# Install backend dependencies
+cd server && npm install && cd ..
 
-# Start development server
+# Start backend (Terminal 1)
+cd server && node index.js
+
+# Start frontend (Terminal 2)
 npm run dev
 ```
 
-Open browser at `http://localhost:3000`
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
 
-### For Colleagues (Quick Setup)
+### Для коллег (Быстрый старт)
+
+1. Убедись что установлен Node.js 18+ (https://nodejs.org)
+2. Выполни команды:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/miklaskoff/clinical-trial-react-app.git
 cd clinical-trial-react-app
 npm install
+cd server && npm install && cd ..
+
+# Терминал 1: Backend
+cd server && node index.js
+
+# Терминал 2: Frontend
 npm run dev
-# Open http://localhost:3000
-# Enter your Anthropic API key in settings
 ```
+
+3. Открой http://localhost:3000
+4. В Settings введи Anthropic API key
 
 ## 📂 Project Structure
 
 ```
 clinical-trial-react-app/
-├── src/
-│   ├── __tests__/           # All tests (138)
-│   │   ├── components/      # Component tests
-│   │   ├── services/        # Service tests
-│   │   └── utils/           # Utility tests
+├── src/                     # React Frontend
+│   ├── __tests__/           # Frontend tests (328)
 │   ├── components/          # React components
-│   │   └── App.jsx          # Main app component
 │   ├── services/            # Business logic
-│   │   ├── api/             # Claude API client
-│   │   ├── cache/           # AI response caching
-│   │   └── matcher/         # Matching engine
+│   │   ├── api/             # Backend client
+│   │   ├── matcher/         # Matching engine
+│   │   └── admin/           # Admin services
 │   ├── utils/               # Utility functions
-│   ├── data/                # Database JSON
-│   └── styles/              # CSS files
+│   └── data/                # Trial database JSON
+├── server/                  # Express Backend
+│   ├── __tests__/           # Backend tests (54)
+│   ├── routes/              # API endpoints
+│   ├── services/            # ClaudeClient, FollowUpGenerator
+│   ├── middleware/          # Rate limiter
+│   └── data/                # SQLite database
 ├── e2e/                     # Playwright E2E tests
 ├── docs/                    # Documentation
-├── package.json
-├── vite.config.js
-├── vitest.config.js
-├── playwright.config.js
-└── eslint.config.js
+└── .github/                 # Copilot instructions, lessons
 ```
 
 ## 🧪 Testing
@@ -104,10 +116,13 @@ npm run test:e2e           # Run E2E tests
 
 | Module | Tests |
 |--------|-------|
-| Utils (string, array, medical) | 52 |
-| Services (matcher, drugs, results, cache, claude) | 72 |
-| Components (App) | 14 |
-| **Total** | **138** |
+| Frontend - Integration | 33 |
+| Frontend - Services | 134 |
+| Frontend - Utils | 52 |
+| Frontend - Components | 15 |
+| Backend - Routes | 28 |
+| Backend - Services | 26 |
+| **Total** | **382** |
 
 ## 🔧 Scripts
 
@@ -155,12 +170,13 @@ const aiConfig = {
 
 ## 🛠 Tech Stack
 
-- **React 18.3.1** - UI library
+- **React 19** - UI library
+- **Node.js/Express** - Backend server
+- **SQLite** - Database (better-sqlite3)
 - **Vite 6** - Build tool
 - **Vitest 2** - Test runner
-- **ESLint 9** - Linting
-- **Prettier 3** - Formatting
 - **Anthropic SDK** - Claude API
+- **Playwright** - E2E testing
 
 ## 📄 License
 
@@ -168,4 +184,12 @@ Private project - All rights reserved.
 
 ---
 
-**Version 4.0.0** | Updated 2026-01-12
+**Version 5.0.0** | Updated 2026-01-20
+
+### Изменения в v5.0.0
+- ✅ Full Express backend с SQLite
+- ✅ API key хранится на сервере (не в localStorage)
+- ✅ AI-generated follow-up questions для treatments и conditions (раздельные потоки)
+- ✅ 382 теста (328 frontend + 54 backend)
+- ✅ Admin panel с аутентификацией
+- ✅ Rate limiting для API

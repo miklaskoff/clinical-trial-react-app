@@ -2,27 +2,47 @@
  * IMPLEMENTATION CONTRACT: Dynamic Follow-up Questions from AI
  * 
  * REQUIREMENT:
- * - When user adds treatment, should be able to call /api/followups/generate
+ * - When user adds treatment, should call /api/followups/generate
  * - Different drugs get different questions based on their category
- * 
- * Note: Full dynamic question rendering requires UI refactoring.
- * These tests verify the foundation is in place.
+ * - UI should render questions returned from backend
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import ClinicalTrialEligibilityQuestionnaire from '../../ClinicalTrialEligibilityQuestionnaire.jsx';
 import { getDrugInfo } from '../../services/matcher/drugDatabase.js';
 
-describe('Contract 2: Dynamic Follow-up Questions Foundation', () => {
+describe('Contract 2: Dynamic Follow-up Questions', () => {
   let user;
   let fetchSpy;
   
   beforeEach(() => {
     user = userEvent.setup();
     fetchSpy = vi.spyOn(global, 'fetch');
+    
+    // Default mock for all fetch calls
+    fetchSpy.mockImplementation((url) => {
+      if (url.includes('/api/followups/generate')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            drugName: 'adalimumab',
+            drugClass: 'TNF inhibitor',
+            questions: [
+              { text: 'Have you had any infections while on this medication?', type: 'select', options: ['Yes', 'No'] },
+              { text: 'Did you experience injection site reactions?', type: 'select', options: ['Yes', 'No', 'Sometimes'] }
+            ],
+            source: 'ai'
+          })
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({})
+      });
+    });
   });
   
   afterEach(() => {
@@ -56,11 +76,9 @@ describe('Contract 2: Dynamic Follow-up Questions Foundation', () => {
     
     it('piclidenoson is classified or noted as experimental', () => {
       const drugInfo = getDrugInfo('piclidenoson');
-      // Piclidenoson is an experimental drug, may not be in database
       if (drugInfo) {
         expect(drugInfo.class).toBeDefined();
       } else {
-        // Documents the gap - drug not yet classified
         expect(drugInfo).toBeNull();
       }
     });
@@ -74,9 +92,7 @@ describe('Contract 2: Dynamic Follow-up Questions Foundation', () => {
         onComplete={() => {}}
       />);
       
-      // Should render a questionnaire component
       await waitFor(() => {
-        // Check that the questionnaire renders with Step 1
         expect(screen.getByText(/Step\s+1/i)).toBeInTheDocument();
       });
     });
@@ -88,6 +104,57 @@ describe('Contract 2: Dynamic Follow-up Questions Foundation', () => {
       const client = new BackendClient('http://localhost:3001');
       
       expect(typeof client.generateFollowUps).toBe('function');
+    });
+  });
+  
+  describe('API Integration', () => {
+    it('calls /api/followups/generate when treatment is added', async () => {
+      render(<ClinicalTrialEligibilityQuestionnaire 
+        apiKey="test-key"
+        useAI={false}
+        onComplete={() => {}}
+      />);
+      
+      // Navigate to treatment section (Step 2)
+      // First answer "No" to conditions question
+      const noRadio = screen.getByLabelText(/no/i);
+      await user.click(noRadio);
+      
+      // Click Next to go to treatment section
+      const nextButton = screen.getByRole('button', { name: /next/i });
+      await user.click(nextButton);
+      
+      // Wait for treatment section - use heading role
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Psoriasis Treatment History/i })).toBeInTheDocument();
+      });
+      
+      // Say yes to having treatments
+      const yesRadio = screen.getByLabelText(/yes/i);
+      await user.click(yesRadio);
+      
+      // Type treatment name - placeholder includes drug examples
+      const treatmentInput = screen.getByPlaceholderText(/humira|cosentyx|skyrizi/i);
+      await user.type(treatmentInput, 'adalimumab');
+      
+      // Add treatment
+      const addButton = screen.getByRole('button', { name: /add treatment/i });
+      await user.click(addButton);
+      
+      // Verify /api/followups/generate was called
+      await waitFor(() => {
+        const followupCalls = fetchSpy.mock.calls.filter(
+          call => call[0].includes('/api/followups/generate')
+        );
+        expect(followupCalls.length).toBeGreaterThan(0);
+      });
+      
+      // Verify the request body contains the drug name
+      const followupCall = fetchSpy.mock.calls.find(
+        call => call[0].includes('/api/followups/generate')
+      );
+      const body = JSON.parse(followupCall[1].body);
+      expect(body.drugName).toBe('adalimumab');
     });
   });
 });

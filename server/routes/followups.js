@@ -4,17 +4,24 @@
  */
 
 import { Router } from 'express';
-import { generateFollowUpQuestions, getCacheStats, clearCache } from '../services/FollowUpGenerator.js';
+import { 
+  generateFollowUpQuestions, 
+  generateConditionFollowUpQuestions,
+  getCacheStats, 
+  clearCache 
+} from '../services/FollowUpGenerator.js';
 
 const router = Router();
 
 /**
  * POST /api/followups/generate
- * Generate follow-up questions for a drug
+ * Generate follow-up questions for a drug OR condition
+ * @body {string} drugName - The drug/condition name
+ * @body {string} [type='treatment'] - Either 'treatment' or 'condition'
  */
 router.post('/generate', async (req, res, next) => {
   try {
-    const { drugName } = req.body;
+    const { drugName, type = 'treatment' } = req.body;
 
     // Validation
     if (!drugName) {
@@ -29,7 +36,15 @@ router.post('/generate', async (req, res, next) => {
       });
     }
 
-    const result = await generateFollowUpQuestions(drugName.trim());
+    let result;
+    
+    if (type === 'condition') {
+      // Use condition-specific generator
+      result = await generateConditionFollowUpQuestions(drugName.trim());
+    } else {
+      // Use treatment/drug generator
+      result = await generateFollowUpQuestions(drugName.trim());
+    }
 
     res.json(result);
 

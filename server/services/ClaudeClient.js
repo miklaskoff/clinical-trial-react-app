@@ -21,13 +21,101 @@ export class ClaudeClient {
   
   /** @type {number} Cache TTL in milliseconds (1 hour) */
   #cacheTTL = 60 * 60 * 1000;
+  
+  /** @type {boolean} */
+  #initialized = false;
+  
+  /** @type {string | null} */
+  #apiKeySource = null;
 
   constructor() {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    // Try environment variable first
+    const envApiKey = process.env.ANTHROPIC_API_KEY;
     
-    if (apiKey && apiKey !== 'your_api_key_here') {
-      this.#client = new Anthropic({ apiKey });
+    // Check for valid API key (not a placeholder)
+    const isValidKey = envApiKey && 
+      envApiKey.startsWith('sk-ant-') && 
+      !envApiKey.includes('your') && 
+      !envApiKey.includes('placeholder');
+    
+    if (isValidKey) {
+      this.#client = new Anthropic({ apiKey: envApiKey });
+      this.#initialized = true;
+      this.#apiKeySource = 'environment';
     }
+  }
+
+  /**
+   * Initialize client from database if not already configured
+   * @returns {Promise<boolean>}
+   */
+  async initFromDatabase() {
+    if (this.#initialized) {
+      return true;
+    }
+
+    const db = getDatabase();
+    if (!db) {
+      console.warn('Database not available for API key lookup');
+      return false;
+    }
+
+    try {
+      const config = await db.getAsync(
+        'SELECT value FROM config WHERE key = ?',
+        ['anthropic_api_key']
+      );
+
+      if (config?.value && config.value.startsWith('sk-ant-')) {
+        this.#client = new Anthropic({ apiKey: config.value });
+        this.#initialized = true;
+        this.#apiKeySource = 'database';
+        console.log('✓ Claude client initialized from stored API key');
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to load API key from database:', error.message);
+    }
+
+    return false;
+  }
+
+  /**
+   * Force reload API key from database
+   * Call this after saving a new API key to the database
+   * @returns {Promise<boolean>}
+   */
+  async reloadFromDatabase() {
+    // Clear current state to force reload
+    this.#initialized = false;
+    this.#client = null;
+    this.#apiKeySource = null;
+    this.#memoryCache.clear();
+    
+    const db = getDatabase();
+    if (!db) {
+      console.warn('Database not available for API key reload');
+      return false;
+    }
+
+    try {
+      const config = await db.getAsync(
+        'SELECT value FROM config WHERE key = ?',
+        ['anthropic_api_key']
+      );
+
+      if (config?.value && config.value.startsWith('sk-ant-')) {
+        this.#client = new Anthropic({ apiKey: config.value });
+        this.#initialized = true;
+        this.#apiKeySource = 'database';
+        console.log('✓ Claude client RELOADED with new API key from database');
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to reload API key from database:', error.message);
+    }
+
+    return false;
   }
 
   /**
@@ -36,6 +124,14 @@ export class ClaudeClient {
    */
   isConfigured() {
     return this.#client !== null;
+  }
+  
+  /**
+   * Get API key source for debugging
+   * @returns {string | null}
+   */
+  getApiKeySource() {
+    return this.#apiKeySource;
   }
 
   /**
@@ -141,6 +237,57 @@ Respond ONLY with valid JSON in this exact format:
     } catch (error) {
       console.error('Claude API error:', error.message);
       throw new Error(`AI matching failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generate follow-up questions using AI
+   * @param {string} prompt - The prompt for generating questions
+   * @returns {Promise<{ questions: Array<Object> }>}
+   */
+  async generateQuestions(prompt) {
+    if (!this.#client) {
+      return { questions: [] };
+    }
+
+    // Use hash of full prompt for cache key to avoid collisions
+    // Include first 50 chars + last 50 chars + length for better uniqueness
+    const promptHash = `${prompt.substring(0, 50)}_${prompt.length}_${prompt.substring(prompt.length - 50)}`;
+    const cacheKey = `questions_${promptHash}`;
+    
+    // Check cache
+    const cached = this.#getFromCache(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const response = await this.#client.messages.create({
+        model: this.#model,
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      const text = response.content[0]?.text || '{}';
+      
+      // Parse JSON from response - handle potential markdown code blocks
+      let jsonText = text;
+      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[1];
+      }
+      
+      const result = JSON.parse(jsonText);
+
+      // Cache the result
+      this.#setCache(cacheKey, result);
+
+      return result;
+
+    } catch (error) {
+      console.error('Claude API question generation error:', error.message);
+      // Return aiGenerated: false so frontend knows AI failed
+      return { questions: [], aiGenerated: false };
     }
   }
 

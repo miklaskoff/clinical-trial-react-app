@@ -292,13 +292,107 @@ export class BackendClient {
 
   /**
    * Get admin statistics
-   * @returns {Promise<{stats: {approvedDrugs: number, pendingReviews: number, cachedFollowups: number}}>}
+   * @returns {Promise<{stats: {approvedDrugs: number, pendingReviews: number, cachedFollowups: number, pendingTerms: number}}>}
    */
   async getAdminStats() {
     const response = await this._request('/api/admin/stats');
 
     if (!response.ok) {
       throw new Error('Failed to fetch stats');
+    }
+
+    return response.json();
+  }
+
+  // ============================================
+  // TERMS API (Unknown conditions/treatments)
+  // ============================================
+
+  /**
+   * Submit an unknown term for admin review
+   * @param {Object} params
+   * @param {string} params.term - The unknown term
+   * @param {string} params.type - Type: 'condition' or 'treatment'
+   * @param {string} [params.context] - Additional context
+   * @returns {Promise<{message: string, id: number}>}
+   */
+  async submitUnknownTerm({ term, type, context }) {
+    const response = await this._request('/api/terms/unknown', {
+      method: 'POST',
+      body: JSON.stringify({ term, type, context })
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Failed to submit term' }));
+      throw new Error(error.error || 'Failed to submit term');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get approved terms for autocomplete sync
+   * @param {string} [type] - Filter by type: 'condition' or 'treatment'
+   * @returns {Promise<{terms: Array}>}
+   */
+  async getApprovedTerms(type = null) {
+    const url = type ? `/api/terms/approved?type=${type}` : '/api/terms/approved';
+    const response = await this._request(url);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch approved terms');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get pending terms for admin review
+   * @returns {Promise<{terms: Array}>}
+   */
+  async getPendingTerms() {
+    const response = await this._request('/api/admin/pending-terms');
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch pending terms');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Approve a pending term
+   * @param {number} id - Pending term ID
+   * @param {string[]} [synonyms] - Optional synonyms
+   * @returns {Promise<{message: string, term: Object}>}
+   */
+  async approvePendingTerm(id, synonyms = []) {
+    const response = await this._request(`/api/admin/terms/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ synonyms })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to approve term');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Reject a pending term
+   * @param {number} id - Pending term ID
+   * @param {string} [reason] - Optional rejection reason
+   * @returns {Promise<{message: string, term: Object}>}
+   */
+  async rejectPendingTerm(id, reason = '') {
+    const response = await this._request(`/api/admin/terms/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to reject term');
     }
 
     return response.json();

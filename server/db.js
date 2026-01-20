@@ -183,6 +183,28 @@ export async function initDatabase(dbPath) {
     CREATE INDEX IF NOT EXISTS idx_pending_reviews_status 
     ON pending_reviews(status);
 
+    -- Pending terms (unknown conditions/treatments from users)
+    CREATE TABLE IF NOT EXISTS pending_terms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      term TEXT NOT NULL,
+      type TEXT NOT NULL,
+      context TEXT,
+      status TEXT DEFAULT 'pending',
+      synonyms TEXT,
+      submitted_at TEXT NOT NULL,
+      reviewed_at TEXT,
+      reviewed_by TEXT,
+      UNIQUE(term, type)
+    );
+
+    -- Index for pending terms by status
+    CREATE INDEX IF NOT EXISTS idx_pending_terms_status 
+    ON pending_terms(status);
+
+    -- Index for approved terms lookup
+    CREATE INDEX IF NOT EXISTS idx_pending_terms_approved 
+    ON pending_terms(status, type) WHERE status = 'approved';
+
     -- Configuration table for API keys and settings
     CREATE TABLE IF NOT EXISTS config (
       key TEXT PRIMARY KEY,

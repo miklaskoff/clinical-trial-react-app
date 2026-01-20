@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { DrugApprovalService, DRUG_CLASSES } from '../../services/admin/DrugApprovalService.js';
 import DrugReviewCard from './DrugReviewCard.jsx';
+import PendingTermsReview from './PendingTermsReview.jsx';
+import ApiKeySettings from './ApiKeySettings.jsx';
+import { backendClient } from '../../services/api/backendClient.js';
 import './DrugReviewDashboard.css';
 
 /**
- * Admin Dashboard for reviewing pending drug classifications
+ * Admin Dashboard for reviewing pending drug classifications and terms
  */
 function DrugReviewDashboard() {
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
+  const [activeTab, setActiveTab] = useState('drugs'); // 'drugs' or 'terms'
 
   // Load reviews on mount
   useEffect(() => {
@@ -73,31 +77,55 @@ function DrugReviewDashboard() {
   return (
     <div className="admin-dashboard" data-testid="admin-dashboard">
       <header className="admin-header">
-        <h1>Drug Review Dashboard</h1>
-        <p>Review and approve drug classifications from patient responses</p>
+        <h1>Admin Review Dashboard</h1>
+        <p>Review and approve drug classifications and unknown terms</p>
       </header>
 
-      {/* Stats Section */}
-      <section className="stats-section">
-        <div className="stat-card">
-          <span className="stat-value">{stats.pending || 0}</span>
-          <span className="stat-label">Pending</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{stats.approved || 0}</span>
-          <span className="stat-label">Approved</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{stats.rejected || 0}</span>
-          <span className="stat-label">Rejected</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{stats.approvedDrugsInDatabase || 0}</span>
-          <span className="stat-label">Drugs in DB</span>
-        </div>
-      </section>
+      {/* Tab Navigation */}
+      <div className="tab-navigation">
+        <button 
+          className={`tab-btn ${activeTab === 'drugs' ? 'active' : ''}`}
+          onClick={() => setActiveTab('drugs')}
+        >
+          Drug Reviews ({stats.pending || 0})
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'terms' ? 'active' : ''}`}
+          onClick={() => setActiveTab('terms')}
+        >
+          Pending Terms
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('settings')}
+        >
+          Settings
+        </button>
+      </div>
 
-      {/* Message Alert */}
+      {activeTab === 'drugs' ? (
+        <>
+          {/* Stats Section */}
+          <section className="stats-section">
+            <div className="stat-card">
+              <span className="stat-value">{stats.pending || 0}</span>
+              <span className="stat-label">Pending</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-value">{stats.approved || 0}</span>
+              <span className="stat-label">Approved</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-value">{stats.rejected || 0}</span>
+              <span className="stat-label">Rejected</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-value">{stats.approvedDrugsInDatabase || 0}</span>
+              <span className="stat-label">Drugs in DB</span>
+            </div>
+          </section>
+
+          {/* Message Alert */}
       {message && (
         <div className={`alert alert-${message.type}`} role="alert">
           {message.text}
@@ -138,6 +166,12 @@ function DrugReviewDashboard() {
           Refresh Reviews
         </button>
       </div>
+        </>
+      ) : activeTab === 'terms' ? (
+        <PendingTermsReview backendClient={backendClient} />
+      ) : (
+        <ApiKeySettings />
+      )}
     </div>
   );
 }

@@ -7,8 +7,8 @@
 - Inclusion/exclusion rules
 - AI integration strategy
 
-All other documentation files are supportive, partial, or derived.
-If there is a conflict, THIS document takes precedence.
+Other equally important documents are lessons learned.md and copilot-instuctions.md All other documentation files are supportive, partial, or derived.
+If there is a conflict, those 3 above mentioned documents takes precedence.
 
 # Clinical Trial Matching System — Architecture & Matching Guide
 
@@ -261,6 +261,105 @@ Pass 3: AI SEMANTIC (if enabled)
 - `ineligible`: Failed inclusion or matched exclusion
 - `needs_review`: Passed but low confidence scores
 
+
+---
+
+
+## AI Integration Requirements — КРИТИЧЕСКИ ВАЖНО
+
+### Definition: "AI-Driven"
+
+A feature is ONLY "AI-driven" if:
+
+1. **Claude API is actually called:**
+```javascript
+// ✅ CORRECT - actual AI call
+const response = await this.claudeClient.messages.create({
+  model: 'claude-sonnet-4-5-20250929',
+  messages: [{ role: 'user', content: prompt }]
+});
+const aiGeneratedContent = response.content[0].text;
+```
+
+2. **AI response is actually used:**
+```javascript
+// ✅ CORRECT - using AI response
+return JSON.parse(aiGeneratedContent);
+
+// ❌ WRONG - ignoring AI, returning hardcoded
+return DEFAULT_QUESTIONS[type];  // AI response ignored!
+```
+
+3. **Fallback is clearly labeled:**
+```javascript
+// ✅ CORRECT - honest fallback
+if (!aiResponse) {
+  console.warn('AI unavailable, using DEFAULT questions');
+  return { source: 'default', questions: DEFAULT_QUESTIONS };
+}
+return { source: 'ai', questions: aiResponse };
+```
+
+### Definition: "Dynamic"
+
+A feature is ONLY "dynamic" if:
+
+1. **Data source is variable:**
+```javascript
+// ✅ CORRECT - dynamic from API
+const questions = await fetchQuestionsFromBackend(conditionName);
+
+// ❌ WRONG - static lookup disguised as dynamic
+const questions = HARDCODED_QUESTIONS[conditionType];
+```
+
+2. **Different inputs produce different outputs:**
+```javascript
+// ✅ CORRECT - AI generates different questions for different inputs
+"brain cancer" → ["What stage?", "Current treatment?", "Metastasis?"]
+"diabetes" → ["Type 1 or 2?", "A1C level?", "Insulin dependent?"]
+
+// ❌ WRONG - same questions for different inputs
+"brain cancer" → ["Do you have this condition?", "When diagnosed?"]
+"diabetes" → ["Do you have this condition?", "When diagnosed?"]
+```
+
+### Verification: Is It Really AI?
+
+Run this mental test before claiming "AI-driven":
+
+```
+1. Comment out the Claude API call
+2. Does the feature still "work"?
+3. If YES → It's NOT AI-driven, it's using fallback/hardcoded
+4. If NO (feature breaks) → It IS AI-driven
+```
+
+### AI Call Verification Test
+
+Every AI feature MUST have a test that:
+```javascript
+// ✅ CORRECT - verifies AI is actually called
+it('calls Claude API for question generation', async () => {
+  const claudeSpy = vi.spyOn(claudeClient, 'messages.create');
+  
+  await generateQuestionsWithAI('brain cancer', 'cancer', criteria);
+  
+  // Verify Claude was called
+  expect(claudeSpy).toHaveBeenCalled();
+  
+  // Verify prompt contains the condition
+  expect(claudeSpy).toHaveBeenCalledWith(
+    expect.objectContaining({
+      messages: expect.arrayContaining([
+        expect.objectContaining({
+          content: expect.stringContaining('brain cancer')
+        })
+      ])
+    })
+  );
+});
+```
 
 ---
 

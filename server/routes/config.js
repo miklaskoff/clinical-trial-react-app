@@ -5,12 +5,15 @@
 
 import { Router } from 'express';
 import { db } from '../db.js';
+import { getClaudeClient } from '../services/ClaudeClient.js';
+import { clearCache as clearFollowUpCache } from '../services/FollowUpGenerator.js';
 
 const router = Router();
 
 /**
  * POST /api/config/apikey
  * Store API key on server (NOT in client localStorage)
+ * After saving, reloads ClaudeClient and clears follow-up cache
  */
 router.post('/apikey', async (req, res) => {
   try {
@@ -35,7 +38,20 @@ router.post('/apikey', async (req, res) => {
       ['anthropic_api_key', apiKey, now]
     );
     
-    res.json({ success: true, message: 'API key stored securely on server' });
+    // CRITICAL: Reload ClaudeClient with new API key
+    const client = getClaudeClient();
+    const reloaded = await client.reloadFromDatabase();
+    
+    // CRITICAL: Clear follow-up cache to force fresh AI generation
+    await clearFollowUpCache();
+    
+    console.log(`✓ API key saved and ClaudeClient reloaded: ${reloaded}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'API key stored securely on server',
+      reloaded: reloaded
+    });
   } catch (error) {
     console.error('Error storing API key:', error);
     res.status(500).json({ error: 'Failed to store API key' });

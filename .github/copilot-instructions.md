@@ -97,24 +97,42 @@ it('saves API key', async () => {
 ### Verification Commands — ЗАПУСКАТЬ ПЕРЕД COMMIT
 
 ```bash
+# АВТОМАТИЧЕСКАЯ ПРОВЕРКА (ОБЯЗАТЕЛЬНО)
+npm run verify
+
+# Это запускает scripts/verify-implementation.ps1 который проверяет:
 # 1. Все тесты проходят
-npm test -- --run
+# 2. Нет прямых вызовов Anthropic из frontend
+# 3. Нет API ключей в localStorage
+# 4. Backend доступен (опционально)
+# 5. Integration тесты проходят
+# 6. Все необходимые файлы существуют
+```
 
-# 2. Backend запущен и отвечает
-curl http://localhost:3001/api/health
+### ⚠️ ОБЯЗАТЕЛЬНЫЙ WORKFLOW ПЕРЕД COMMIT
 
-# 3. Нет прямых вызовов Anthropic из frontend
-grep -r "api.anthropic.com" src/
-# Должен вернуть: ничего
+```
+1. npm run verify         ← ОБЯЗАТЕЛЬНО, не пропускай!
+2. Открой браузер         ← Manual verification
+3. Проверь каждый пункт   ← Screenshot как доказательство
+4. git add -A && git commit -m "..."  ← ТОЛЬКО после шагов 1-3
+```
 
-# 4. Нет API ключей в localStorage
-grep -r "localStorage.*api.*key" src/
-# Должен вернуть: ничего (или только чтение для миграции)
+### Contract Report — ГЕНЕРИРУЙ ПОСЛЕ КАЖДОЙ ФИЧИ
 
-# 5. Manual UI verification
-# - Открыть браузер
-# - Пройти по каждому пункту contract
-# - Screenshot как доказательство
+```markdown
+## CONTRACT REPORT: [Feature Name]
+
+| Requirement | Test File | Test Name | Status |
+|-------------|-----------|-----------|--------|
+| [Req 1] | [file.test.js] | [test name] | ✅/❌ |
+
+### Verification Script Output
+npm run verify → [PASS/FAIL]
+
+### Manual Verification
+- [ ] Tested in browser
+- [ ] Screenshot captured
 ```
 
 ### Failure Recovery — ЕСЛИ ТЕСТЫ ПРОШЛИ, НО НЕ РАБОТАЕТ
@@ -126,6 +144,107 @@ grep -r "localStorage.*api.*key" src/
 5. **FIX CODE** — Исправь реализацию
 6. **VERIFY PASS** — Тест проходит
 7. **MANUAL** — Проверь в браузере
+
+---
+
+## ⛔ DELIVERY GATE — НЕЛЬЗЯ ОБОЙТИ
+
+### Absolute Rule: NO PARTIAL DELIVERY
+
+**Before saying "done", "complete", "implemented", or "fixed":**
+
+1. **Every requirement in the Contract MUST be implemented** — Not "partially", not "foundation laid"
+2. **Every acceptance test MUST verify ACTUAL behavior** — Not mocks, not "fetch was called"
+3. **Manual verification MUST be performed** — Open browser, see it work, screenshot
+
+### If Implementation Cannot Be Completed
+
+**STOP and ask permission BEFORE delivering:**
+
+```markdown
+## ⚠️ PERMISSION REQUEST
+
+### What Was Requested
+[Original requirement]
+
+### What I Can Deliver
+[What is actually working]
+
+### What Is Missing
+[What is NOT implemented]
+
+### Why It Cannot Be Completed
+[Technical reason - not laziness]
+
+### Options
+A) Deliver partial implementation with documented limitations
+B) Continue implementing until complete
+C) Change approach to [alternative]
+
+### Recommendation
+[My recommendation with reasoning]
+
+**Do I have permission to proceed with Option [X]?**
+```
+
+### Violation Examples — ЗАПРЕЩЕНО
+
+```javascript
+// ❌ FORBIDDEN: Claiming AI-driven with hardcoded data
+return [
+  { text: 'Are you currently taking this medication?' },  // HARDCODED!
+  { text: 'How many weeks ago was your last dose?' }      // HARDCODED!
+];
+// While claiming: "AI-driven follow-up generation implemented ✅"
+
+// ❌ FORBIDDEN: Claiming dynamic with static
+const questions = DEFAULT_QUESTIONS[type];  // STATIC LOOKUP!
+// While claiming: "Dynamic questions from AI ✅"
+
+// ❌ FORBIDDEN: Tests that prove nothing
+expect(fetchSpy).toHaveBeenCalled();  // Only proves fetch was called
+// While claiming: "Integration test passes ✅"
+// Reality: Response could be ignored, UI could be hardcoded
+```
+
+### Self-Check Before Delivery — ОБЯЗАТЕЛЬНО
+
+Ask yourself these questions. If ANY answer is "no" or "partially", **DO NOT DELIVER**:
+
+```markdown
+□ Does the code ACTUALLY do what I'm claiming?
+  - If I said "AI generates questions" — is there an actual AI call?
+  - If I said "dynamic" — does the data come from a variable source?
+  - If I said "from database" — is there an actual DB query?
+
+□ Do tests verify ACTUAL BEHAVIOR, not just function calls?
+  - Does test check the CONTENT of the response?
+  - Does test verify the UI DISPLAYS the dynamic content?
+  - Would test FAIL if I returned hardcoded data?
+
+□ Have I SEEN it work in the browser?
+  - Not "tests pass" — actually opened browser
+  - Not "should work" — actually saw the output
+  - Can I screenshot the ACTUAL behavior?
+
+□ Does my claim match reality?
+  - "AI-driven" = Claude API is called and response is used
+  - "Dynamic" = Data comes from variable source, not hardcoded
+  - "From database" = Actual SQL/DB query executed
+  - "Integration" = Multiple components actually connected
+```
+
+### Consequence of Violation
+
+If I deliver something as "done" that is not actually implemented:
+
+1. I have **LIED** to the user
+2. User wastes time testing non-functional feature
+3. User loses trust
+4. This MUST be documented in `lesson learned.md`
+5. I must explain WHY I lied (laziness? misunderstanding? rushing?)
+
+---
 
 ### Async/Parallel Execution — СТРОГО ОБЯЗАТЕЛЬНО
 
@@ -481,6 +600,13 @@ When asked about overall architecture, always reference the canonical document.
 
 ---
 
-**Version**: 5.0 (2026-01-19)  
-**Status**: Backend Integration in Progress 🔄
+**Version**: 5.0 (2026-01-20)  
+**Status**: Backend Integration Complete ✅
 
+### Lessons Learnt
+
+After solving a non-trivial bug or learning something important:
+
+1. Add entry to [lesson learned.md](./lesson learned.md)
+2. Include: Problem → Cause → Solution → Lesson
+3. This helps avoid repeating the same mistakes

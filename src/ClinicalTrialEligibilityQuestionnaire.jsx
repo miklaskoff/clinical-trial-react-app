@@ -266,6 +266,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
   const [cmb_selectedConditions, setCmb_selectedConditions] = useState([]);
   const [cmb_conditionInput, setCmb_conditionInput] = useState('');
   const [cmb_conditionDetails, setCmb_conditionDetails] = useState({});
+  const [cmb_dynamicQuestions, setCmb_dynamicQuestions] = useState({});  // Dynamic questions from backend
+  const [cmb_questionsLoading, setCmb_questionsLoading] = useState({});   // Loading state per condition
   
   // Additional common conditions that should always be in suggestions
   // (especially cancer types for synonym matching)
@@ -290,6 +292,126 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
   const [pth_selectedTreatments, setPth_selectedTreatments] = useState([]);
   const [pth_treatmentInput, setPth_treatmentInput] = useState('');
   const [pth_treatmentDetails, setPth_treatmentDetails] = useState({});
+  const [pth_dynamicQuestions, setPth_dynamicQuestions] = useState({});  // Dynamic questions from backend
+  const [pth_questionsLoading, setPth_questionsLoading] = useState({});   // Loading state per treatment
+  
+  // Backend URL for API calls
+  const BACKEND_URL = 'http://localhost:3001';
+  
+  // Submit unknown term to backend for admin review
+  const submitUnknownTerm = async (term, type, context = '') => {
+    try {
+      await fetch(`${BACKEND_URL}/api/terms/unknown`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ term, type, context })
+      });
+      // Silently submit - no need to wait or show feedback
+    } catch (error) {
+      console.warn('Failed to submit unknown term:', error);
+    }
+  };
+  
+  // Check if a condition is in the known list
+  const isKnownCondition = (condition) => {
+    const normalizedInput = condition.toLowerCase().trim();
+    return cmbConditionOptions.some(opt => 
+      opt.toLowerCase() === normalizedInput
+    );
+  };
+  
+  // Check if a treatment is in the known list
+  const isKnownTreatment = (treatment) => {
+    const normalizedInput = treatment.toLowerCase().trim();
+    return pthTreatmentOptions.some(opt => 
+      opt.toLowerCase() === normalizedInput
+    );
+  };
+
+  // Fetch dynamic follow-up questions for CONDITIONS
+  const fetchDynamicQuestionsForCondition = async (conditionName, idx) => {
+    setCmb_questionsLoading(prev => ({ ...prev, [idx]: true }));
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/followups/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drugName: conditionName, type: 'condition' })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCmb_dynamicQuestions(prev => ({ 
+          ...prev, 
+          [idx]: {
+            conditionName: data.conditionName || conditionName,
+            conditionType: data.conditionType || 'medical condition',
+            questions: data.questions || [],
+            source: data.source || 'backend',
+            matchingCriteriaCount: data.matchingCriteriaCount || 0,
+            aiGenerated: data.aiGenerated !== undefined ? data.aiGenerated : true  // Track if AI generated
+          }
+        }));
+      }
+    } catch (error) {
+      console.warn('Failed to fetch dynamic questions for condition:', error);
+      // Mark as NOT AI generated - will trigger blocking
+      setCmb_dynamicQuestions(prev => ({ 
+        ...prev, 
+        [idx]: {
+          conditionName: conditionName,
+          conditionType: 'medical condition',
+          questions: [],
+          source: 'error',
+          aiGenerated: false  // AI NOT available - will block progression
+        }
+      }));
+    } finally {
+      setCmb_questionsLoading(prev => ({ ...prev, [idx]: false }));
+    }
+  };
+  
+  // Fetch dynamic follow-up questions when treatment is added
+  const fetchDynamicQuestions = async (treatmentName, idx) => {
+    setPth_questionsLoading(prev => ({ ...prev, [idx]: true }));
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/followups/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drugName: treatmentName, type: 'treatment' })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPth_dynamicQuestions(prev => ({ 
+          ...prev, 
+          [idx]: {
+            drugName: treatmentName,
+            drugClass: data.drugClass || 'unknown',
+            questions: data.questions || [],
+            source: data.source || 'backend',
+            aiGenerated: data.aiGenerated !== undefined ? data.aiGenerated : true  // Track if AI generated
+          }
+        }));
+      }
+    } catch (error) {
+      console.warn('Failed to fetch dynamic questions for treatment:', error);
+      // Mark as NOT AI generated - will trigger blocking
+      setPth_dynamicQuestions(prev => ({ 
+        ...prev, 
+        [idx]: {
+          drugName: treatmentName,
+          drugClass: 'unknown',
+          questions: [],
+          source: 'error',
+          aiGenerated: false  // AI NOT available - will block progression
+        }
+      }));
+    } finally {
+      setPth_questionsLoading(prev => ({ ...prev, [idx]: false }));
+    }
+  };
   
   // Extract unique treatments from database
   const pthTreatmentOptions = mergeSimilarConditions(
@@ -471,7 +593,15 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <button
               onClick={() => {
                 if (cmb_conditionInput && !cmb_selectedConditions.includes(cmb_conditionInput)) {
-                  setCmb_selectedConditions([...cmb_selectedConditions, cmb_conditionInput]);
+                  const newConditions = [...cmb_selectedConditions, cmb_conditionInput];
+                  const newIdx = newConditions.length - 1;
+                  // Submit unknown condition for review if not in known list
+                  if (!isKnownCondition(cmb_conditionInput)) {
+                    submitUnknownTerm(cmb_conditionInput, 'condition', 'Submitted via comorbid conditions form');
+                  }
+                  setCmb_selectedConditions(newConditions);
+                  // Fetch dynamic questions for this condition
+                  fetchDynamicQuestionsForCondition(cmb_conditionInput, newIdx);
                   setCmb_conditionInput('');
                 }
               }}
@@ -533,114 +663,214 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
   
   function renderConditionFollowUps(condition, idx) {
     const details = cmb_conditionDetails[idx] || {};
+    const dynamicData = cmb_dynamicQuestions[idx];
+    const isLoading = cmb_questionsLoading[idx];
+    
+    // BLOCKING: If AI is not available, show blocking message
+    if (!isLoading && dynamicData && dynamicData.aiGenerated === false) {
+      return (
+        <div style={{ marginTop: '15px', paddingLeft: '20px', borderLeft: '3px solid #dc3545' }}>
+          <div style={{ 
+            padding: '15px', 
+            backgroundColor: '#f8d7da', 
+            borderRadius: '4px',
+            color: '#721c24',
+            marginBottom: '15px'
+          }}>
+            <strong>⚠️ AI Configuration Required</strong>
+            <p style={{ margin: '10px 0 0 0', fontSize: '14px' }}>
+              Follow-up questions for this condition cannot be generated because AI is not configured.
+              Please contact your administrator to configure the Anthropic API key on the server.
+            </p>
+            <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#856404' }}>
+              This condition ({condition}) has been recorded but additional details cannot be collected until AI is enabled.
+            </p>
+          </div>
+        </div>
+      );
+    }
     
     return (
       <div style={{ marginTop: '15px', paddingLeft: '20px', borderLeft: '3px solid #007bff' }}>
-        {/* Pattern: Current or History? */}
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-            When did you have this condition?
-          </label>
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            <input
-              type="checkbox"
-              checked={details.pattern?.includes('current') || false}
-              onChange={(e) => {
-                const newDetails = { ...cmb_conditionDetails };
-                if (!newDetails[idx]) newDetails[idx] = { pattern: [] };
-                if (!newDetails[idx].pattern) newDetails[idx].pattern = [];
-                
-                if (e.target.checked) {
-                  newDetails[idx].pattern = [...newDetails[idx].pattern, 'current'];
-                } else {
-                  newDetails[idx].pattern = newDetails[idx].pattern.filter(p => p !== 'current');
-                }
-                setCmb_conditionDetails(newDetails);
-              }}
-            />
-            {' '}Currently have it
-          </label>
-          <label style={{ display: 'block' }}>
-            <input
-              type="checkbox"
-              checked={details.pattern?.includes('history') || false}
-              onChange={(e) => {
-                const newDetails = { ...cmb_conditionDetails };
-                if (!newDetails[idx]) newDetails[idx] = { pattern: [] };
-                if (!newDetails[idx].pattern) newDetails[idx].pattern = [];
-                
-                if (e.target.checked) {
-                  newDetails[idx].pattern = [...newDetails[idx].pattern, 'history'];
-                } else {
-                  newDetails[idx].pattern = newDetails[idx].pattern.filter(p => p !== 'history');
-                }
-                setCmb_conditionDetails(newDetails);
-              }}
-            />
-            {' '}Had it in the past
-          </label>
-        </div>
-        
-        {/* Timeframe (if history) */}
-        {details.pattern?.includes('history') && (
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-              When was your last episode?
-            </label>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <input
-                type="number"
-                placeholder="Number"
-                value={details.timeframe_amount || ''}
-                onChange={(e) => {
-                  const newDetails = { ...cmb_conditionDetails };
-                  if (!newDetails[idx]) newDetails[idx] = {};
-                  newDetails[idx].timeframe_amount = e.target.value;
-                  setCmb_conditionDetails(newDetails);
-                }}
-                style={{ width: '80px', padding: '6px' }}
-              />
-              <select
-                value={details.timeframe_unit || 'weeks'}
-                onChange={(e) => {
-                  const newDetails = { ...cmb_conditionDetails };
-                  if (!newDetails[idx]) newDetails[idx] = {};
-                  newDetails[idx].timeframe_unit = e.target.value;
-                  setCmb_conditionDetails(newDetails);
-                }}
-                style={{ padding: '6px' }}
-              >
-                <option value="days">days ago</option>
-                <option value="weeks">weeks ago</option>
-                <option value="months">months ago</option>
-                <option value="years">years ago</option>
-              </select>
-            </div>
+        {/* Show loading state */}
+        {isLoading && (
+          <div style={{ padding: '10px', color: '#666', fontStyle: 'italic' }}>
+            Loading follow-up questions...
           </div>
         )}
         
-        {/* Severity */}
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-            How severe is/was it?
-          </label>
-          <select
-            value={details.severity || 'none_specified'}
-            onChange={(e) => {
-              const newDetails = { ...cmb_conditionDetails };
-              if (!newDetails[idx]) newDetails[idx] = {};
-              newDetails[idx].severity = e.target.value;
-              setCmb_conditionDetails(newDetails);
-            }}
-            style={{ width: '100%', padding: '6px' }}
-          >
-            <option value="none_specified">Not specified</option>
-            <option value="mild">Mild</option>
-            <option value="moderate">Moderate</option>
-            <option value="severe">Severe</option>
-            <option value="significant">Clinically significant</option>
-          </select>
-        </div>
+        {/* Show condition type if available */}
+        {dynamicData?.conditionType && dynamicData.conditionType !== 'medical condition' && (
+          <div style={{ 
+            padding: '8px 12px', 
+            backgroundColor: '#e7f3ff', 
+            borderRadius: '4px',
+            marginBottom: '15px',
+            fontSize: '14px'
+          }}>
+            <strong>Condition Type:</strong> {dynamicData.conditionType}
+            {dynamicData.source === 'cache' && (
+              <span style={{ marginLeft: '10px', color: '#666', fontSize: '12px' }}>(cached)</span>
+            )}
+          </div>
+        )}
+        
+        {/* Dynamic questions from backend */}
+        {dynamicData?.questions && dynamicData.questions.length > 0 && (
+          <div style={{ marginBottom: '15px' }}>
+            <h5 style={{ marginBottom: '10px', color: '#007bff' }}>
+              Questions for {dynamicData.conditionName || condition}:
+            </h5>
+            {dynamicData.questions.map((question, qIdx) => (
+              <div key={qIdx} style={{ marginBottom: '12px' }}>
+                <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
+                  {question.text || question}
+                </label>
+                {question.type === 'select' && question.options ? (
+                  <select
+                    value={details[`dynamic_${qIdx}`] || ''}
+                    onChange={(e) => {
+                      const newDetails = { ...cmb_conditionDetails };
+                      if (!newDetails[idx]) newDetails[idx] = {};
+                      newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
+                      setCmb_conditionDetails(newDetails);
+                    }}
+                    style={{ width: '100%', padding: '6px' }}
+                  >
+                    <option value="">Select an answer</option>
+                    {question.options.map((opt, oIdx) => (
+                      <option key={oIdx} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={details[`dynamic_${qIdx}`] || ''}
+                    onChange={(e) => {
+                      const newDetails = { ...cmb_conditionDetails };
+                      if (!newDetails[idx]) newDetails[idx] = {};
+                      newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
+                      setCmb_conditionDetails(newDetails);
+                    }}
+                    placeholder="Enter your answer..."
+                    style={{ width: '100%', padding: '6px' }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Fallback: Show basic questions if no dynamic data and not loading */}
+        {!isLoading && (!dynamicData || !dynamicData.questions || dynamicData.questions.length === 0) && (
+          <>
+            {/* Pattern: Current or History? */}
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
+                When did you have this condition?
+              </label>
+              <label style={{ display: 'block', marginBottom: '5px' }}>
+                <input
+                  type="checkbox"
+                  checked={details.pattern?.includes('current') || false}
+                  onChange={(e) => {
+                    const newDetails = { ...cmb_conditionDetails };
+                    if (!newDetails[idx]) newDetails[idx] = { pattern: [] };
+                    if (!newDetails[idx].pattern) newDetails[idx].pattern = [];
+                    
+                    if (e.target.checked) {
+                      newDetails[idx].pattern = [...newDetails[idx].pattern, 'current'];
+                    } else {
+                      newDetails[idx].pattern = newDetails[idx].pattern.filter(p => p !== 'current');
+                    }
+                    setCmb_conditionDetails(newDetails);
+                  }}
+                />
+                {' '}Currently have it
+              </label>
+              <label style={{ display: 'block' }}>
+                <input
+                  type="checkbox"
+                  checked={details.pattern?.includes('history') || false}
+                  onChange={(e) => {
+                    const newDetails = { ...cmb_conditionDetails };
+                    if (!newDetails[idx]) newDetails[idx] = { pattern: [] };
+                    if (!newDetails[idx].pattern) newDetails[idx].pattern = [];
+                    
+                    if (e.target.checked) {
+                      newDetails[idx].pattern = [...newDetails[idx].pattern, 'history'];
+                    } else {
+                      newDetails[idx].pattern = newDetails[idx].pattern.filter(p => p !== 'history');
+                    }
+                    setCmb_conditionDetails(newDetails);
+                  }}
+                />
+                {' '}Had it in the past
+              </label>
+            </div>
+            
+            {/* Timeframe (if history) */}
+            {details.pattern?.includes('history') && (
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
+                  When was your last episode?
+                </label>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    placeholder="Number"
+                    value={details.timeframe_amount || ''}
+                    onChange={(e) => {
+                      const newDetails = { ...cmb_conditionDetails };
+                      if (!newDetails[idx]) newDetails[idx] = {};
+                      newDetails[idx].timeframe_amount = e.target.value;
+                      setCmb_conditionDetails(newDetails);
+                    }}
+                    style={{ width: '80px', padding: '6px' }}
+                  />
+                  <select
+                    value={details.timeframe_unit || 'weeks'}
+                    onChange={(e) => {
+                      const newDetails = { ...cmb_conditionDetails };
+                      if (!newDetails[idx]) newDetails[idx] = {};
+                      newDetails[idx].timeframe_unit = e.target.value;
+                      setCmb_conditionDetails(newDetails);
+                    }}
+                    style={{ padding: '6px' }}
+                  >
+                    <option value="days">days ago</option>
+                    <option value="weeks">weeks ago</option>
+                    <option value="months">months ago</option>
+                    <option value="years">years ago</option>
+                  </select>
+                </div>
+              </div>
+            )}
+            
+            {/* Severity */}
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
+                How severe is/was it?
+              </label>
+              <select
+                value={details.severity || 'none_specified'}
+                onChange={(e) => {
+                  const newDetails = { ...cmb_conditionDetails };
+                  if (!newDetails[idx]) newDetails[idx] = {};
+                  newDetails[idx].severity = e.target.value;
+                  setCmb_conditionDetails(newDetails);
+                }}
+                style={{ width: '100%', padding: '6px' }}
+              >
+                <option value="none_specified">Not specified</option>
+                <option value="mild">Mild</option>
+                <option value="moderate">Moderate</option>
+                <option value="severe">Severe</option>
+                <option value="significant">Clinically significant</option>
+              </select>
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -695,7 +925,15 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <button
               onClick={() => {
                 if (pth_treatmentInput && !pth_selectedTreatments.includes(pth_treatmentInput)) {
-                  setPth_selectedTreatments([...pth_selectedTreatments, pth_treatmentInput]);
+                  const newTreatments = [...pth_selectedTreatments, pth_treatmentInput];
+                  const newIdx = newTreatments.length - 1;
+                  // Submit unknown treatment for review if not in known list
+                  if (!isKnownTreatment(pth_treatmentInput)) {
+                    submitUnknownTerm(pth_treatmentInput, 'treatment', 'Submitted via treatment history form');
+                  }
+                  setPth_selectedTreatments(newTreatments);
+                  // Fetch dynamic questions for this treatment
+                  fetchDynamicQuestions(pth_treatmentInput, newIdx);
                   setPth_treatmentInput('');
                 }
               }}
@@ -757,9 +995,105 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
   
   function renderTreatmentFollowUps(treatment, idx) {
     const details = pth_treatmentDetails[idx] || {};
+    const dynamicData = pth_dynamicQuestions[idx];
+    const isLoading = pth_questionsLoading[idx];
+    
+    // BLOCKING: If AI is not available, show blocking message
+    if (!isLoading && dynamicData && dynamicData.aiGenerated === false) {
+      return (
+        <div style={{ marginTop: '15px', paddingLeft: '20px', borderLeft: '3px solid #dc3545' }}>
+          <div style={{ 
+            padding: '15px', 
+            backgroundColor: '#f8d7da', 
+            borderRadius: '4px',
+            color: '#721c24',
+            marginBottom: '15px'
+          }}>
+            <strong>⚠️ AI Configuration Required</strong>
+            <p style={{ margin: '10px 0 0 0', fontSize: '14px' }}>
+              Follow-up questions for this treatment cannot be generated because AI is not configured.
+              Please contact your administrator to configure the Anthropic API key on the server.
+            </p>
+            <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#856404' }}>
+              This treatment ({treatment}) has been recorded but additional details cannot be collected until AI is enabled.
+            </p>
+          </div>
+        </div>
+      );
+    }
     
     return (
       <div style={{ marginTop: '15px', paddingLeft: '20px', borderLeft: '3px solid #28a745' }}>
+        {/* Show loading state */}
+        {isLoading && (
+          <div style={{ padding: '10px', color: '#666', fontStyle: 'italic' }}>
+            Loading follow-up questions...
+          </div>
+        )}
+        
+        {/* Show drug class if available */}
+        {dynamicData?.drugClass && dynamicData.drugClass !== 'unknown' && (
+          <div style={{ 
+            padding: '8px 12px', 
+            backgroundColor: '#e7f3ff', 
+            borderRadius: '4px',
+            marginBottom: '15px',
+            fontSize: '14px'
+          }}>
+            <strong>Drug Class:</strong> {dynamicData.drugClass}
+            {dynamicData.source === 'cache' && (
+              <span style={{ marginLeft: '10px', color: '#666', fontSize: '12px' }}>(cached)</span>
+            )}
+          </div>
+        )}
+        
+        {/* Dynamic questions from backend */}
+        {dynamicData?.questions && dynamicData.questions.length > 0 && (
+          <div style={{ marginBottom: '15px' }}>
+            <h5 style={{ marginBottom: '10px', color: '#28a745' }}>
+              Additional Questions for {dynamicData.drugClass || treatment}:
+            </h5>
+            {dynamicData.questions.map((question, qIdx) => (
+              <div key={qIdx} style={{ marginBottom: '12px' }}>
+                <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
+                  {question.text || question}
+                </label>
+                {question.type === 'select' && question.options ? (
+                  <select
+                    value={details[`dynamic_${qIdx}`] || ''}
+                    onChange={(e) => {
+                      const newDetails = { ...pth_treatmentDetails };
+                      if (!newDetails[idx]) newDetails[idx] = {};
+                      newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
+                      setPth_treatmentDetails(newDetails);
+                    }}
+                    style={{ width: '100%', padding: '6px' }}
+                  >
+                    <option value="">Select an answer</option>
+                    {question.options.map((opt, oIdx) => (
+                      <option key={oIdx} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={details[`dynamic_${qIdx}`] || ''}
+                    onChange={(e) => {
+                      const newDetails = { ...pth_treatmentDetails };
+                      if (!newDetails[idx]) newDetails[idx] = {};
+                      newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
+                      setPth_treatmentDetails(newDetails);
+                    }}
+                    style={{ width: '100%', padding: '6px' }}
+                    placeholder="Your answer..."
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Default questions (always shown) */}
         {/* Pattern: Currently using or used previously? */}
         <div style={{ marginBottom: '15px' }}>
           <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>

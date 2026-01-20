@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.0.1] - 2026-01-20
+
+### 🔧 Cache Key Collision Fix
+
+Fixed critical bug where treatments were showing condition questions due to cache key collisions.
+
+### Fixed
+
+- **ClaudeClient cache key collision** - Cache key now uses unique hash (first 50 + length + last 50) instead of just first 100 chars
+- **FollowUpGenerator cache separation** - Treatment cache keys prefixed with `treatment:` to prevent collision with conditions
+- **Frontend type parameter** - Treatment requests now include `type: 'treatment'` in API calls
+
+### Verified
+
+- Frontend tests: 328/328 passing ✅
+- Backend tests: 54/54 passing ✅
+- **Total: 382 tests passing**
+
+---
+
 ## [5.0.0] - 2026-01-20
 
 ### 🔄 Major Backend Integration Release

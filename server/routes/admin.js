@@ -281,22 +281,169 @@ router.delete('/pending/:id', requireAuth, adminRateLimiter, async (req, res) =>
 router.get('/stats', requireAuth, adminRateLimiter, async (req, res) => {
   try {
     // Parallel queries for stats
-    const [drugsCount, pendingCount, cacheCount] = await Promise.all([
+    const [drugsCount, pendingCount, cacheCount, pendingTermsCount] = await Promise.all([
       db.getAsync('SELECT COUNT(*) as count FROM approved_drugs'),
       db.getAsync('SELECT COUNT(*) as count FROM pending_reviews'),
-      db.getAsync('SELECT COUNT(*) as count FROM followup_cache')
+      db.getAsync('SELECT COUNT(*) as count FROM followup_cache'),
+      db.getAsync('SELECT COUNT(*) as count FROM pending_terms WHERE status = ?', ['pending'])
     ]);
 
     res.json({
       stats: {
         approvedDrugs: drugsCount?.count || 0,
         pendingReviews: pendingCount?.count || 0,
-        cachedFollowups: cacheCount?.count || 0
+        cachedFollowups: cacheCount?.count || 0,
+        pendingTerms: pendingTermsCount?.count || 0
       }
     });
   } catch (error) {
     console.error('Error fetching stats:', error);
     res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// ============================================
+// PENDING TERMS MANAGEMENT (Unknown conditions/treatments)
+// ============================================
+
+/**
+ * GET /api/admin/pending-terms
+ * List all pending terms for review
+ */
+router.get('/pending-terms', requireAuth, adminRateLimiter, async (req, res) => {
+  try {
+    const terms = await db.allAsync(
+      `SELECT id, term, type, context, status, submitted_at 
+       FROM pending_terms 
+       WHERE status = 'pending' 
+       ORDER BY submitted_at DESC`
+    );
+
+    res.json({ terms });
+  } catch (error) {
+    console.error('Error fetching pending terms:', error);
+    res.status(500).json({ error: 'Failed to fetch pending terms' });
+  }
+});
+
+/**
+ * POST /api/admin/terms/:id/approve
+ * Approve a pending term with optional synonyms
+ */
+router.post('/terms/:id/approve', requireAuth, adminRateLimiter, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { synonyms } = req.body; // Optional array of synonyms
+
+    // Get the pending term
+    const term = await db.getAsync(
+      'SELECT * FROM pending_terms WHERE id = ?',
+      [id]
+    );
+
+    if (!term) {
+      return res.status(404).json({ error: 'Pending term not found' });
+    }
+
+    if (term.status !== 'pending') {
+      return res.status(400).json({ error: 'Term already processed' });
+    }
+
+    // Update term status to approved
+    await db.runAsync(
+      `UPDATE pending_terms 
+       SET status = 'approved', 
+           synonyms = ?,
+           reviewed_at = datetime('now'),
+           reviewed_by = 'admin'
+       WHERE id = ?`,
+      [synonyms ? JSON.stringify(synonyms) : null, id]
+    );
+
+    res.json({ 
+      message: 'Term approved successfully',
+      term: { 
+        id, 
+        term: term.term, 
+        type: term.type,
+        synonyms: synonyms || []
+      }
+    });
+  } catch (error) {
+    console.error('Error approving term:', error);
+    res.status(500).json({ error: 'Failed to approve term' });
+  }
+});
+
+/**
+ * POST /api/admin/terms/:id/reject
+ * Reject a pending term
+ */
+router.post('/terms/:id/reject', requireAuth, adminRateLimiter, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body; // Optional rejection reason
+
+    // Get the pending term
+    const term = await db.getAsync(
+      'SELECT * FROM pending_terms WHERE id = ?',
+      [id]
+    );
+
+    if (!term) {
+      return res.status(404).json({ error: 'Pending term not found' });
+    }
+
+    if (term.status !== 'pending') {
+      return res.status(400).json({ error: 'Term already processed' });
+    }
+
+    // Update term status to rejected
+    await db.runAsync(
+      `UPDATE pending_terms 
+       SET status = 'rejected', 
+           context = COALESCE(context, '') || ' | Rejection reason: ' || ?,
+           reviewed_at = datetime('now'),
+           reviewed_by = 'admin'
+       WHERE id = ?`,
+      [reason || 'No reason provided', id]
+    );
+
+    res.json({ 
+      message: 'Term rejected successfully',
+      term: { id, term: term.term, type: term.type }
+    });
+  } catch (error) {
+    console.error('Error rejecting term:', error);
+    res.status(500).json({ error: 'Failed to reject term' });
+  }
+});
+
+/**
+ * GET /api/admin/terms/history
+ * Get history of all processed terms
+ */
+router.get('/terms/history', requireAuth, adminRateLimiter, async (req, res) => {
+  try {
+    const { status, limit = 50 } = req.query;
+    
+    let query = `SELECT * FROM pending_terms WHERE status != 'pending'`;
+    const params = [];
+    
+    if (status) {
+      query += ` AND status = ?`;
+      params.push(status);
+    }
+    
+    query += ` ORDER BY reviewed_at DESC LIMIT ?`;
+    params.push(parseInt(limit, 10));
+
+    const terms = await db.allAsync(query, params);
+
+    res.json({ terms });
+  } catch (error) {
+    console.error('Error fetching terms history:', error);
+    res.status(500).json({ error: 'Failed to fetch terms history' });
   }
 });
 

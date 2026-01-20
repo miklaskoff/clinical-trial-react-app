@@ -22,14 +22,19 @@ const PORT = process.env.PORT || 3001;
 // Security headers
 app.use(helmet());
 
-// CORS configuration
+// CORS configuration - allow all localhost ports for development
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:3000'
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow any localhost origin
+    if (origin.match(/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/)) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -70,11 +75,13 @@ import matchRoutes from './routes/match.js';
 import followupRoutes from './routes/followups.js';
 import adminRoutes from './routes/admin.js';
 import configRoutes from './routes/config.js';
+import termsRoutes from './routes/terms.js';
 
 app.use('/api/match', matchRoutes);
 app.use('/api/followups', followupRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/terms', termsRoutes);
 
 // ============================================
 // ERROR HANDLING

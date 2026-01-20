@@ -21,6 +21,37 @@
   font-size: 1rem;
 }
 
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+.tab-btn.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
 /* Stats Section */
 .stats-section {
   display: grid;
@@ -333,3 +364,168 @@
     justify-content: center;
   }
 }
+
+/* API Key Settings Styles */
+.api-key-settings {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.api-key-settings h2 {
+  font-size: 1.5rem;
+  color: #1a1a2e;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.api-key-settings h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.status-section {
+  margin-bottom: 2rem;
+}
+
+.status-indicator {
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-indicator.configured {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.status-indicator.not-configured {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+}
+
+.status-icon {
+  font-size: 1.5rem;
+}
+
+.status-text {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.status-date {
+  color: #666;
+  font-size: 0.875rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.status-warning {
+  color: #856404;
+  font-size: 0.9rem;
+  width: 100%;
+  margin: 0.5rem 0 0 0;
+}
+
+.input-section {
+  margin-bottom: 1.5rem;
+}
+
+.input-section label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.input-section input[type="password"] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  transition: border-color 0.2s;
+  font-family: monospace;
+}
+
+.input-section input[type="password"]:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.input-section input[type="password"]:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.input-hint {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.input-hint a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.input-hint a:hover {
+  text-decoration: underline;
+}
+
+.actions-section {
+  display: flex;
+  gap: 1rem;
+}
+
+.actions-section .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.actions-section .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.actions-section .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.actions-section .btn-danger {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.actions-section .btn-danger:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.actions-section .btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

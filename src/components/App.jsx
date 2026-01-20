@@ -354,12 +354,33 @@ function App() {
         body: JSON.stringify({ apiKey: key })
       });
       
+      // Get response text first to handle empty responses
+      const text = await response.text();
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to save API key');
+        // Try to parse error JSON, fallback to text
+        let errorMessage = 'Failed to save API key';
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = text || `Server error: ${response.status}`;
+        }
+        throw new Error(errorMessage);
       }
       
-      return true;
+      // Handle empty successful responses
+      if (!text) {
+        return { success: true };
+      }
+      
+      // Parse the JSON response
+      try {
+        return JSON.parse(text);
+      } catch {
+        // If response is not JSON but request succeeded, that's ok
+        return { success: true };
+      }
     } catch (error) {
       console.error('Failed to save API key to backend:', error);
       throw error;

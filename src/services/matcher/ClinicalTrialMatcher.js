@@ -66,13 +66,18 @@ export class ClinicalTrialMatcher {
     this.#confidenceThresholds = aiConfig?.confidenceThresholds || getDefaultConfidenceThresholds();
 
     // Initialize AI client if config provided
-    if (aiConfig?.apiKey) {
+    // V5: If apiKey is 'configured-on-server', AI calls go through backend, not direct
+    const useDirectAI = aiConfig?.apiKey && aiConfig.apiKey !== 'configured-on-server';
+    
+    if (useDirectAI) {
       this.#aiClient = new ClaudeAPIClient(aiConfig.apiKey, aiConfig.model);
       this.#aiFallback = new AIFallbackHandler({ 
         claudeClient: this.#aiClient, 
         enabled: true 
       });
     } else {
+      // V5: Backend handles AI - frontend does rule-based matching only
+      this.#aiClient = null;
       this.#aiFallback = new AIFallbackHandler({ 
         claudeClient: null, 
         enabled: false 

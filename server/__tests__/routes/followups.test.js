@@ -127,4 +127,74 @@ describe('Follow-up Generator Route', () => {
       expect(response.body).toHaveProperty('message');
     });
   });
+
+  describe('POST /api/followups/generate with type=condition', () => {
+    it('should return CONDITION-specific questions for type=condition', async () => {
+      const response = await request(app)
+        .post('/api/followups/generate')
+        .send({ drugName: 'brain cancer', type: 'condition' });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('questions');
+      expect(response.body).toHaveProperty('conditionType');
+      expect(Array.isArray(response.body.questions)).toBe(true);
+      
+      // CRITICAL: Questions should be about CONDITIONS, not medications
+      const questionTexts = response.body.questions.map(q => q.text.toLowerCase());
+      
+      // Should NOT contain drug-related terms
+      const hasMedicationQuestions = questionTexts.some(text => 
+        text.includes('medication') || 
+        text.includes('dose') || 
+        text.includes('taking this')
+      );
+      expect(hasMedicationQuestions).toBe(false);
+      
+      // Should contain condition-related terms
+      const hasConditionQuestions = questionTexts.some(text => 
+        text.includes('status') || 
+        text.includes('diagnosed') || 
+        text.includes('condition') ||
+        text.includes('severity') ||
+        text.includes('active') ||
+        text.includes('stage')
+      );
+      expect(hasConditionQuestions).toBe(true);
+    });
+
+    it('should identify cancer as conditionType for brain cancer', async () => {
+      const response = await request(app)
+        .post('/api/followups/generate')
+        .send({ drugName: 'brain cancer', type: 'condition' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.conditionType).toBe('cancer');
+    });
+
+    it('should identify autoimmune for rheumatoid arthritis', async () => {
+      const response = await request(app)
+        .post('/api/followups/generate')
+        .send({ drugName: 'rheumatoid arthritis', type: 'condition' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.conditionType).toBe('autoimmune');
+    });
+
+    it('should return different questions for conditions vs treatments', async () => {
+      const conditionResponse = await request(app)
+        .post('/api/followups/generate')
+        .send({ drugName: 'diabetes', type: 'condition' });
+
+      const treatmentResponse = await request(app)
+        .post('/api/followups/generate')
+        .send({ drugName: 'metformin', type: 'treatment' });
+
+      expect(conditionResponse.status).toBe(200);
+      expect(treatmentResponse.status).toBe(200);
+      
+      // Condition response should have conditionType, treatment should have drugClass
+      expect(conditionResponse.body).toHaveProperty('conditionType');
+      expect(treatmentResponse.body).toHaveProperty('drugClass');
+    });
+  });
 });

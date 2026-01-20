@@ -5,6 +5,10 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "Rename-Item": true
+        "Rename-Item": true,
+        "/^cd \"c:\\\\Users\\\\lasko\\\\Downloads\\\\clinical-trial-react-app\\\\server\"; node index\\.js 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }
