@@ -185,7 +185,11 @@ function generateTextReport(results) {
             const text = c.rawText || c.criterionId;
             const conf = `${(c.confidence * 100).toFixed(0)}%`;
             const ai = c.requiresAI ? ' [AI]' : '';
-            lines.push(`   ┌─ Criterion: ${text}`);
+            const criterionType = c.exclusionStrength === 'inclusion' ? 'Inclusion' : 'Exclusion';
+            
+            lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+            lines.push(`   │  Type: ${criterionType}`);
+            lines.push(`   │  Text: ${text}`);
             lines.push(`   │  Confidence: ${conf}${ai}`);
             if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
             if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
@@ -206,7 +210,12 @@ function generateTextReport(results) {
       if (trial.flaggedCriteria && trial.flaggedCriteria.length > 0) {
         lines.push('   Flagged criteria:');
         trial.flaggedCriteria.forEach((c) => {
-          lines.push(`   ┌─ Criterion: ${c.rawText || c.criterionId}`);
+          const text = c.rawText || c.criterionId;
+          const criterionType = c.exclusionStrength === 'inclusion' ? 'Inclusion' : 'Exclusion';
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: ${criterionType}`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${(c.confidence * 100).toFixed(0)}%${c.requiresAI ? ' [AI]' : ''}`);
           if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
           if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
@@ -236,7 +245,10 @@ function generateTextReport(results) {
           const text = c.rawText || c.criterionId;
           const conf = `${(c.confidence * 100).toFixed(0)}%`;
           const ai = c.requiresAI ? ' [AI]' : '';
-          lines.push(`   ┌─ Criterion: ${text}`);
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: Inclusion`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${conf}${ai}`);
           if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
           if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
@@ -250,7 +262,11 @@ function generateTextReport(results) {
           const text = c.rawText || c.criterionId;
           const conf = `${(c.confidence * 100).toFixed(0)}%`;
           const ai = c.requiresAI ? ' [AI]' : '';
-          lines.push(`   ┌─ Criterion: ${text}`);
+          const criterionType = c.exclusionStrength === 'mandatory_exclude' ? 'Mandatory Exclusion' : 'Exclusion';
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: ${criterionType}`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${conf}${ai}`);
           if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
           if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
