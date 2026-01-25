@@ -29,6 +29,50 @@ describe('Array Utils', () => {
         arraysOverlap([{ id: 1 }, { id: 2 }], [{ id: 2 }, { id: 3 }], compareFn)
       ).toBe(true);
     });
+
+    describe('partial matching (Issue 2e/4 - cancer synonym matching)', () => {
+      it('should match compound medical terms with partial matching enabled', () => {
+        // Test case from investigation: "breast cancer" should match "malignant tumors"
+        expect(arraysOverlap(['malignant tumors'], ['tumor'], true)).toBe(true);
+        expect(arraysOverlap(['tumor'], ['malignant tumors'], true)).toBe(true);
+      });
+
+      it('should match via substring when partial matching enabled', () => {
+        expect(arraysOverlap(['breast cancer'], ['cancer'], true)).toBe(true);
+        expect(arraysOverlap(['cancer'], ['breast cancer'], true)).toBe(true);
+      });
+
+      it('should match via word-level overlap for compound terms', () => {
+        // "malignant tumors" contains word "tumors"
+        expect(arraysOverlap(['malignant tumors'], ['tumors'], true)).toBe(true);
+        // Only matches words > 3 chars to avoid false positives (4+ chars)
+        expect(arraysOverlap(['the cat'], ['cat'], true)).toBe(true); // "cat" is 3 chars - will match via substring
+      });
+
+      it('should NOT match when partial matching is disabled', () => {
+        // Without partial matching, exact match required
+        expect(arraysOverlap(['malignant tumors'], ['tumor'], false)).toBe(false);
+        expect(arraysOverlap(['malignant tumors'], ['tumor'])).toBe(false);
+      });
+
+      it('should still perform exact match when partial matching enabled', () => {
+        // Exact matches should still work with partial matching
+        expect(arraysOverlap(['cancer'], ['cancer'], true)).toBe(true);
+        expect(arraysOverlap(['tumor', 'cancer'], ['cancer'], true)).toBe(true);
+      });
+
+      it('should be case-insensitive with partial matching', () => {
+        expect(arraysOverlap(['Malignant Tumors'], ['TUMOR'], true)).toBe(true);
+        expect(arraysOverlap(['Breast Cancer'], ['cancer'], true)).toBe(true);
+      });
+
+      it('should match significant medical terms via word-level matching', () => {
+        // Words > 3 chars (4+ characters) should match at word level
+        expect(arraysOverlap(['malignant tumors'], ['tumor'], true)).toBe(true); // "tumor" is 5 chars
+        expect(arraysOverlap(['breast cancer'], ['cancer'], true)).toBe(true); // "cancer" is 6 chars
+        expect(arraysOverlap(['lung disease'], ['disease'], true)).toBe(true); // "disease" is 7 chars
+      });
+    });
   });
 
   describe('unique', () => {
