@@ -1,5 +1,98 @@
 # Lessons Learned
 
+## 2026-01-25: Double-Negative Criteria and Compound Medical Terms
+
+### Problem
+Investigation revealed 71kg patients incorrectly excluded by weight criteria like "must not weigh < 30kg" and cancer patients not matched by "malignant tumors" exclusion.
+
+### Root Causes
+
+**Issue 1: Double-Negative Weight Criteria**
+- Criteria like "must not weigh < 30kg" without WEIGHT_MIN/MAX slot-filled fields
+- Matcher defaulted to `matches = true` when no fields present
+- BMI cluster had `aiEnabled: false` so no AI fallback
+- Double-negative logic ("must NOT weigh LESS than") wasn't parsed/inverted
+
+**Issue 2: Exact String Matching for Synonyms**
+- `arraysOverlap()` required exact string equality
+- "breast cancer" → synonyms: ["tumor", "malignancy"]
+- Criterion: ["malignant tumors"] 
+- "malignant tumors" ≠ "tumor" (not exact match) → no overlap detected
+
+### Solution Applied
+
+**For Weight Criteria:**
+1. Added `#parseWeightFromRawText()` to ClinicalTrialMatcher.js
+2. Pattern detection for:
+   - Double-negative: "must not weigh < X kg"
+   - Simple comparisons: "weighing ≤ X kg", "weighing ≥ X kg"
+3. Logic inversion for double-negatives in exclusions:
+   ```javascript
+   // "must NOT weigh < 30kg" in exclusion criterion
+   const meetsRequirement = (patientWeight >= threshold);
+   matches = !meetsRequirement; // Inverted!
+   ```
+4. Modified `#evaluateBMI()` to detect missing fields and call parser
+
+**For Synonym Matching:**
+1. Enhanced `arraysOverlap()` with partial matching (3rd param: `true`)
+2. Substring matching: "malignant tumors".includes("tumor") 
+3. Word-level matching: split by spaces, match words >3 chars
+4. Updated `#evaluateComorbidity()` to use partial matching
+5. Expanded medical-synonyms.json with cancer-specific mappings
+
+**For Report Formatting:**
+1. Added criterion IDs to all report sections
+2. Added criterion types (Inclusion/Exclusion/Mandatory Exclusion)
+3. Updated 3 sections for consistency
+
+**For Documentation:**
+1. Added OR-logic criteria section to ARCHITECTURE guide
+2. Added double-negative weight criteria section
+3. Documented AI fallback behavior
+
+### Verification
+- Created investigation_script.js with factual code simulation
+- Traced exact code paths through matcher
+- Verified fixes with actual database entries
+- No mocks used - 100% factual analysis
+
+### Lessons
+
+**Design Lessons:**
+- **Double-negatives require semantic analysis** - "must NOT be LESS than" = minimum requirement
+- **Database labels can differ from semantic meaning** - Exclusion-labeled criteria can represent inclusion requirements
+- **Exact string matching fails for compound medical terms** - Need partial/word-level matching
+- **Missing slot-filled fields need fallback parsing** - Can't rely on fields always being present
+
+**Implementation Lessons:**
+- **Parse raw_text as last resort** - When slot-filled fields missing
+- **Invert logic for semantic contradictions** - Database label vs. actual meaning
+- **Enhance matching for medical terminology** - Medical terms are often compound (e.g., "malignant tumors")
+- **Word-level matching with minimum length** - Prevents false positives on short words
+
+**Investigation Lessons:**
+- **Code simulation reveals hidden bugs** - Tracing through actual code paths found issues
+- **No mocks = factual analysis** - Real database + real code = real results
+- **Documentation prevents repeat failures** - ARCHITECTURE guide now has OR-logic behavior
+- **Pattern detection scales better than enumeration** - Regex patterns vs. exhaustive database updates
+
+**Testing Lessons:**
+- **Test with realistic edge cases** - Double-negatives, compound terms, missing fields
+- **Verify against actual database** - Slot-filled fields may be missing
+- **Check semantic meaning, not just syntax** - "must NOT weigh < 30kg" ≠ exclusion
+- **Manual verification catches semantic bugs** - Tests can pass but logic can be inverted
+
+### Prevention Checklist
+- [ ] Check for double-negative phrasing in criteria text
+- [ ] Verify slot-filled fields exist before using them
+- [ ] Test compound medical terms with partial matching
+- [ ] Trace semantic meaning vs. database label
+- [ ] Document complex parsing/matching logic
+- [ ] Add examples to ARCHITECTURE guide
+
+---
+
 ## 2026-01-19: Claimed "AI-driven" but Implemented Hardcoded Questions
 
 ### Problem

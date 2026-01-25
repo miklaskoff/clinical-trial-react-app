@@ -247,6 +247,78 @@ Pass 3: AI SEMANTIC (if enabled)
 - Model selection: Use Haiku for simple, Sonnet for complex
 
 
+### Complex Criteria Handling
+
+**OR-Logic Criteria:**
+
+Criteria that require "at least 1 of the following" conditions are handled specially in the matching system.
+
+**Example:**
+```
+Have at least 1 of the following cardiovascular risk factors:
+- Current cigarette smoker
+- Diagnosis of hypertension
+- Diagnosis of hyperlipidemia
+- Diabetes mellitus type 1 or 2
+- Obesity
+- Family history of premature CHD
+```
+
+**Current Implementation:**
+- Stored as **single criterion** in database with all sub-conditions in `raw_text`
+- No slot-filled fields for individual sub-conditions
+- Sub-conditions embedded in `raw_text`, NOT as separate criteria
+- `LOGICAL_OPERATOR: "OR"` field indicates OR-logic requirement
+
+**Evaluation Behavior:**
+1. **Rule-based matching:** Cannot evaluate sub-conditions independently
+2. **AI fallback:** For clusters with `aiEnabled: true`, AI analyzes `raw_text` semantically
+3. **AI understanding:** Can interpret OR-logic and match if patient has ANY listed condition
+4. **Limitation:** Granular tracking not available (cannot identify which specific sub-condition matched)
+
+**Clusters with AI Enabled for OR-Logic:**
+```json
+{
+  "CMB": { "aiEnabled": true },  // Comorbidities
+  "PTH": { "aiEnabled": true },  // Treatment history
+  "AIC": { "aiEnabled": true },  // Active infections
+  "SEV": { "aiEnabled": true }   // Severity scores
+}
+```
+
+**Future Enhancement:**
+- Parser rewrite will split OR-criteria into separate entries with shared group ID
+- Add `LOGICAL_OPERATOR: "OR"` field support in matcher
+- Enable rule-based evaluation for OR-logic without AI dependency
+
+
+### Weight Criteria with Double-Negatives
+
+**Challenge:** Criteria like "must not weigh < 30kg" or "weighing ≤ 18kg" without slot-filled fields.
+
+**Solution:** Raw text parsing with pattern detection (implemented as of v5.0.1)
+
+**Patterns Detected:**
+```javascript
+// Double-negative pattern (inverted logic)
+"must not weigh < 30kg" → patient MUST weigh ≥ 30kg
+
+// Simple comparison patterns
+"weighing ≤ 18kg" → patient MUST weigh ≤ 18kg
+"weighing ≥ 50kg" → patient MUST weigh ≥ 50kg
+```
+
+**Logic Inversion:**
+For double-negatives in exclusion criteria, the matcher inverts the result:
+- Criterion: "must NOT weigh < 30kg" (exclusion)
+- Semantically means: "minimum weight 30kg" (inclusion-like requirement)
+- Patient 71kg: meets requirement (≥30kg)
+- Inversion: `matches = !meetsRequirement` = false
+- Result: Patient NOT excluded ✅
+
+**Implementation:** See `#parseWeightFromRawText()` in `ClinicalTrialMatcher.js`
+
+
 ### Confidence Scoring
 
 

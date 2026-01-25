@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.0.2] - 2026-01-25
+
+### 🔴 Critical Fixes + Enhanced Matching
+
+Investigation and fix of clinical trial evaluation anomalies based on code simulation analysis.
+
+### Added
+
+- **Double-Negative Weight Parsing** (`ClinicalTrialMatcher.js`)
+  - New `#parseWeightFromRawText()` method to parse criteria without slot-filled fields
+  - Pattern detection: "must not weigh < X kg", "weighing ≤ X kg", "weighing ≥ X kg"
+  - Logic inversion for double-negatives in exclusion criteria
+  - Fixes BMI_1916 (NCT06979453) and NCT04772079 weight criteria bugs
+
+- **Enhanced Synonym Matching** (`utils/array.js`, `medical-synonyms.json`)
+  - Partial matching support in `arraysOverlap()` for compound medical terms
+  - Substring matching and word-level matching (>3 chars)
+  - New cancer-related synonyms: "malignant tumors", "breast cancer", "lung cancer", etc.
+  - Fixes cancer exclusion matching (Issues 2e/4: NCT07150988)
+
+- **Improved Report Formatting** (`App.jsx`)
+  - Criterion IDs now displayed in all report sections
+  - Criterion types shown (Inclusion/Exclusion/Mandatory Exclusion)
+  - Updated 3 sections: non-exact matches, flagged criteria, failed/matched criteria
+  - Better traceability and debugging
+
+- **Documentation Updates** (`ARCHITECTURE_AND_MATCHING_GUIDE.md`)
+  - New section: "Complex Criteria Handling" with OR-logic documentation
+  - New section: "Weight Criteria with Double-Negatives"
+  - Documented AI fallback behavior for OR-logic criteria
+
+- **Investigation Documentation** (7 files)
+  - Complete investigation package with factual code simulation
+  - Implementation plan and analysis documents
+
+### Fixed
+
+- **Issue 2a:** 71kg patients incorrectly excluded by "must not weigh < 30kg" criteria
+- **Issue 2e/4:** "breast cancer" now properly matches "malignant tumors" exclusion criteria
+- **Issue 1:** Reports missing criterion IDs and types
+
+### Changed
+
+- `arraysOverlap()` signature: 3rd parameter can now be boolean `true` for partial matching
+- `#evaluateComorbidity()` now uses partial matching for condition arrays
+- `medical-synonyms.json` version bumped to 1.0.1
+
+### Verified
+
+- Investigation based on actual code simulation (no mocks)
+- 7 issues analyzed with factual outputs
+- 3 critical/high priority issues fixed
+- 3 issues confirmed working correctly
+
+---
+
 ## [5.0.1] - 2026-01-20
 
 ### 🔧 Cache Key Collision Fix
