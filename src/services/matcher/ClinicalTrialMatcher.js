@@ -394,18 +394,21 @@ export class ClinicalTrialMatcher {
     let matches = true;
     const patientValues = [];
     const requirements = [];
+    let hasExplicitFields = false;
 
     // Check BMI
     if (patientBMI.bmi) {
       patientValues.push(`BMI: ${patientBMI.bmi}`);
     }
     if (criterion.BMI_MIN !== null && criterion.BMI_MIN !== undefined) {
+      hasExplicitFields = true;
       requirements.push(`BMI ≥${criterion.BMI_MIN}`);
       if (patientBMI.bmi < criterion.BMI_MIN) {
         matches = false;
       }
     }
     if (criterion.BMI_MAX !== null && criterion.BMI_MAX !== undefined) {
+      hasExplicitFields = true;
       requirements.push(`BMI ≤${criterion.BMI_MAX}`);
       if (patientBMI.bmi > criterion.BMI_MAX) {
         matches = false;
@@ -419,16 +422,23 @@ export class ClinicalTrialMatcher {
       patientValues.push(`Weight: ${weightValue}${weightUnit}`);
     }
     if (criterion.WEIGHT_MIN !== null && criterion.WEIGHT_MIN !== undefined) {
+      hasExplicitFields = true;
       requirements.push(`Weight ≥${criterion.WEIGHT_MIN}kg`);
       if (weightValue < criterion.WEIGHT_MIN) {
         matches = false;
       }
     }
     if (criterion.WEIGHT_MAX !== null && criterion.WEIGHT_MAX !== undefined) {
+      hasExplicitFields = true;
       requirements.push(`Weight ≤${criterion.WEIGHT_MAX}kg`);
       if (weightValue > criterion.WEIGHT_MAX) {
         matches = false;
       }
+    }
+
+    // If no explicit fields present, try parsing from raw_text
+    if (!hasExplicitFields && criterion.raw_text) {
+      return this.#parseWeightFromRawText(criterion, patientBMI, patientValues);
     }
 
     return { 
@@ -436,6 +446,99 @@ export class ClinicalTrialMatcher {
       confidence: getConfidenceByMatchType('exactMatch'),
       patientValue: patientValues.join(', ') || 'No BMI/weight data',
       confidenceReason: `Exact numeric comparison. Required: ${requirements.join(', ') || 'N/A'}`
+    };
+  }
+
+  /**
+   * Parse weight/BMI requirements from raw_text for criteria without slot-filled fields
+   * Handles double-negative phrasing like "must not weigh < X" or "weighing ≤ X"
+   * @param {Object} criterion - Criterion object with raw_text
+   * @param {Object} patientBMI - Patient BMI/weight data
+   * @param {Array<string>} patientValues - Array of patient value strings for display
+   * @returns {Object} Match result with matches, confidence, and reasoning
+   */
+  #parseWeightFromRawText(criterion, patientBMI, patientValues) {
+    const rawText = criterion.raw_text;
+    const weightValue = patientBMI.weight?.value || patientBMI.weight;
+    const isExclusion = criterion.EXCLUSION_STRENGTH !== 'inclusion';
+    
+    // Pattern 1: Double-negative "must not weigh < X kg" or "must not weigh less than X kg"
+    const doubleNegativePattern1 = /must\s+not\s+weigh\s*[<≤]\s*([\d.]+)\s*kg/i;
+    const doubleNegativePattern2 = /must\s+not\s+weigh\s+less\s+than\s*([\d.]+)\s*kg/i;
+    
+    // Pattern 2: Simple "weighing ≤ X kg" or "weighing < X kg"
+    const lessThanPattern = /weighing\s*[≤<]\s*([\d.]+)\s*kg/i;
+    
+    // Pattern 3: Simple "weighing ≥ X kg" or "weighing > X kg"
+    const greaterThanPattern = /weighing\s*[≥>]\s*([\d.]+)\s*kg/i;
+    
+    let matches = false;
+    let confidenceReason = '';
+    
+    // Check double-negative patterns
+    let match = rawText.match(doubleNegativePattern1) || rawText.match(doubleNegativePattern2);
+    if (match) {
+      const threshold = parseFloat(match[1]);
+      const meetsRequirement = (weightValue >= threshold);
+      
+      if (isExclusion) {
+        // Double-negative in exclusion creates semantic inversion
+        // "must NOT weigh < 30kg" semantically means "must weigh >= 30kg" (minimum weight)
+        // But it's labeled as exclusion, so we invert the result
+        matches = !meetsRequirement; // Inverted!
+        
+        confidenceReason = `Double-negative exclusion (inverted logic). Patient ${weightValue}kg, threshold ${threshold}kg. Criterion semantically means "minimum weight ${threshold}kg". Patient ${meetsRequirement ? 'MEETS' : 'FAILS'} requirement.`;
+      } else {
+        // Inclusion criterion with double-negative
+        matches = meetsRequirement;
+        confidenceReason = `Double-negative inclusion. Patient ${weightValue}kg must be ≥ ${threshold}kg. Patient ${meetsRequirement ? 'MEETS' : 'FAILS'} requirement.`;
+      }
+      
+      return {
+        matches,
+        confidence: getConfidenceByMatchType('exactMatch'),
+        patientValue: patientValues.join(', '),
+        confidenceReason
+      };
+    }
+    
+    // Check less-than patterns
+    match = rawText.match(lessThanPattern);
+    if (match) {
+      const threshold = parseFloat(match[1]);
+      matches = (weightValue <= threshold);
+      confidenceReason = `Parsed from raw text. Weight must be ≤ ${threshold}kg. Patient ${weightValue}kg ${matches ? 'MEETS' : 'FAILS'} requirement.`;
+      
+      return {
+        matches,
+        confidence: getConfidenceByMatchType('exactMatch'),
+        patientValue: patientValues.join(', '),
+        confidenceReason
+      };
+    }
+    
+    // Check greater-than patterns
+    match = rawText.match(greaterThanPattern);
+    if (match) {
+      const threshold = parseFloat(match[1]);
+      matches = (weightValue >= threshold);
+      confidenceReason = `Parsed from raw text. Weight must be ≥ ${threshold}kg. Patient ${weightValue}kg ${matches ? 'MEETS' : 'FAILS'} requirement.`;
+      
+      return {
+        matches,
+        confidence: getConfidenceByMatchType('exactMatch'),
+        patientValue: patientValues.join(', '),
+        confidenceReason
+      };
+    }
+    
+    // Could not parse - flag for manual review
+    return {
+      matches: false,
+      confidence: 0.5,
+      requiresAI: true,
+      patientValue: patientValues.join(', '),
+      confidenceReason: `Could not parse weight requirement from: "${rawText}". Manual review needed.`
     };
   }
 
@@ -462,10 +565,10 @@ export class ClinicalTrialMatcher {
         const conditionTypes = condition.CONDITION_TYPE || [];
         const patientTypes = patientCondition.CONDITION_TYPE || [];
 
-        if (arraysOverlap(conditionTypes, patientTypes)) {
+        if (arraysOverlap(conditionTypes, patientTypes, true)) {
           // Check pattern if specified
           if (condition.CONDITION_PATTERN && patientCondition.CONDITION_PATTERN) {
-            if (!arraysOverlap(condition.CONDITION_PATTERN, patientCondition.CONDITION_PATTERN)) {
+            if (!arraysOverlap(condition.CONDITION_PATTERN, patientCondition.CONDITION_PATTERN, true)) {
               continue;
             }
           }
@@ -495,7 +598,7 @@ export class ClinicalTrialMatcher {
         // Try synonym matching for ALL patient types, not just the first one
         for (const patientType of patientTypes) {
           const synonyms = findSynonyms(patientType);
-          if (arraysOverlap(conditionTypes, synonyms)) {
+          if (arraysOverlap(conditionTypes, synonyms, true)) {
             return { 
               matches: true, 
               confidence: getConfidenceByMatchType('synonymMatch'),
