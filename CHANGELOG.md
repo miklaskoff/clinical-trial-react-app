@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.0.6] - 2026-01-27
+
+### 🗄️ Cache Parity & Structured Questions
+
+Enhanced cache management with database persistence for conditions and structured question format with slot mapping.
+
+### Added
+
+- **Cache Parity for Conditions (CMB Cluster)**
+  - `generateConditionFollowUpQuestions()` now stores to SQLite DB cache (matching PTH behavior)
+  - Uses `condition:{conditionType}` prefix to avoid collision with treatment cache
+  - DB cache lookup before generating new questions
+  - Persists across server restarts
+
+- **Version-Based Cache Invalidation**
+  - New `app_version` table in SQLite to track application version
+  - `checkAndInvalidateCache(currentVersion)` function clears all caches when version changes
+  - Ensures stale AI responses are cleared on code updates
+
+- **Structured Questions with Slot Mapping**
+  - `deriveTimingOptions(criteria)` extracts timeframe boundaries from matched criteria
+  - Generates options like "Currently taking", "Stopped within last 12 weeks", etc.
+  - `slotMapping` field maps option labels to slot-filled field values
+  - `postProcessQuestions()` ensures all questions have valid types (no `text` type)
+  - `getDefaultQuestionsWithSlotMapping()` replaces `getDefaultQuestions()`
+
+- **New Test Files**
+  - `server/__tests__/services/FollowUpGenerator.cache.test.js` (7 tests)
+  - `server/__tests__/services/FollowUpGenerator.structured.test.js` (8 tests)
+
+### Changed
+
+- **AI Prompt Updated** to require `slotMapping` in response format
+- **Backend vitest.config.js** - Added `fileParallelism: false` to prevent database contention
+- **Cache prefixes standardized**: `treatment:{drugClass}` and `condition:{conditionType}`
+
+### Fixed
+
+- **Cache inconsistency** - CMB (conditions) cache now persists in DB like PTH (treatments)
+- **Test isolation** - Sequential test file execution prevents SQLite contention
+- **Function name error** - Fixed `getDefaultQuestions is not defined` for unknown drugs
+
+### Results
+
+| Feature | Before | After |
+|---------|--------|-------|
+| CMB Cache Persistence | Memory only | Memory + SQLite DB |
+| PTH Cache Persistence | Memory + SQLite DB | Memory + SQLite DB |
+| Cache Invalidation | Manual only | Automatic on version change |
+| Question Format | `text` type allowed | `select`/`radio` only |
+| Slot Mapping | Not included | Included for all questions |
+
+---
+
 ## [5.0.5] - 2026-01-25
 
 ### 🔍 Comprehensive Drug Criteria Search

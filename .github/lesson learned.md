@@ -1,5 +1,51 @@
 # Lessons Learned
 
+## 2026-01-27: Test Isolation with SQLite - Parallel Test File Execution
+
+### Problem
+Cache test passed when run individually (`npm test -- --run FollowUpGenerator.cache.test.js`) but failed when run with all tests (`npm test -- --run`).
+
+### Root Cause
+**Vitest runs test files in parallel by default**. Multiple test files accessing the same SQLite database caused race conditions:
+- Test A clears cache in beforeEach
+- Test B writes to cache
+- Test A reads empty cache (Test B's writes interfered)
+
+### Evidence
+```javascript
+// When run alone:
+All cache entries: [ 'condition:metabolic', 'treatment:TNF_inhibitors' ]
+
+// When run with other tests:
+All cache entries: [ 'condition:metabolic' ]  // treatment missing!
+```
+
+### Solution
+Added `fileParallelism: false` to vitest.config.js:
+
+```javascript
+// server/vitest.config.js
+export default defineConfig({
+  test: {
+    // ... other options
+    fileParallelism: false,  // ← Run test files sequentially
+  },
+});
+```
+
+### When to Use Sequential Tests
+- Tests that share SQLite database
+- Tests that use module-level singleton state
+- Tests that modify global state (environment variables, etc.)
+
+### Lesson
+- **SQLite tests MUST run sequentially** - No built-in transaction isolation
+- **Check if test passes alone but fails in suite** - Classic isolation symptom
+- **`fileParallelism: false`** - Simple fix for database-dependent tests
+- **Add debug logging** - `console.log('All cache entries:', ...)` quickly reveals state issues
+
+---
+
 ## 2026-01-26: Dynamic Import Fetch Error - Vite/HMR Issue
 
 ### Problem

@@ -23,6 +23,141 @@ const conditionCache = new Map();
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 /**
+ * Normalize timeframe to weeks for comparison
+ * @param {{ amount: number, unit: string }} timeframe
+ * @returns {number} Weeks
+ */
+function normalizeToWeeks(timeframe) {
+  if (!timeframe || !timeframe.amount) return 0;
+  const { amount, unit } = timeframe;
+  switch (unit?.toLowerCase()) {
+    case 'days': return Math.ceil(amount / 7);
+    case 'weeks': return amount;
+    case 'months': return amount * 4; // Approximate
+    case 'years': return amount * 52;
+    default: return amount; // Assume weeks
+  }
+}
+
+/**
+ * Format weeks as human-readable range
+ * @param {number} weeks
+ * @returns {string}
+ */
+function formatWeeksAsLabel(weeks) {
+  if (weeks <= 4) return `${weeks} weeks`;
+  if (weeks <= 12) return `${Math.round(weeks / 4)} months`;
+  return `${Math.round(weeks / 4)} months`;
+}
+
+/**
+ * Derive timing options from matched criteria timeframes
+ * @param {Array<Object>} criteria - Matched criteria with TIMEFRAME fields
+ * @returns {Array<{ label: string, slotValue: Object }>}
+ */
+export function deriveTimingOptions(criteria) {
+  const boundaries = new Set();
+  let hasCurrentUse = false;
+  
+  for (const c of criteria) {
+    if (c.TIMEFRAME) {
+      const weeks = normalizeToWeeks(c.TIMEFRAME);
+      if (weeks > 0) boundaries.add(weeks);
+    }
+    // Check for "currently" in raw_text
+    if (c.raw_text?.toLowerCase().includes('currently')) {
+      hasCurrentUse = true;
+    }
+  }
+  
+  // Always include "currently taking"
+  const options = [
+    {
+      label: 'Currently taking',
+      slotValue: { usage_current: true, TIMEFRAME: { amount: 0, unit: 'weeks', relation: 'current' } }
+    }
+  ];
+  
+  // Sort boundaries and create ranges
+  const sortedBoundaries = [...boundaries].sort((a, b) => a - b);
+  
+  let prev = 0;
+  for (const weeks of sortedBoundaries) {
+    const label = prev === 0 
+      ? `Stopped within last ${formatWeeksAsLabel(weeks)}`
+      : `Stopped ${formatWeeksAsLabel(prev)} to ${formatWeeksAsLabel(weeks)} ago`;
+    
+    options.push({
+      label,
+      slotValue: {
+        usage_current: false,
+        TIMEFRAME: { amount: weeks, unit: 'weeks', relation: 'within' }
+      }
+    });
+    prev = weeks;
+  }
+  
+  // Add "beyond all thresholds" option
+  const maxWeeks = sortedBoundaries.length > 0 ? sortedBoundaries[sortedBoundaries.length - 1] : 26; // Default 6 months
+  options.push({
+    label: `Stopped over ${formatWeeksAsLabel(maxWeeks)} ago`,
+    slotValue: {
+      usage_current: false,
+      TIMEFRAME: { amount: maxWeeks, unit: 'weeks', relation: 'beyond' }
+    }
+  });
+  
+  return options;
+}
+
+/**
+ * Check app version and invalidate cache if version changed
+ * @param {string} currentVersion - Current app version from package.json
+ * @returns {Promise<boolean>} - True if cache was invalidated
+ */
+export async function checkAndInvalidateCache(currentVersion) {
+  const db = getDatabase();
+  if (!db) return false;
+  
+  try {
+    // Get stored version
+    const stored = await db.getAsync('SELECT version FROM app_version WHERE id = 1');
+    
+    if (!stored) {
+      // First run - store version, no invalidation needed
+      await db.runAsync(
+        'INSERT INTO app_version (id, version, updated_at) VALUES (1, ?, ?)',
+        [currentVersion, new Date().toISOString()]
+      );
+      return false;
+    }
+    
+    if (stored.version !== currentVersion) {
+      console.log(`🔄 App version changed: ${stored.version} → ${currentVersion}. Clearing caches...`);
+      
+      // Clear all caches
+      memoryCache.clear();
+      conditionCache.clear();
+      await db.runAsync('DELETE FROM followup_cache');
+      
+      // Update stored version
+      await db.runAsync(
+        'UPDATE app_version SET version = ?, updated_at = ? WHERE id = 1',
+        [currentVersion, new Date().toISOString()]
+      );
+      
+      console.log('✅ Caches cleared due to version change');
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Version check failed:', error.message);
+    return false;
+  }
+}
+
+/**
  * Condition type mappings
  */
 const CONDITION_TYPES = {
@@ -207,10 +342,14 @@ async function generateQuestionsWithAI(drugName, drugClass, criteria) {
   if (!client.isConfigured()) {
     // Return default questions if no AI configured
     console.log('⚠ AI not configured, using default treatment questions');
-    return { questions: getDefaultQuestions(drugClass), aiGenerated: false };
+    return { questions: getDefaultQuestionsWithSlotMapping(drugClass, criteria), aiGenerated: false };
   }
   
   console.log(`🤖 Generating AI questions for drug: ${drugName} (class: ${drugClass})`);
+
+  // Derive timing options from criteria BEFORE calling AI
+  const timingOptions = deriveTimingOptions(criteria);
+  const timingOptionsJson = JSON.stringify(timingOptions.map(o => o.label));
 
   const criteriaText = criteria
     .slice(0, 10) // Limit to 10 most relevant
@@ -228,24 +367,45 @@ Based on these criteria, generate follow-up questions needed to determine eligib
 3. Treatment response (if criteria mention response/efficacy)
 4. Dosage stability (if criteria require stable doses)
 
+CRITICAL RULES:
+1. NEVER use type "text" for any question. Use "select" or "radio" instead.
+2. For timing/status questions, you MUST use these exact options: ${timingOptionsJson}
+3. Each question must have "slotMapping" that maps option labels to slot-filled values.
+
 Return ONLY valid JSON in this format:
 {
   "questions": [
     {
-      "id": "q1",
-      "text": "Question text here",
-      "type": "radio|number|select",
-      "options": ["Option1", "Option2"], // for radio/select only
-      "unit": "weeks", // for number type only
+      "id": "timing",
+      "text": "Are you currently taking this medication, or have you taken it in the past?",
+      "type": "select",
+      "options": ${timingOptionsJson},
+      "slotMapping": {
+        "Currently taking": { "usage_current": true },
+        "Stopped within last 12 weeks": { "usage_current": false, "TIMEFRAME": { "amount": 12, "unit": "weeks", "relation": "within" } }
+      },
       "required": true,
-      "criterionIds": ["PTH_XXXX", "PTH_YYYY"] // Array of criterion IDs this question addresses (can be single or multiple)
+      "criterionIds": ["PTH_XXXX", "PTH_YYYY"]
+    },
+    {
+      "id": "response",
+      "text": "How did you respond to this treatment?",
+      "type": "select",
+      "options": ["Good response", "Partial response", "No response", "Lost response over time", "Could not tolerate"],
+      "slotMapping": {
+        "Good response": { "response": "good" },
+        "Partial response": { "response": "partial" },
+        "No response": { "response": "none" },
+        "Lost response over time": { "response": "lost" },
+        "Could not tolerate": { "response": "intolerant" }
+      },
+      "required": true,
+      "criterionIds": ["PTH_XXXX"]
     }
   ]
 }
 
-IMPORTANT: For each question, include the "criterionIds" field as an array with ALL relevant criterion IDs (e.g., ["PTH_5432", "PTH_5433"]) from the list above that this question addresses. Even if only one criterion is relevant, use an array format: ["PTH_5432"].
-
-Generate 2-5 relevant questions. Be concise.`;
+Generate 2-5 relevant questions. For each question, include the "criterionIds" field as an array with ALL relevant criterion IDs from the list above.`;
 
   try {
     const response = await client.generateQuestions(prompt);
@@ -253,72 +413,122 @@ Generate 2-5 relevant questions. Be concise.`;
     // Check if AI returned aiGenerated: false (API error occurred)
     if (response && response.aiGenerated === false) {
       console.log(`⚠ AI API failed for drug: ${drugName}, using blocking response`);
-      return { questions: [], aiGenerated: false };  // Return empty to trigger blocking
+      return { questions: [], aiGenerated: false };
     }
     
     if (response && response.questions && Array.isArray(response.questions) && response.questions.length > 0) {
-      console.log(`✅ AI generated ${response.questions.length} questions for drug: ${drugName}`);
-      return { questions: response.questions, aiGenerated: true };
+      // Post-process: ensure all questions have slotMapping and no text type
+      const processedQuestions = postProcessQuestions(response.questions, timingOptions);
+      console.log(`✅ AI generated ${processedQuestions.length} questions for drug: ${drugName}`);
+      return { questions: processedQuestions, aiGenerated: true };
     }
     
     console.log(`⚠ AI returned no questions, using defaults for drug: ${drugName}`);
-    return { questions: getDefaultQuestions(drugClass), aiGenerated: false };
+    return { questions: getDefaultQuestionsWithSlotMapping(drugClass, criteria), aiGenerated: false };
 
   } catch (error) {
     console.error('AI question generation failed:', error.message);
-    return { questions: getDefaultQuestions(drugClass), aiGenerated: false };
+    return { questions: getDefaultQuestionsWithSlotMapping(drugClass, criteria), aiGenerated: false };
   }
 }
 
 /**
- * Get default follow-up questions based on drug class
- * @param {string} drugClass 
+ * Post-process AI questions to ensure they have slotMapping and valid types
+ * @param {Array<Object>} questions 
+ * @param {Array<Object>} timingOptions - Derived timing options
  * @returns {Array<Object>}
  */
-function getDefaultQuestions(drugClass) {
+function postProcessQuestions(questions, timingOptions) {
+  return questions.map(q => {
+    // Convert text type to select with default options
+    if (q.type === 'text' || !q.type) {
+      q.type = 'select';
+      if (!q.options || q.options.length === 0) {
+        // Determine appropriate options based on question content
+        if (q.text?.toLowerCase().includes('currently') || q.text?.toLowerCase().includes('taking')) {
+          q.options = timingOptions.map(o => o.label);
+          q.slotMapping = {};
+          timingOptions.forEach(o => {
+            q.slotMapping[o.label] = o.slotValue;
+          });
+        } else {
+          q.options = ['Yes', 'No', 'Not sure'];
+          q.slotMapping = {
+            'Yes': { [q.id]: true },
+            'No': { [q.id]: false },
+            'Not sure': { [q.id]: 'unknown' }
+          };
+        }
+      }
+    }
+    
+    // Ensure slotMapping exists for select/radio types
+    if ((q.type === 'select' || q.type === 'radio') && !q.slotMapping && q.options) {
+      q.slotMapping = {};
+      q.options.forEach(opt => {
+        q.slotMapping[opt] = { [q.id]: opt };
+      });
+    }
+    
+    // Ensure criterionIds is an array
+    if (q.criterionId && !q.criterionIds) {
+      q.criterionIds = [q.criterionId];
+    }
+    
+    return q;
+  });
+}
+
+/**
+ * Get default follow-up questions with slot mapping
+ * @param {string} drugClass 
+ * @param {Array<Object>} criteria - Matched criteria for deriving options
+ * @returns {Array<Object>}
+ */
+function getDefaultQuestionsWithSlotMapping(drugClass, criteria = []) {
+  const timingOptions = deriveTimingOptions(criteria);
+  const timingSlotMapping = {};
+  timingOptions.forEach(o => {
+    timingSlotMapping[o.label] = o.slotValue;
+  });
+  
   const baseQuestions = [
     {
-      id: 'usage_status',
-      text: 'Are you currently taking this medication?',
-      type: 'radio',
-      options: ['Yes, currently taking', 'No, stopped taking'],
+      id: 'timing',
+      text: 'Are you currently taking this medication, or have you taken it in the past?',
+      type: 'select',
+      options: timingOptions.map(o => o.label),
+      slotMapping: timingSlotMapping,
       required: true
     },
     {
-      id: 'last_dose',
-      text: 'How many weeks ago was your last dose?',
-      type: 'number',
-      unit: 'weeks',
+      id: 'response',
+      text: 'How did you respond to this treatment?',
+      type: 'select',
+      options: ['Good response', 'Partial response', 'No response', 'Lost response over time', 'Could not tolerate'],
+      slotMapping: {
+        'Good response': { response: 'good' },
+        'Partial response': { response: 'partial' },
+        'No response': { response: 'none' },
+        'Lost response over time': { response: 'lost' },
+        'Could not tolerate': { response: 'intolerant' }
+      },
       required: true
     }
   ];
 
   // Add class-specific questions
   const classQuestions = {
-    TNF_inhibitors: [
-      {
-        id: 'response',
-        text: 'How did you respond to this treatment?',
-        type: 'select',
-        options: ['Good response', 'Partial response', 'No response', 'Lost response over time', 'Could not tolerate'],
-        required: true
-      }
-    ],
-    IL17_inhibitors: [
-      {
-        id: 'response',
-        text: 'How did you respond to this IL-17 inhibitor?',
-        type: 'select',
-        options: ['Good response', 'Partial response', 'No response', 'Lost response', 'Intolerant'],
-        required: true
-      }
-    ],
     JAK_inhibitors: [
       {
         id: 'dose_stable',
         text: 'Has your dose been stable for at least 4 weeks?',
         type: 'radio',
         options: ['Yes', 'No'],
+        slotMapping: {
+          'Yes': { dose_stable: true, dose_stable_weeks: 4 },
+          'No': { dose_stable: false }
+        },
         required: true
       }
     ],
@@ -326,15 +536,14 @@ function getDefaultQuestions(drugClass) {
       {
         id: 'daily_dose',
         text: 'What is your current daily dose (in mg prednisone equivalent)?',
-        type: 'number',
-        unit: 'mg',
-        required: true
-      },
-      {
-        id: 'dose_stable',
-        text: 'Has your dose been stable for at least 4 weeks?',
-        type: 'radio',
-        options: ['Yes', 'No'],
+        type: 'select',
+        options: ['Less than 5mg', '5-10mg', '10-20mg', 'More than 20mg'],
+        slotMapping: {
+          'Less than 5mg': { daily_dose_mg: 2.5 },
+          '5-10mg': { daily_dose_mg: 7.5 },
+          '10-20mg': { daily_dose_mg: 15 },
+          'More than 20mg': { daily_dose_mg: 25 }
+        },
         required: true
       }
     ]
@@ -623,7 +832,7 @@ export async function generateConditionFollowUpQuestions(conditionName) {
   const { conditionType, found } = resolveConditionCategory(conditionName);
 
   // Check memory cache first
-  const cacheKey = `condition_${conditionType}`;
+  const cacheKey = `condition:${conditionType}`;
   const cached = conditionCache.get(cacheKey);
   
   if (cached && cached.expiresAt > Date.now()) {
@@ -633,9 +842,45 @@ export async function generateConditionFollowUpQuestions(conditionName) {
       conditionName,
       matchingCriteriaCount: cached.matchingCriteriaCount || 0,
       cached: true,
-      source: 'cache',
-      aiGenerated: cached.aiGenerated !== undefined ? cached.aiGenerated : true  // Preserve AI status from cache
+      source: 'memory_cache',
+      aiGenerated: cached.aiGenerated !== undefined ? cached.aiGenerated : true
     };
+  }
+
+  // Check database cache (NEW: parity with treatments)
+  const db = getDatabase();
+  if (db) {
+    try {
+      const dbCached = await db.getAsync(
+        'SELECT * FROM followup_cache WHERE drug_class = ? AND expires_at > ?',
+        [cacheKey, new Date().toISOString()]
+      );
+
+      if (dbCached) {
+        const questions = JSON.parse(dbCached.questions);
+        const aiGenerated = questions && questions.length > 0;
+        
+        // Also store in memory cache
+        conditionCache.set(cacheKey, {
+          questions,
+          matchingCriteriaCount: 0,
+          aiGenerated,
+          expiresAt: new Date(dbCached.expires_at).getTime()
+        });
+
+        return {
+          questions,
+          conditionType,
+          conditionName,
+          matchingCriteriaCount: 0,
+          cached: true,
+          source: 'db_cache',
+          aiGenerated
+        };
+      }
+    } catch (error) {
+      console.error('DB cache lookup failed for condition:', error.message);
+    }
   }
 
   // Load criteria database and find matching criteria
@@ -645,7 +890,7 @@ export async function generateConditionFollowUpQuestions(conditionName) {
   // Generate questions
   let questions;
   let source = 'default';
-  let aiGenerated = false;  // Track if AI actually generated
+  let aiGenerated = false;
   
   if (matchingCriteria.length > 0) {
     const result = await generateConditionQuestionsWithAI(conditionName, conditionType, matchingCriteria);
@@ -658,7 +903,7 @@ export async function generateConditionFollowUpQuestions(conditionName) {
     aiGenerated = false;
   }
 
-  // Store in cache
+  // Store in memory cache
   const expiresAt = Date.now() + CACHE_TTL;
   conditionCache.set(cacheKey, {
     questions,
@@ -668,15 +913,28 @@ export async function generateConditionFollowUpQuestions(conditionName) {
     expiresAt
   });
 
+  // Store in database cache (NEW: parity with treatments)
+  if (db) {
+    try {
+      await db.runAsync(
+        `INSERT OR REPLACE INTO followup_cache (drug_class, questions, created_at, expires_at) 
+         VALUES (?, ?, ?, ?)`,
+        [cacheKey, JSON.stringify(questions), new Date().toISOString(), new Date(expiresAt).toISOString()]
+      );
+    } catch (error) {
+      console.error('DB cache store failed for condition:', error.message);
+    }
+  }
+
   return {
     questions,
     conditionType,
     conditionName,
     matchingCriteriaCount: matchingCriteria.length,
-    matchedCriteriaIds: matchingCriteria.map(c => c.id), // For debugging/testing
+    matchedCriteriaIds: matchingCriteria.map(c => c.id),
     cached: false,
     source,
-    aiGenerated  // Frontend will use this to block if false
+    aiGenerated
   };
 }
 
@@ -766,7 +1024,7 @@ export async function generateFollowUpQuestions(drugName) {
     source = result.aiGenerated ? 'ai' : 'default';
     console.log(`📋 Raw AI response questions: ${JSON.stringify(questions, null, 2)}`);
   } else {
-    questions = getDefaultQuestions(drugClass);
+    questions = getDefaultQuestionsWithSlotMapping(drugClass, []);
     source = 'default';
     aiGenerated = false;
   }
