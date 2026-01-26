@@ -51,6 +51,18 @@ function generatePatientNarrative(patientResponse) {
       const condition = c.CONDITION_TYPE || c.condition || c;
       const severity = c.SEVERITY || c.severity || '';
       lines.push(`  - ${condition}${severity ? ` (${severity})` : ''}`);
+      
+      // Show AI-generated follow-up questions if present
+      if (c.dynamicQuestions && Array.isArray(c.dynamicQuestions)) {
+        lines.push(`    🤖 AI Follow-up Questions:`);
+        c.dynamicQuestions.forEach((q) => {
+          const answer = c[q.id] || 'not answered';
+          // Handle both old (criterionId) and new (criterionIds) formats
+          const ids = q.criterionIds || (q.criterionId ? [q.criterionId] : []);
+          const criterionLabel = ids.length > 0 ? ` (Criteria: ${ids.join(', ')})` : '';
+          lines.push(`      - ${q.text} → ${answer}${criterionLabel}`);
+        });
+      }
     });
   } else {
     lines.push('• No comorbid conditions reported');
@@ -63,6 +75,18 @@ function generatePatientNarrative(patientResponse) {
       const treatment = t.TREATMENT_TYPE || t.treatment || t;
       const pattern = t.TREATMENT_PATTERN || t.pattern || '';
       lines.push(`  - ${treatment}${pattern ? ` (${pattern})` : ''}`);
+      
+      // Show AI-generated follow-up questions if present
+      if (t.dynamicQuestions && Array.isArray(t.dynamicQuestions)) {
+        lines.push(`    🤖 AI Follow-up Questions:`);
+        t.dynamicQuestions.forEach((q) => {
+          const answer = t[q.id] || 'not answered';
+          // Handle both old (criterionId) and new (criterionIds) formats
+          const ids = q.criterionIds || (q.criterionId ? [q.criterionId] : []);
+          const criterionLabel = ids.length > 0 ? ` (Criteria: ${ids.join(', ')})` : '';
+          lines.push(`      - ${q.text} → ${answer}${criterionLabel}`);
+        });
+      }
     });
   } else {
     lines.push('• No previous psoriasis treatments reported');
@@ -882,3 +906,4 @@ function App() {
 }
 
 export default App;
+export { generatePatientNarrative };

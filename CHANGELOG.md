@@ -7,6 +7,148 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.0.5] - 2026-01-25
+
+### 🔍 Comprehensive Drug Criteria Search
+
+Enhanced drug-to-criteria matching with three-level search terms (drug name, class, and generic category).
+
+### Added
+
+- **`getGenericSearchTerms()` function** (`DrugCategoryResolver.js`)
+  - Returns higher-level classification terms for each drug type
+  - Biologics: "biologic", "biologic agent", "biological therapy", "monoclonal antibody", "antibody", "mAb"
+  - bDMARDs: "bDMARD", "DMARD", "biologic DMARD"
+  - csDMARDs: "csDMARD", "conventional DMARD", "conventional synthetic DMARD"
+  - Small molecules: "small molecule", "targeted synthetic", "tsDMARD"
+  - Immunosuppressants: "immunosuppressive", "immunosuppressant"
+
+- **Unit Tests** (`server/__tests__/services/DrugCategoryResolver.test.js`)
+  - Test: `resolveDrugCategory()` for adalimumab, secukinumab, methotrexate
+  - Test: `getClassSearchTerms()` for TNF, IL-17 inhibitors
+  - Test: `getGenericSearchTerms()` returns correct terms per drug type
+  - Test: Small molecules do NOT include biologic terms
+  - Test: Unknown drugs return empty array
+  - **Total: 12 new tests (all passing)**
+
+### Changed
+
+- **`findMatchingCriteria()` in `FollowUpGenerator.js`**
+  - Now uses all three search term levels: name + class + generic
+  - Deduplicates search terms with `[...new Set()]`
+  - Logs term count for debugging (e.g., "23 terms" for adalimumab)
+
+### Fixed
+
+- **Cluster-Scoped Search** - Treatment follow-ups now ONLY search CLUSTER_PTH (not FLR or CMB)
+
+### Results
+
+| Drug | Search Terms | Matched Criteria |
+|------|--------------|-----------------|
+| adalimumab | 23 | 10 (PTH_005, PTH_009, PTH_012, PTH_013, PTH_019, PTH_020, PTH_021, PTH_025, PTH_027, PTH_030) |
+| methotrexate | 9 | 3 (PTH_013, PTH_017, PTH_029) |
+| IL-17A inhibitor | 6 | 2 |
+
+### Verified
+
+- ✅ All 75 backend tests passing
+- ✅ All 345 frontend tests passing
+- ✅ TDD workflow followed: tests failed first, then implemented
+- ✅ Documentation updated (lesson learned, architecture guide)
+
+---
+
+## [5.0.4] - 2026-01-25
+
+### 🔧 Fixed Treatment Criterion IDs Prompt
+
+**Issue**: AI prompt inconsistency prevented criterion IDs from being reliably included in treatment follow-up questions.
+
+### Fixed
+
+- **Prompt Inconsistency in `FollowUpGenerator.js`** (line 169)
+  - **Before**: JSON example showed `criterionIds` array but instruction said `criterionId` (singular)
+  - **After**: Both example and instruction now consistently request `criterionIds` array
+  - **Impact**: Claude AI now correctly includes `criterionIds: ["PTH_XXXX", "PTH_YYYY"]` in treatment questions
+
+### Added
+
+- **Integration Tests** (`server/__tests__/services/FollowUpGenerator.treatmentCriteria.test.js`)
+  - Test: Database loading from CLUSTER_PTH
+  - Test: Criteria filtering by TREATMENT_TYPE/TREATMENT_PATTERN
+  - Test: criterionIds in AI responses
+  - Test: Criteria context in AI prompts
+  - Test: aiGenerated:false blocking behavior
+  - **Total: 5 new tests (all passing)**
+
+### Technical Details
+
+**Root Cause**: Mixed messaging in AI prompt
+```javascript
+// Line 163: Shows array format
+"criterionIds": ["PTH_XXXX", "PTH_YYYY"]
+
+// Line 169: Asked for singular (INCONSISTENT!)
+"include the 'criterionId' field"
+```
+
+**Solution**: Updated instruction to match example format
+```javascript
+"include the 'criterionIds' field as an array with ALL relevant criterion IDs"
+```
+
+### Verified
+
+- ✅ All 404 tests passing (59 backend + 345 frontend)
+- ✅ Database loading logic confirmed working (loads 7 criteria for adalimumab)
+- ✅ Prompt now consistently requests array format
+- ✅ Backward compatibility preserved (normalization in ClaudeClient)
+
+### Notes
+
+- **Discovery**: Database loading was ALREADY implemented correctly
+- **Issue**: Only prompt wording was inconsistent, causing AI confusion
+- **Impact**: Treatment questions should now include criterion IDs like conditions already do
+
+---
+
+## [5.0.3] - 2026-01-25
+
+### 🎯 Enhanced AI Follow-Up Questions
+
+AI-generated follow-up questions now support referencing **multiple related criteria** with a single question.
+
+### Added
+
+- **Multiple Criterion IDs Support** (Backend + Frontend)
+  - `ClaudeClient.js`: Normalizes `criterionId` to `criterionIds` array automatically
+  - `FollowUpGenerator.js`: AI prompts request `criterionIds` array for each question
+  - `App.jsx`: Report displays multiple IDs as "Criteria: ID1, ID2, ID3"
+  - Backward compatible with old single-ID format
+
+- **Integration Tests** (`src/__tests__/integration/multipleCriterionIds.test.jsx`)
+  - Test: Multiple IDs in CMB cluster (conditions)
+  - Test: Multiple IDs in PTH cluster (treatments)
+  - Test: Backward compatibility with old format
+  - Test: Graceful handling of missing IDs
+  - **Total: 4 new tests**
+
+### Changed
+
+- AI can now consolidate related criteria intelligently
+  - Example: "gastritis for 2 years" + "gastritis for 23 months" → ONE question: "How long have you had gastritis?"
+  - Question labeled with BOTH criterion IDs: `(Criteria: CMB_2391, CMB_2392)`
+
+### Verified
+
+- ✅ All 345 tests passing (341 existing + 4 new)
+- ✅ Backend normalization handles both old and new formats
+- ✅ Frontend report generation supports arrays
+- ✅ No breaking changes to existing functionality
+
+---
+
 ## [5.0.2] - 2026-01-25
 
 ### 🔴 Critical Fixes + Enhanced Matching

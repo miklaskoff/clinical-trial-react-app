@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:backend": "cd server && npm start",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\" --names \"frontend,backend\" --prefix-colors \"cyan,magenta\"",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
@@ -47,7 +49,8 @@
     "msw": "^2.7.0",
     "prettier": "^3.4.2",
     "vite": "^6.0.6",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "concurrently": "^9.1.2"
   },
   "lint-staged": {
     "src/**/*.{js,jsx}": [

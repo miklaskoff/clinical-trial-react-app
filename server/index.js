@@ -124,6 +124,14 @@ async function startServer() {
     await initDatabase();
     console.log('✓ Database initialized');
 
+    // Try to initialize Claude client from stored API key
+    const { getClaudeClient } = await import('./services/ClaudeClient.js');
+    const client = getClaudeClient();
+    const apiKeyLoaded = await client.initFromDatabase();
+    if (!apiKeyLoaded) {
+      console.log('ℹ API key not configured - configure via Admin panel');
+    }
+
     // Start listening
     server = app.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}`);

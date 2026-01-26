@@ -9,6 +9,15 @@
         "/^cd \"c:\\\\Users\\\\lasko\\\\Downloads\\\\clinical-trial-react-app\\\\server\"; node index\\.js 2>&1$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "git fetch": true,
+        "git checkout": true,
+        "git pull": true,
+        "npm install": true,
+        "/^cd server; node index\\.js$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "Move-Item": true
     }
 }

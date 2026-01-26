@@ -4,7 +4,7 @@
  */
 
 import { getClaudeClient } from './ClaudeClient.js';
-import { resolveDrugCategory, getClassSearchTerms } from './DrugCategoryResolver.js';
+import { resolveDrugCategory, getClassSearchTerms, getGenericSearchTerms } from './DrugCategoryResolver.js';
 import { getDatabase } from '../db.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -76,14 +76,72 @@ async function loadCriteriaDatabase() {
  * @param {string} drugClass 
  * @returns {Array<Object>}
  */
-function findMatchingCriteria(database, drugName, drugClass) {
-  const searchTerms = [
+/**
+ * Interleukin subtype mappings - subtypes should match their parent
+ * IL-17A, IL-17F → IL-17; IL-23p19 → IL-23; etc.
+ */
+const IL_SUBTYPE_MAPPINGS = {
+  'il-17a': ['il-17', 'il17', 'interleukin-17', 'interleukin 17'],
+  'il-17f': ['il-17', 'il17', 'interleukin-17', 'interleukin 17'],
+  'il-17a/17f': ['il-17', 'il17', 'interleukin-17', 'interleukin 17'],
+  'il-23p19': ['il-23', 'il23', 'interleukin-23', 'interleukin 23'],
+  'il-12/23': ['il-12', 'il12', 'il-23', 'il23'],
+  'il-12p40': ['il-12', 'il12', 'il-23', 'il23'], // p40 is shared subunit
+};
+
+/**
+ * Expand search terms to include parent IL types
+ * @param {string} term 
+ * @returns {string[]}
+ */
+function expandILTerms(term) {
+  const normalized = term.toLowerCase().replace(/\s+/g, '-');
+  const expanded = [term];
+  
+  // Check for IL subtype patterns
+  for (const [subtype, parents] of Object.entries(IL_SUBTYPE_MAPPINGS)) {
+    if (normalized.includes(subtype) || term.toLowerCase().includes(subtype.replace(/-/g, ''))) {
+      expanded.push(...parents);
+    }
+  }
+  
+  // Also extract base IL number from patterns like "IL-17A inhibitor"
+  const ilMatch = term.match(/il[- ]?(\d+)([a-z])?/i);
+  if (ilMatch) {
+    const baseIL = `il-${ilMatch[1]}`;
+    if (!expanded.includes(baseIL)) {
+      expanded.push(baseIL);
+      expanded.push(`il${ilMatch[1]}`);
+      expanded.push(`interleukin-${ilMatch[1]}`);
+    }
+  }
+  
+  return [...new Set(expanded)];
+}
+
+function findMatchingCriteria(database, drugName, drugClass, targetCluster = 'CLUSTER_PTH') {
+  // Get drug info for generic term lookup
+  const drugInfo = resolveDrugCategory(drugName);
+  
+  // Build comprehensive search terms:
+  // 1. Drug name
+  // 2. Class-specific terms (TNF, IL-17, etc.)
+  // 3. Generic terms (biologic, DMARD, monoclonal antibody, etc.)
+  const baseTerms = [
     drugName.toLowerCase(),
-    ...getClassSearchTerms(drugClass).map(t => t.toLowerCase())
+    ...getClassSearchTerms(drugClass).map(t => t.toLowerCase()),
+    ...getGenericSearchTerms(drugInfo).map(t => t.toLowerCase())
   ];
+  
+  // Expand IL subtypes to their parent types
+  const searchTerms = [...new Set(baseTerms.flatMap(term => expandILTerms(term)))];
+  
+  console.log(`🔍 Search terms for "${drugName}" (${searchTerms.length} terms): ${searchTerms.slice(0, 15).join(', ')}${searchTerms.length > 15 ? '...' : ''}`);
+  console.log(`🎯 Searching in cluster: ${targetCluster}`);
 
   const matchingCriteria = [];
-  const clusters = ['CLUSTER_PTH', 'CLUSTER_FLR', 'CLUSTER_CMB'];
+  // Only search the target cluster for treatments (default: CLUSTER_PTH)
+  const clusters = [targetCluster];
 
   for (const clusterKey of clusters) {
     const cluster = database[clusterKey];
@@ -94,16 +152,29 @@ function findMatchingCriteria(database, drugName, drugClass) {
       const conditionTypes = criterion.conditions?.flatMap(c => c.TREATMENT_TYPE || []) || [];
       const treatmentTypes = criterion.CONDITION_TYPE || [];
       
-      const allText = [
-        rawText,
+      // Collect all criterion terms for bidirectional matching
+      const criterionTerms = [
         ...conditionTypes.map(t => t.toLowerCase()),
         ...treatmentTypes.map(t => t.toLowerCase())
-      ].join(' ');
-
-      // Check if any search term appears in the criterion
-      const matches = searchTerms.some(term => allText.includes(term));
+      ];
       
-      if (matches) {
+      const allText = [rawText, ...criterionTerms].join(' ');
+
+      // BIDIRECTIONAL MATCHING:
+      // 1. Search term appears in criterion text (original logic)
+      const forwardMatch = searchTerms.some(term => allText.includes(term));
+      
+      // 2. Criterion treatment types appear in search term (catches IL-17 matching IL-17A inhibitor)
+      const reverseMatch = criterionTerms.some(criterionTerm => {
+        // Expand criterion terms too for IL matching
+        const expandedCriterionTerms = expandILTerms(criterionTerm);
+        return searchTerms.some(searchTerm => 
+          searchTerm.includes(criterionTerm) || 
+          expandedCriterionTerms.some(expanded => searchTerm.includes(expanded))
+        );
+      });
+      
+      if (forwardMatch || reverseMatch) {
         matchingCriteria.push({
           id: criterion.id,
           nct_id: criterion.nct_id,
@@ -166,10 +237,13 @@ Return ONLY valid JSON in this format:
       "type": "radio|number|select",
       "options": ["Option1", "Option2"], // for radio/select only
       "unit": "weeks", // for number type only
-      "required": true
+      "required": true,
+      "criterionIds": ["PTH_XXXX", "PTH_YYYY"] // Array of criterion IDs this question addresses (can be single or multiple)
     }
   ]
 }
+
+IMPORTANT: For each question, include the "criterionIds" field as an array with ALL relevant criterion IDs (e.g., ["PTH_5432", "PTH_5433"]) from the list above that this question addresses. Even if only one criterion is relevant, use an array format: ["PTH_5432"].
 
 Generate 2-5 relevant questions. Be concise.`;
 
@@ -372,10 +446,13 @@ Return ONLY valid JSON in this format:
       "text": "Question text here",
       "type": "radio|select|text|number",
       "options": ["Option1", "Option2"], // for radio/select only
-      "required": true
+      "required": true,
+      "criterionIds": ["CMB_XXXX", "CMB_YYYY"] // Array of criterion IDs this question addresses (can be single or multiple)
     }
   ]
 }
+
+IMPORTANT: For each question, include the "criterionIds" field as an array with ALL relevant criterion IDs (e.g., ["CMB_1234", "CMB_5678"]) that this question addresses. If a question addresses multiple related criteria, include all of them.
 
 Generate 2-5 relevant questions. Be concise.`;
 
@@ -596,6 +673,7 @@ export async function generateConditionFollowUpQuestions(conditionName) {
     conditionType,
     conditionName,
     matchingCriteriaCount: matchingCriteria.length,
+    matchedCriteriaIds: matchingCriteria.map(c => c.id), // For debugging/testing
     cached: false,
     source,
     aiGenerated  // Frontend will use this to block if false
@@ -623,6 +701,7 @@ export async function generateFollowUpQuestions(drugName) {
       drugName,
       isBiologic,
       matchingCriteriaCount: cached.matchingCriteriaCount || 0,
+      matchedCriteriaIds: cached.matchedCriteriaIds || [], // Preserve from cache
       cached: true,
       aiGenerated: cached.aiGenerated !== undefined ? cached.aiGenerated : true  // Preserve AI status from cache
     };
@@ -670,6 +749,11 @@ export async function generateFollowUpQuestions(drugName) {
   const database = await loadCriteriaDatabase();
   const matchingCriteria = findMatchingCriteria(database, drugName, drugClass);
 
+  console.log(`📊 Found ${matchingCriteria.length} matching criteria for ${drugName} (class: ${drugClass})`);
+  if (matchingCriteria.length > 0) {
+    console.log(`📋 Criterion IDs: ${matchingCriteria.slice(0, 10).map(c => c.id).join(', ')}`);
+  }
+
   // Generate questions
   let questions;
   let source = 'default';
@@ -680,6 +764,7 @@ export async function generateFollowUpQuestions(drugName) {
     questions = result.questions;
     aiGenerated = result.aiGenerated;
     source = result.aiGenerated ? 'ai' : 'default';
+    console.log(`📋 Raw AI response questions: ${JSON.stringify(questions, null, 2)}`);
   } else {
     questions = getDefaultQuestions(drugClass);
     source = 'default';
@@ -688,9 +773,11 @@ export async function generateFollowUpQuestions(drugName) {
 
   // Store in caches
   const expiresAt = Date.now() + CACHE_TTL;
+  const matchedCriteriaIds = matchingCriteria.map(c => c.id);
   memoryCache.set(cacheKey, {
     questions,
     matchingCriteriaCount: matchingCriteria.length,
+    matchedCriteriaIds, // Store criterion IDs for debugging/testing
     source,
     aiGenerated,
     expiresAt
@@ -715,6 +802,7 @@ export async function generateFollowUpQuestions(drugName) {
     drugName,
     isBiologic,
     matchingCriteriaCount: matchingCriteria.length,
+    matchedCriteriaIds: matchingCriteria.map(c => c.id), // For debugging/testing
     cached: false,
     source,
     aiGenerated  // Frontend will use this to block if false

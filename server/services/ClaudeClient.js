@@ -278,6 +278,27 @@ Respond ONLY with valid JSON in this exact format:
       }
       
       const result = JSON.parse(jsonText);
+      
+      // Log raw AI response for debugging criterion IDs
+      console.log('📋 Raw AI response questions:', JSON.stringify(result.questions?.slice(0, 2), null, 2));
+      
+      // Normalize criterionId/criterionIds format for backward compatibility
+      if (result.questions && Array.isArray(result.questions)) {
+        result.questions.forEach(q => {
+          // If old format (single criterionId), convert to array
+          if (q.criterionId && !q.criterionIds) {
+            q.criterionIds = [q.criterionId];
+            delete q.criterionId;
+          }
+          // If criterionIds is not an array, wrap it
+          if (q.criterionIds && !Array.isArray(q.criterionIds)) {
+            q.criterionIds = [q.criterionIds];
+          }
+        });
+      }
+      
+      // Log normalized questions
+      console.log('✅ Normalized questions:', JSON.stringify(result.questions?.slice(0, 2), null, 2));
 
       // Cache the result
       this.#setCache(cacheKey, result);

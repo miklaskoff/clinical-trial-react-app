@@ -1,5 +1,130 @@
 # Lessons Learned
 
+## 2026-01-25: Comprehensive Drug Search - Three-Level Matching Required
+
+### Problem
+User reported that searching for treatments like "adalimumab" wasn't finding ALL relevant criteria. The search was only matching the drug name directly, missing criteria that mentioned the drug's CLASS (e.g., "TNF inhibitors") or GENERIC CATEGORY (e.g., "biologic", "monoclonal antibody", "DMARD").
+
+### Requirements (User Clarification)
+1. **ALL criteria containing the drug name** (direct match)
+2. **ALL criteria containing the drug's CLASS** (e.g., TNF inhibitors, IL-17 inhibitors)
+3. **ALL criteria containing GENERIC categories** (e.g., biologic, DMARD, monoclonal antibody)
+
+### Solution Implemented
+
+**1. Three-Level Search Terms:**
+```javascript
+// getGenericSearchTerms() - New function in DrugCategoryResolver.js
+function getGenericSearchTerms(drugInfo) {
+  const terms = [];
+  if (drugInfo.isBiologic) {
+    terms.push('biologic', 'biologic agent', 'biological therapy',
+               'monoclonal antibody', 'antibody', 'mAb');
+  }
+  if (biologicDMARDClasses.includes(drugInfo.drugClass)) {
+    terms.push('bDMARD', 'DMARD', 'biologic DMARD');
+  }
+  if (conventionalDMARDClasses.includes(drugInfo.drugClass)) {
+    terms.push('csDMARD', 'conventional DMARD', 'conventional synthetic DMARD');
+  }
+  // ... more categories
+  return terms;
+}
+```
+
+**2. Comprehensive Search in findMatchingCriteria():**
+```javascript
+const searchTerms = [
+  drugName.toLowerCase(),                              // Direct name
+  ...getClassSearchTerms(drugClass),                   // Class terms
+  ...getGenericSearchTerms(drugInfo)                   // Generic categories
+].flatMap(term => expandILTerms(term));               // IL subtype expansion
+```
+
+**3. Results:**
+- **adalimumab**: 23 search terms → 10 PTH criteria matched
+- **secukinumab**: 23 search terms (IL-17 specific) → matches IL-17 criteria
+- **methotrexate**: 9 search terms → 3 PTH criteria matched
+
+### TDD Process Used
+1. ✅ Created failing tests first (`DrugCategoryResolver.test.js`)
+2. ✅ Implemented `getGenericSearchTerms()` function
+3. ✅ All 12 new tests passed
+4. ✅ Updated `FollowUpGenerator.js` to use new function
+5. ✅ All 75 backend tests + 345 frontend tests passed
+6. ✅ Manual API verification confirmed correct behavior
+
+### Lesson
+- **Drug matching requires three-level search**: name → class → generic category
+- **TDD works well for NEW functionality**: Write test → verify fail → implement → verify pass
+- **Cluster-scoped search is critical**: Treatment follow-ups should ONLY search CLUSTER_PTH
+- **IL subtype expansion prevents missed matches**: "IL-17A" → "IL-17", "IL17", "interleukin-17"
+
+### Prevention Checklist
+- [ ] New drug search features need all three levels
+- [ ] Check that cluster scoping is correct (PTH for treatments, CMB for conditions)
+- [ ] Verify search terms are deduplicated
+- [ ] Test with both biologic and small molecule drugs
+
+---
+
+## 2026-01-25: Already-Implemented Features Discovered During Investigation
+
+### Problem
+User requested two features:
+1. Remove hardcoded base questions from PTH cluster (only AI questions)
+2. Label AI-generated questions with criterion IDs in report
+
+After creating tests and starting implementation, discovered features were ALREADY implemented in the codebase.
+
+### Root Cause
+- **Assumed features missing** without checking existing code first
+- **Jumped to TDD** before understanding current state
+- **Created failing tests** for features that already worked
+- **Wasted time** writing implementation that existed
+
+### What Was Actually There
+
+**Feature 1 - PTH Questions:**
+- `renderTreatmentFollowUps()` already showed ONLY AI questions
+- No hardcoded questions present (lines 996-1095 in questionnaire)
+- Blocking message for AI failures already implemented
+
+**Feature 2 - Report Labels:**
+- `generatePatientNarrative()` already included `🤖 AI Follow-up Questions:` label
+- Already showed `(Criterion: ${q.criterionId})` for each question
+- `buildSlotFilledResponse()` already stored `dynamicQuestions` array in responses
+
+### Discovery Process
+1. Created tests expecting missing features
+2. Tests failed on UI navigation (couldn't find elements)
+3. Inspected actual questionnaire code
+4. Found complete implementation already present
+5. Deleted unnecessary tests
+6. All 341 existing tests passed ✅
+
+### Lesson
+- **ALWAYS investigate existing code BEFORE starting TDD**
+- **Search for similar function names** in the codebase first
+- **Read the actual implementation** before assuming it's missing
+- **Check recent commits** to see if features were added
+- **TDD is for NEW features**, not rediscovering existing ones
+
+### Prevention Checklist
+- [ ] Search codebase for related function names
+- [ ] Read implementation files before writing tests
+- [ ] Check git history for related changes
+- [ ] Verify feature is actually missing
+- [ ] THEN start TDD workflow
+
+### Time Saved by Discovering Early
+- Avoided rewriting 200+ lines of already-working code
+- Avoided debugging "new" implementation
+- Avoided breaking existing functionality
+- Went from "5 failing tests" to "341 passing tests" by deleting wrong tests
+
+---
+
 ## 2026-01-25: Double-Negative Criteria and Compound Medical Terms
 
 ### Problem
