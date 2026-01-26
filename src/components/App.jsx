@@ -330,6 +330,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAdminRoute, setIsAdminRoute] = useState(false);
   
+  // API key status for header indicator
+  const [apiKeyStatus, setApiKeyStatus] = useState('unknown'); // 'unknown' | 'configured' | 'not-configured' | 'backend-offline'
+  
   // Confidence thresholds
   const [confidenceThresholds, setConfidenceThresholds] = useState({
     exclude: 0.8,  // High confidence = exclude patient
@@ -358,11 +361,17 @@ function App() {
           if (data.configured) {
             // API key is configured on server - set a placeholder to indicate configured
             setApiKey('configured-on-server');
+            setApiKeyStatus('configured');
+          } else {
+            setApiKeyStatus('not-configured');
           }
+        } else {
+          setApiKeyStatus('not-configured');
         }
       } catch (error) {
         // Backend might not be running, that's ok
         console.log('Backend not available, using local mode');
+        setApiKeyStatus('backend-offline');
       }
     };
     checkApiKeyStatus();
@@ -433,8 +442,10 @@ function App() {
       await fetch(`${BACKEND_URL}/api/config/apikey`, {
         method: 'DELETE'
       });
+      setApiKeyStatus('not-configured');
     } catch (error) {
       console.error('Failed to clear API key:', error);
+      setApiKeyStatus('backend-offline');
     }
     setApiKey('');
   }, []);
@@ -467,8 +478,10 @@ function App() {
         // Clear the key from state after saving to backend
         // Keep a flag that it's configured
         setApiKey('configured-on-server');
+        setApiKeyStatus('configured');
       } catch (err) {
         setError('Failed to save API key to server: ' + err.message);
+        setApiKeyStatus('not-configured');
         setIsLoading(false);
         return;
       } finally {
@@ -549,6 +562,29 @@ function App() {
       <header className="app-header">
         <h1>Clinical Trial Matching System</h1>
         <p className="app-subtitle">AI-powered patient-trial matching</p>
+        {/* API Key Status Indicator */}
+        <div className="api-status-indicator" data-testid="api-status-indicator">
+          {apiKeyStatus === 'configured' && (
+            <span className="status-badge status-configured" title="AI features enabled">
+              🟢 AI Ready
+            </span>
+          )}
+          {apiKeyStatus === 'not-configured' && (
+            <span className="status-badge status-not-configured" title="Configure API key in settings">
+              🟡 AI Not Configured
+            </span>
+          )}
+          {apiKeyStatus === 'backend-offline' && (
+            <span className="status-badge status-offline" title="Backend server not running">
+              🔴 Backend Offline
+            </span>
+          )}
+          {apiKeyStatus === 'unknown' && (
+            <span className="status-badge status-checking" title="Checking status...">
+              ⏳ Checking...
+            </span>
+          )}
+        </div>
         {/* Admin link removed from patient-facing UI for security */}
         {/* Access admin via direct URL: /admin */}
       </header>

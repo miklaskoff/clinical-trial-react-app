@@ -1,5 +1,198 @@
 # Lessons Learned
 
+## 2026-01-26: Dynamic Import Fetch Error - Vite/HMR Issue
+
+### Problem
+Browser console shows: `Failed to fetch dynamically imported module`
+
+### Root Causes (Multiple Possible)
+1. **Vite Hot Module Replacement (HMR) glitch** - Module references become stale
+2. **Browser cache** - Old module URLs cached
+3. **Stale Vite cache** - `node_modules/.vite` contains outdated pre-bundled modules
+4. **Build/dev mode conflict** - Running preview after dev without clean build
+
+### Solutions (Try in Order)
+
+**1. Hard Refresh Browser:**
+```
+Windows/Linux: Ctrl+Shift+R
+Mac: Cmd+Shift+R
+```
+
+**2. Restart Vite Dev Server:**
+```bash
+# Stop current server, then:
+npm run dev
+```
+
+**3. Clear Vite Cache:**
+```bash
+rm -rf node_modules/.vite
+npm run dev
+```
+
+**4. Clean Build (if persists):**
+```bash
+rm -rf build dist node_modules/.vite
+npm run build
+npm run preview
+```
+
+### Lesson
+- **Dynamic imports are fragile** - HMR doesn't always update them correctly
+- **Browser caching is aggressive** - Always hard refresh after code changes
+- **Vite cache can become stale** - Clear `node_modules/.vite` if issues persist
+- **Check console first** - Error message tells you which module failed
+
+---
+
+## 2026-01-26: PowerShell Encoding Corruption
+
+### Problem
+PowerShell commands fail with Cyrillic character `с` prepended to command text.
+
+### Root Cause
+Terminal encoding mismatch between UTF-8 and Windows code page.
+
+### Quick Fix
+```powershell
+chcp 437
+```
+
+### Permanent Fix
+Add to PowerShell profile or restart VS Code terminal.
+
+### Lesson
+- **Encoding issues = garbled characters** - Look for unexpected characters at command start
+- **Code page 437 is ASCII-safe** - Works for all English commands
+- **Restarting terminal often helps** - Fresh terminal = fresh encoding
+
+---
+
+## 2026-01-26: Files Not Showing in GitHub After Commit
+
+### Problem
+User committed changes but files not visible in GitHub repository.
+
+### Root Cause
+**Forgot `git push`**. Local commit succeeded but changes not pushed to remote.
+
+### Solution
+```bash
+git push
+```
+
+### Verification
+```bash
+# Check if ahead of remote
+git status
+
+# Should show "Your branch is ahead of 'origin/main' by X commits"
+# After push, should show "Your branch is up to date"
+```
+
+### Lesson
+- **Commit ≠ Push** - Commit is local, push sends to remote
+- **Check git status** - Shows if you're ahead of remote
+- **Add push to workflow** - `git add -A && git commit -m "..." && git push`
+
+---
+
+## 2026-01-26: Browser Shows Old Content Despite Code Changes
+
+### Problem
+Frontend code changes not visible in browser even after saving files and server restart.
+
+### Root Cause
+Browser cache serving old JavaScript/CSS files.
+
+### Solution
+**Hard Refresh:**
+```
+Windows/Linux: Ctrl+Shift+R
+Mac: Cmd+Shift+R
+```
+
+**Alternative - DevTools:**
+1. Open DevTools (F12)
+2. Right-click refresh button
+3. Select "Empty Cache and Hard Reload"
+
+### When to Hard Refresh
+- After any `.jsx` or `.js` file change
+- After any `.css` file change
+- When UI doesn't match expected behavior
+- Before reporting "code not working"
+
+### Lesson
+- **Regular refresh uses cache** - F5/Ctrl+R may serve cached files
+- **Hard refresh bypasses cache** - Forces browser to re-download everything
+- **DevTools affects caching** - With DevTools open, "Disable cache" option available
+
+---
+
+## 2026-01-26: Backend Returns Stale Cached Responses
+
+### Problem
+API returns old data even after changing backend code.
+
+### Root Cause
+SQLite `followup_cache` table contains cached AI-generated questions.
+
+### Solution
+```bash
+# Use npm script (recommended)
+npm run cache:clear
+
+# Or manual SQL
+cd server
+node -e "const Database = require('better-sqlite3'); const db = new Database('./data/clinical-trials.db'); const r = db.prepare('DELETE FROM followup_cache').run(); console.log('Cleared', r.changes, 'entries'); db.close();"
+```
+
+### When to Clear Cache
+- After changing `FollowUpGenerator.js`
+- After changing `ClaudeClient.js`
+- After changing AI prompt logic
+- When seeing old follow-up questions
+- After API key configuration changes
+
+### Lesson
+- **Caching is invisible** - Old data appears without error
+- **Cache must be cleared after AI logic changes** - Database persists across restarts
+- **npm run cache:clear exists** - Use it, don't forget
+
+---
+
+## 2026-01-26: Terminal Commands Run in Wrong Directory
+
+### Problem
+VS Code terminal reuses terminals, causing commands to run in unexpected directories.
+
+### Root Cause
+Terminal state persists across command invocations. Working directory from previous command affects next command.
+
+### Solution
+1. **Check current directory:**
+   ```powershell
+   Get-Location  # or pwd
+   ```
+
+2. **Use absolute paths:**
+   ```bash
+   cd c:\Users\lasko\Downloads\clinical-trial-react-app
+   npm run dev
+   ```
+
+3. **Open new terminal:**
+   VS Code → Terminal → New Terminal
+
+### Lesson
+- **Always verify directory before running commands** - Especially after long sessions
+- **Use absolute paths for safety** - Avoids directory confusion
+- **New terminal = clean state** - When in doubt, open fresh terminal
+
+---
+
 ## 2026-01-26: White Screen After Commit - Servers Not Running
 
 ### Problem

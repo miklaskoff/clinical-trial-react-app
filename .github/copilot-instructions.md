@@ -1,5 +1,33 @@
 # Copilot Instructions — Clinical Trial Matching System
 
+## 📋 CUSTOM COMMANDS — Используй в чате
+
+Полная документация команд: `.vscode/copilot-commands.md`
+
+| Команда | Описание | Использование |
+|---------|----------|---------------|
+| `@plan` | Покажи план, НЕ реализуй | `@plan добавить фичу X` |
+| `@check` | Проверь документацию и код | `@check перед коммитом` |
+| `@standards` | Проверь соответствие правилам | `@standards` |
+| `@review` | Полный code review | `@review компонент Y` |
+| `@fix` | TDD подход к исправлению бага | `@fix баг Z` |
+| `@commit` | Чеклист перед коммитом | `@commit` |
+
+### Как использовать в чате:
+```
+@workspace смотри .vscode/copilot-commands.md @plan - [твоя задача]
+```
+
+### Поиск по истории чатов:
+- **Экспорт Continue.dev**: `node scripts/export-chat.js --continue`
+- **Поиск**: `node scripts/export-chat.js --search "API key"`
+- **Ручная запись**: `node scripts/export-chat.js -i`
+- **Файлы для CTRL+F**:
+  - `.vscode/CONTINUE_HISTORY.md` — экспорт Continue.dev
+  - `.vscode/CHAT_LOG.md` — ручные записи
+
+---
+
 ## ⚠️ MANDATORY DEVELOPMENT RULES — КРИТИЧЕСКИ ВАЖНО
 
 ### TDD (Test-Driven Development) — СТРОГО ОБЯЗАТЕЛЬНО
@@ -115,8 +143,20 @@ npm run verify
 1. npm run verify         ← ОБЯЗАТЕЛЬНО, не пропускай!
 2. Открой браузер         ← Manual verification
 3. Проверь каждый пункт   ← Screenshot как доказательство
-4. git add -A && git commit -m "..."  ← ТОЛЬКО после шагов 1-3
+4. ОБНОВИ ДОКУМЕНТАЦИЮ    ← CHANGELOG.md, lesson learned.md (если баг)
+5. git add -A && git commit -m "..."  ← ТОЛЬКО после шагов 1-4
+6. git push               ← НЕ ЗАБУДЬ! Иначе изменения не в GitHub
 ```
+
+### ⚠️ DOCUMENTATION MUST BE UPDATED WITH CODE
+
+**Every code change MUST include:**
+- [ ] CHANGELOG.md entry (if user-facing change)
+- [ ] lesson learned.md entry (if bug fix or learned something)
+- [ ] copilot-instructions.md update (if new pattern/rule)
+- [ ] Architecture docs update (if design change)
+
+**Why?** Documentation that lags behind code becomes useless.
 
 ### Contract Report — ГЕНЕРИРУЙ ПОСЛЕ КАЖДОЙ ФИЧИ
 
@@ -243,6 +283,148 @@ If I deliver something as "done" that is not actually implemented:
 3. User loses trust
 4. This MUST be documented in `lesson learned.md`
 5. I must explain WHY I lied (laziness? misunderstanding? rushing?)
+
+---
+
+## ⚠️ ENVIRONMENT & TROUBLESHOOTING — ОБЯЗАТЕЛЬНО
+
+### Server Management Rules
+
+**ALWAYS verify servers are running before debugging:**
+
+```powershell
+# Check if both servers are listening
+Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue
+
+# Expected output (both running):
+LocalPort  State   OwningProcess
+3000       Listen  12345          # Frontend (Vite)
+3001       Listen  67890          # Backend (Express)
+
+# If port missing → start that server
+```
+
+**Starting Servers:**
+
+```bash
+# Option 1: Use the batch file (starts both)
+start-dev.bat
+
+# Option 2: Use npm script
+npm run dev:all
+
+# Option 3: Manual (two terminals)
+# Terminal 1: npm run dev
+# Terminal 2: npm run dev:backend
+```
+
+**⚠️ After Git Operations:** Always verify servers are still running. Git commits and terminal operations can stop background processes.
+
+### Git Workflow — COMPLETE (Including Push)
+
+```bash
+# 1. Verify all tests pass
+npm test
+
+# 2. Commit changes
+git add -A
+git commit -m "feat/fix/refactor: description"
+
+# 3. PUSH TO REMOTE — Don't forget!
+git push
+
+# 4. Verify servers still running
+Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue
+```
+
+**⚠️ Files not showing in GitHub = forgot `git push`**
+
+### Cache Clearing — ОБЯЗАТЕЛЬНО после API изменений
+
+```bash
+# Clear backend follow-up cache (SQLite)
+npm run cache:clear
+
+# Clear browser cache (in browser)
+Ctrl+Shift+R  # Hard refresh
+
+# Clear Vite cache (if HMR issues)
+rm -rf node_modules/.vite
+npm run dev
+```
+
+**When to clear cache:**
+- After changing AI/follow-up question generation logic
+- After modifying database schema
+- When seeing stale API responses
+- After API key configuration changes
+
+### Dynamic Import Fetch Error — Troubleshooting
+
+**Symptom:** `Failed to fetch dynamically imported module` in browser console
+
+**Causes & Solutions:**
+
+1. **Vite HMR issue** — Restart Vite dev server
+   ```bash
+   # Stop server, then:
+   npm run dev
+   ```
+
+2. **Browser cache** — Hard refresh
+   ```
+   Ctrl+Shift+R  (or Cmd+Shift+R on Mac)
+   ```
+
+3. **Stale Vite cache** — Clear and restart
+   ```bash
+   rm -rf node_modules/.vite
+   npm run dev
+   ```
+
+4. **Build artifacts conflict** — Clean rebuild
+   ```bash
+   rm -rf build dist
+   npm run build
+   npm run preview
+   ```
+
+### PowerShell Encoding Issues
+
+**Symptom:** Commands fail with Cyrillic characters prepended (e.g., `с` before command)
+
+**Quick Fix:**
+```powershell
+chcp 437
+```
+
+**Permanent Fix:** Add to PowerShell profile or restart terminal
+
+### Browser Cache Issues
+
+**Symptom:** Code changes not visible even after server restart
+
+**Solution:** Hard refresh (bypasses browser cache)
+```
+Windows/Linux: Ctrl+Shift+R
+Mac: Cmd+Shift+R
+```
+
+**When to hard refresh:**
+- After any frontend code change
+- After CSS updates
+- When UI doesn't match expected behavior
+- Before reporting "feature not working"
+
+### Terminal Reuse Issues
+
+**Symptom:** Commands run in wrong directory or with stale environment
+
+**Solution:**
+1. Check current directory: `pwd` or `Get-Location`
+2. Use absolute paths in commands
+3. Open new terminal if issues persist
+4. Verify environment: `echo $env:PATH` (PowerShell)
 
 ---
 
@@ -655,6 +837,8 @@ VITE_LOG_LEVEL=info
 - [ ] Commit made with clear message
 - [ ] Documentation updated (if needed)
 - [ ] CHANGELOG.md updated
+- [ ] lesson learned.md updated (if bug fix)
+- [ ] **git push executed** (changes must be in GitHub!)
 
 ---
 

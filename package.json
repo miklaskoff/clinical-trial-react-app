@@ -18,6 +18,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install chromium",
+    "cache:clear": "cd server && node -e \"const Database = require('better-sqlite3'); const db = new Database('./data/clinical-trials.db'); try { const r = db.prepare('DELETE FROM followup_cache').run(); console.log('Cleared', r.changes, 'cached entries'); } catch(e) { console.log('Cache table not found or error:', e.message); } db.close();\"",
     "verify": "powershell -ExecutionPolicy Bypass -File scripts/verify-implementation.ps1",
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix",
