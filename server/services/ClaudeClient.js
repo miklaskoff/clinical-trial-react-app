@@ -264,17 +264,27 @@ Respond ONLY with valid JSON in this exact format:
     try {
       const response = await this.#client.messages.create({
         model: this.#model,
-        max_tokens: 1024,
+        max_tokens: 2048,  // Increased to avoid truncation
         messages: [{ role: 'user', content: prompt }]
       });
 
       const text = response.content[0]?.text || '{}';
       
       // Parse JSON from response - handle potential markdown code blocks
-      let jsonText = text;
+      let jsonText = text.trim();
+      
+      // Try to extract from markdown code blocks (with or without closing ```)
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
-        jsonText = jsonMatch[1];
+        jsonText = jsonMatch[1].trim();
+      } else if (text.startsWith('```')) {
+        // Handle case where response starts with ``` but doesn't close
+        // Remove the opening ```json or ```
+        jsonText = text.replace(/^```(?:json)?\s*/, '').trim();
+        // If it ends with ``` remove that too
+        if (jsonText.endsWith('```')) {
+          jsonText = jsonText.slice(0, -3).trim();
+        }
       }
       
       const result = JSON.parse(jsonText);

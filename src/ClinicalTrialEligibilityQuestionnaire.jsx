@@ -728,7 +728,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                 <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
                   {question.text || question}
                 </label>
-                {question.type === 'select' && question.options ? (
+                {/* Render both 'select' and 'radio' type questions as dropdowns for space efficiency */}
+                {(question.type === 'select' || question.type === 'radio') && question.options ? (
                   <select
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
@@ -1060,7 +1061,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                 <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
                   {question.text || question}
                 </label>
-                {question.type === 'select' && question.options ? (
+                {/* Render both 'select' and 'radio' type questions as dropdowns for space efficiency */}
+                {(question.type === 'select' || question.type === 'radio') && question.options ? (
                   <select
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {

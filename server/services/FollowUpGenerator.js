@@ -480,6 +480,54 @@ function postProcessQuestions(questions, timingOptions) {
 }
 
 /**
+ * Post-process condition questions to ensure all have proper type and options
+ * Converts any 'text' type questions to 'select' with appropriate options
+ * @param {Array<Object>} questions 
+ * @returns {Array<Object>}
+ */
+function postProcessConditionQuestions(questions) {
+  // Common options for different question types
+  const timingOptions = ['Less than 6 months ago', '6-12 months ago', '1-2 years ago', '2-5 years ago', 'More than 5 years ago'];
+  const statusOptions = ['Currently active', 'In remission', 'Resolved/cured', 'Controlled with treatment'];
+  const severityOptions = ['Mild', 'Moderate', 'Severe'];
+  const yesNoOptions = ['Yes', 'No', 'Not sure'];
+
+  return questions.map(q => {
+    // Convert text/number type to select with appropriate options
+    if (q.type === 'text' || q.type === 'number' || !q.type) {
+      q.type = 'select';
+      
+      if (!q.options || q.options.length === 0) {
+        const textLower = q.text?.toLowerCase() || '';
+        
+        // Determine appropriate options based on question content
+        if (textLower.includes('when') || textLower.includes('diagnosed') || textLower.includes('how long')) {
+          q.options = timingOptions;
+        } else if (textLower.includes('status') || textLower.includes('active') || textLower.includes('remission')) {
+          q.options = statusOptions;
+        } else if (textLower.includes('severe') || textLower.includes('severity')) {
+          q.options = severityOptions;
+        } else {
+          q.options = yesNoOptions;
+        }
+      }
+    }
+    
+    // Convert radio to select for consistency
+    if (q.type === 'radio') {
+      q.type = 'select';
+    }
+    
+    // Ensure criterionIds is an array
+    if (q.criterionId && !q.criterionIds) {
+      q.criterionIds = [q.criterionId];
+    }
+    
+    return q;
+  });
+}
+
+/**
  * Get default follow-up questions with slot mapping
  * @param {string} drugClass 
  * @param {Array<Object>} criteria - Matched criteria for deriving options
@@ -647,16 +695,22 @@ Based on these criteria, generate follow-up questions needed to determine eligib
 IMPORTANT: These are questions about a MEDICAL CONDITION (disease), NOT a medication.
 Do NOT ask about doses, medication timing, or drug-related questions.
 
+CRITICAL RULES:
+1. NEVER use type "text" for any question - ALWAYS use "select" with predefined options.
+2. For timing questions (when diagnosed, how long), use these options: ["Less than 6 months ago", "6-12 months ago", "1-2 years ago", "2-5 years ago", "More than 5 years ago"]
+3. For status questions, use options like: ["Currently active", "In remission", "Resolved/cured", "Controlled with treatment"]
+4. For severity questions, use options like: ["Mild", "Moderate", "Severe"]
+
 Return ONLY valid JSON in this format:
 {
   "questions": [
     {
       "id": "q1",
       "text": "Question text here",
-      "type": "radio|select|text|number",
-      "options": ["Option1", "Option2"], // for radio/select only
+      "type": "select",
+      "options": ["Option1", "Option2", "Option3"],
       "required": true,
-      "criterionIds": ["CMB_XXXX", "CMB_YYYY"] // Array of criterion IDs this question addresses (can be single or multiple)
+      "criterionIds": ["CMB_XXXX", "CMB_YYYY"]
     }
   ]
 }
@@ -675,9 +729,11 @@ Generate 2-5 relevant questions. Be concise.`;
     }
     
     if (response && response.questions && Array.isArray(response.questions) && response.questions.length > 0) {
-      console.log(`✅ AI generated ${response.questions.length} questions for condition: ${conditionName}`);
+      // Post-process to ensure all questions are select type with proper options
+      const processedQuestions = postProcessConditionQuestions(response.questions);
+      console.log(`✅ AI generated ${processedQuestions.length} questions for condition: ${conditionName}`);
       // Return with source marker
-      return { questions: response.questions, aiGenerated: true };
+      return { questions: processedQuestions, aiGenerated: true };
     }
     
     console.log(`⚠ AI returned no questions, using defaults for: ${conditionName}`);
