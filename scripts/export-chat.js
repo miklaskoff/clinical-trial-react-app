@@ -1,15 +1,9 @@
 #!/usr/bin/env node
 /**
- * Chat Export Script
+ * Chat History Manager
  * 
- * Помогает документировать важные разговоры с Copilot и Continue.dev.
- * 
- * Использование:
- *   node scripts/export-chat.js -i              # Интерактивный режим
- *   node scripts/export-chat.js --continue      # Экспорт всех сессий Continue.dev
- *   node scripts/export-chat.js --continue -n 5 # Экспорт последних 5 сессий
- *   node scripts/export-chat.js --search "API"  # Поиск по всем сессиям
- *   node scripts/export-chat.js "Topic" "Summary" "Decision1" "Decision2" ...
+ * Интерактивное меню для работы с историей чатов.
+ * Просто запусти: npm run chat
  */
 
 import fs from 'fs';
@@ -17,6 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import readline from 'readline';
 import os from 'os';
+import { exec } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,58 +20,37 @@ const CHAT_LOG_PATH = path.join(__dirname, '../.vscode/CHAT_LOG.md');
 const CONTINUE_SESSIONS_PATH = path.join(os.homedir(), '.continue', 'sessions');
 const CONTINUE_EXPORT_PATH = path.join(__dirname, '../.vscode/CONTINUE_HISTORY.md');
 
-/**
- * Добавляет запись в лог чата
- */
-function logChatSession(topic, summary, decisions = [], files = []) {
-  const date = new Date().toISOString().split('T')[0];
-  const time = new Date().toTimeString().split(' ')[0];
-  
-  const entry = `
-## ${date} ${time} - ${topic}
+// ─────────────────────────────────────────────────────────────
+// УТИЛИТЫ
+// ─────────────────────────────────────────────────────────────
 
-### Summary
-${summary}
-
-### Decisions
-${decisions.length > 0 ? decisions.map(d => `- ${d}`).join('\n') : '- No specific decisions recorded'}
-
-### Files Affected
-${files.length > 0 ? files.map(f => `- \`${f}\``).join('\n') : '- No files recorded'}
-
----
-`;
-
-  // Создаём файл если не существует
-  if (!fs.existsSync(CHAT_LOG_PATH)) {
-    const header = `# Copilot Chat Log
-
-This file documents important conversations and decisions made during development.
-
-Use \`node scripts/export-chat.js\` to add entries.
-
----
-`;
-    fs.writeFileSync(CHAT_LOG_PATH, header);
-  }
-
-  // Добавляем запись
-  fs.appendFileSync(CHAT_LOG_PATH, entry);
-  
-  console.log(`✅ Chat session logged to ${CHAT_LOG_PATH}`);
-  console.log(`   Topic: ${topic}`);
-  console.log(`   Decisions: ${decisions.length}`);
-  console.log(`   Files: ${files.length}`);
+function createReadline() {
+  return readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 }
 
-/**
- * Парсит сессии Continue.dev
- */
+function question(rl, prompt) {
+  return new Promise(resolve => rl.question(prompt, resolve));
+}
+
+function openFile(filePath) {
+  const cmd = process.platform === 'win32' ? `code "${filePath}"` : `open "${filePath}"`;
+  exec(cmd, (err) => {
+    if (err) {
+      console.log(`📂 Файл: ${filePath}`);
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ПАРСИНГ CONTINUE.DEV
+// ─────────────────────────────────────────────────────────────
+
 function parseContinueSessions(limit = null) {
   if (!fs.existsSync(CONTINUE_SESSIONS_PATH)) {
-    console.log(`❌ Continue.dev sessions folder not found at: ${CONTINUE_SESSIONS_PATH}`);
-    console.log(`   Make sure Continue.dev extension is installed and has been used.`);
-    return [];
+    return { error: 'not_found', path: CONTINUE_SESSIONS_PATH };
   }
 
   const files = fs.readdirSync(CONTINUE_SESSIONS_PATH)
@@ -86,7 +60,11 @@ function parseContinueSessions(limit = null) {
       path: path.join(CONTINUE_SESSIONS_PATH, f),
       mtime: fs.statSync(path.join(CONTINUE_SESSIONS_PATH, f)).mtime
     }))
-    .sort((a, b) => b.mtime - a.mtime); // Newest first
+    .sort((a, b) => b.mtime - a.mtime);
+
+  if (files.length === 0) {
+    return { error: 'empty', path: CONTINUE_SESSIONS_PATH };
+  }
 
   const sessionsToProcess = limit ? files.slice(0, limit) : files;
   const sessions = [];
@@ -102,76 +80,82 @@ function parseContinueSessions(limit = null) {
         messages: data.history || data.messages || []
       });
     } catch (e) {
-      console.log(`⚠️ Could not parse ${file.name}: ${e.message}`);
+      // Skip invalid files
     }
   }
 
-  return sessions;
+  return { sessions };
 }
 
-/**
- * Экспортирует сессии Continue.dev в Markdown
- */
+// ─────────────────────────────────────────────────────────────
+// ФУНКЦИИ МЕНЮ
+// ─────────────────────────────────────────────────────────────
+
 function exportContinueSessions(limit = null) {
-  const sessions = parseContinueSessions(limit);
+  const result = parseContinueSessions(limit);
   
-  if (sessions.length === 0) {
-    return;
+  if (result.error === 'not_found') {
+    console.log(`\n❌ Папка Continue.dev не найдена: ${result.path}`);
+    console.log(`   Установи Continue.dev и поговори с ним хотя бы раз.\n`);
+    return false;
   }
 
-  let markdown = `# Continue.dev Chat History
+  if (result.error === 'empty') {
+    console.log(`\n❌ Нет сессий в Continue.dev. Сначала поговори с ним.\n`);
+    return false;
+  }
 
-Exported: ${new Date().toISOString()}
-Sessions: ${sessions.length}
+  const sessions = result.sessions;
+  let markdown = `# Continue.dev История Чатов
 
-Use CTRL+F to search!
+Экспортировано: ${new Date().toLocaleString('ru-RU')}
+Сессий: ${sessions.length}
+
+**Используй CTRL+F для поиска!**
 
 ---
 `;
 
   for (const session of sessions) {
-    const dateStr = session.date.toISOString().split('T')[0];
-    const timeStr = session.date.toTimeString().split(' ')[0];
+    const dateStr = session.date.toLocaleDateString('ru-RU');
+    const timeStr = session.date.toLocaleTimeString('ru-RU');
     
-    markdown += `
-## ${dateStr} ${timeStr} - ${session.title}
-
-**Session ID:** \`${session.id}\`
-
-`;
+    markdown += `\n## 📅 ${dateStr} ${timeStr} - ${session.title}\n\n`;
 
     for (const msg of session.messages) {
-      const role = msg.role === 'user' ? '👤 **User**' : '🤖 **Assistant**';
+      const role = msg.role === 'user' ? '👤 **Ты**' : '🤖 **AI**';
       const content = typeof msg.content === 'string' 
         ? msg.content 
         : JSON.stringify(msg.content, null, 2);
       
-      markdown += `### ${role}
-
-${content}
-
-`;
+      markdown += `### ${role}\n\n${content}\n\n`;
     }
 
-    markdown += `---
-`;
+    markdown += `---\n`;
+  }
+
+  // Создаём .vscode если нет
+  const vscodeDir = path.dirname(CONTINUE_EXPORT_PATH);
+  if (!fs.existsSync(vscodeDir)) {
+    fs.mkdirSync(vscodeDir, { recursive: true });
   }
 
   fs.writeFileSync(CONTINUE_EXPORT_PATH, markdown);
-  console.log(`✅ Exported ${sessions.length} sessions to ${CONTINUE_EXPORT_PATH}`);
-  console.log(`   Open the file and use CTRL+F to search!`);
+  console.log(`\n✅ Экспортировано ${sessions.length} сессий`);
+  console.log(`📂 Файл: ${CONTINUE_EXPORT_PATH}`);
+  console.log(`💡 Открой файл и используй CTRL+F для поиска!\n`);
+  return true;
 }
 
-/**
- * Поиск по всем сессиям Continue.dev
- */
 function searchContinueSessions(query) {
-  const sessions = parseContinueSessions();
+  const result = parseContinueSessions();
   
-  if (sessions.length === 0) {
+  if (result.error) {
+    console.log(`\n❌ Continue.dev история не найдена.\n`);
     return;
   }
 
+  const sessions = result.sessions;
   const queryLower = query.toLowerCase();
   const results = [];
 
@@ -185,119 +169,196 @@ function searchContinueSessions(query) {
       if (content.toLowerCase().includes(queryLower)) {
         results.push({
           session: session.title,
-          sessionId: session.id,
           date: session.date,
-          role: msg.role,
-          content: content,
-          messageIndex: i
+          role: msg.role === 'user' ? '👤 Ты' : '🤖 AI',
+          content: content
         });
       }
     }
   }
 
   if (results.length === 0) {
-    console.log(`❌ No results found for: "${query}"`);
+    console.log(`\n❌ Ничего не найдено по запросу: "${query}"\n`);
     return;
   }
 
-  console.log(`\n🔍 Found ${results.length} matches for "${query}":\n`);
+  console.log(`\n🔍 Найдено ${results.length} совпадений для "${query}":\n`);
   
-  for (const result of results.slice(0, 20)) { // Show max 20 results
-    const dateStr = result.date.toISOString().split('T')[0];
-    const preview = result.content.substring(0, 200).replace(/\n/g, ' ');
+  for (const r of results.slice(0, 10)) {
+    const dateStr = r.date.toLocaleDateString('ru-RU');
+    const preview = r.content.substring(0, 150).replace(/\n/g, ' ');
     
-    console.log(`📅 ${dateStr} | ${result.session}`);
-    console.log(`   ${result.role}: ${preview}...`);
-    console.log(`   Session ID: ${result.sessionId}`);
+    console.log(`📅 ${dateStr} | ${r.session}`);
+    console.log(`   ${r.role}: ${preview}...`);
     console.log('');
   }
 
-  if (results.length > 20) {
-    console.log(`   ... and ${results.length - 20} more results`);
+  if (results.length > 10) {
+    console.log(`   ... и ещё ${results.length - 10} результатов`);
+    console.log(`   Для просмотра всех — экспортируй и используй CTRL+F\n`);
   }
 }
 
-/**
- * Интерактивный режим
- */
-async function interactiveMode() {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
+async function manualEntry(rl) {
+  console.log('\n📝 Запись вручную\n');
 
-  const question = (prompt) => new Promise(resolve => rl.question(prompt, resolve));
+  const topic = await question(rl, 'Тема: ');
+  if (!topic) {
+    console.log('❌ Тема обязательна\n');
+    return;
+  }
 
-  console.log('\n📝 Copilot Chat Export - Interactive Mode\n');
-
-  const topic = await question('Topic/Title: ');
-  const summary = await question('Summary (what was discussed): ');
+  const summary = await question(rl, 'Краткое описание: ');
   
-  console.log('\nDecisions (enter each on new line, empty line to finish):');
+  console.log('\nВажные решения (Enter для завершения):');
   const decisions = [];
-  let decision;
-  while ((decision = await question('  - ')) !== '') {
-    decisions.push(decision);
+  let d;
+  while ((d = await question(rl, '  • ')) !== '') {
+    decisions.push(d);
   }
 
-  console.log('\nFiles affected (enter each on new line, empty line to finish):');
-  const files = [];
-  let file;
-  while ((file = await question('  - ')) !== '') {
-    files.push(file);
+  // Записываем
+  const date = new Date().toLocaleDateString('ru-RU');
+  const time = new Date().toLocaleTimeString('ru-RU');
+  
+  const entry = `
+## 📅 ${date} ${time} - ${topic}
+
+${summary}
+
+${decisions.length > 0 ? '### Решения\n' + decisions.map(d => `- ${d}`).join('\n') : ''}
+
+---
+`;
+
+  // Создаём файл если не существует
+  if (!fs.existsSync(CHAT_LOG_PATH)) {
+    const header = `# 📝 Лог Чатов
+
+Ручные записи важных разговоров.
+
+---
+`;
+    fs.writeFileSync(CHAT_LOG_PATH, header);
   }
 
-  rl.close();
-
-  logChatSession(topic, summary, decisions, files);
+  fs.appendFileSync(CHAT_LOG_PATH, entry);
+  console.log(`\n✅ Записано в ${CHAT_LOG_PATH}\n`);
 }
 
-/**
- * Показать помощь
- */
+// ─────────────────────────────────────────────────────────────
+// ГЛАВНОЕ МЕНЮ
+// ─────────────────────────────────────────────────────────────
+
+async function showMenu() {
+  const rl = createReadline();
+
+  while (true) {
+    console.log(`
+╔═══════════════════════════════════════════════╗
+║          📝 Chat History Manager              ║
+╠═══════════════════════════════════════════════╣
+║                                               ║
+║   1. Экспорт Continue.dev → файл (CTRL+F)     ║
+║   2. Поиск по истории                         ║
+║   3. Записать вручную                         ║
+║   4. Открыть файл истории                     ║
+║                                               ║
+║   0. Выход                                    ║
+║                                               ║
+╚═══════════════════════════════════════════════╝
+`);
+
+    const choice = await question(rl, 'Выбор [0-4]: ');
+
+    switch (choice.trim()) {
+      case '1':
+        exportContinueSessions();
+        break;
+
+      case '2':
+        const query = await question(rl, '\n🔍 Что искать: ');
+        if (query.trim()) {
+          searchContinueSessions(query.trim());
+        }
+        break;
+
+      case '3':
+        await manualEntry(rl);
+        break;
+
+      case '4':
+        console.log('\nКакой файл открыть?');
+        console.log('  1. Continue.dev история');
+        console.log('  2. Ручные записи');
+        const fileChoice = await question(rl, 'Выбор [1-2]: ');
+        
+        if (fileChoice === '1') {
+          if (fs.existsSync(CONTINUE_EXPORT_PATH)) {
+            openFile(CONTINUE_EXPORT_PATH);
+            console.log(`\n📂 Открываю ${CONTINUE_EXPORT_PATH}\n`);
+          } else {
+            console.log('\n❌ Сначала экспортируй историю (пункт 1)\n');
+          }
+        } else if (fileChoice === '2') {
+          if (fs.existsSync(CHAT_LOG_PATH)) {
+            openFile(CHAT_LOG_PATH);
+            console.log(`\n📂 Открываю ${CHAT_LOG_PATH}\n`);
+          } else {
+            console.log('\n❌ Файл ещё не создан. Сначала сделай запись (пункт 3)\n');
+          }
+        }
+        break;
+
+      case '0':
+      case '':
+        console.log('\n👋 Пока!\n');
+        rl.close();
+        process.exit(0);
+
+      default:
+        console.log('\n❓ Неизвестный выбор. Введи число от 0 до 4.\n');
+    }
+
+    await question(rl, 'Нажми Enter для продолжения...');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// CLI РЕЖИМ (для обратной совместимости)
+// ─────────────────────────────────────────────────────────────
+
 function showHelp() {
   console.log(`
-📝 Chat Export Script - Help
+📝 Chat History Manager
 
-Usage:
-  node scripts/export-chat.js [options] [arguments]
+Использование:
+  npm run chat              Интерактивное меню (рекомендуется)
+  npm run chat -- --help    Эта справка
 
-Options:
-  -i, --interactive     Interactive mode for manual entry
-  -c, --continue        Export Continue.dev sessions to Markdown
-  -n, --number <N>      Limit number of sessions to export (use with --continue)
-  -s, --search <query>  Search through all Continue.dev sessions
-  -h, --help            Show this help
+CLI команды (для скриптов):
+  --continue, -c           Экспорт Continue.dev в файл
+  --search, -s "запрос"    Поиск по истории
+  --interactive, -i        Ручная запись
 
-Examples:
-  node scripts/export-chat.js -i
-    → Interactive mode to log a chat session
-
-  node scripts/export-chat.js --continue
-    → Export ALL Continue.dev sessions to .vscode/CONTINUE_HISTORY.md
-
-  node scripts/export-chat.js --continue -n 5
-    → Export last 5 Continue.dev sessions
-
-  node scripts/export-chat.js --search "API key"
-    → Search for "API key" in all sessions
-
-  node scripts/export-chat.js "Topic" "Summary" "Decision1" "Decision2"
-    → Quick add to chat log
-
-Output Files:
-  .vscode/CHAT_LOG.md         Manual entries
-  .vscode/CONTINUE_HISTORY.md Continue.dev export (CTRL+F searchable!)
+Примеры:
+  npm run chat                        → Открыть меню
+  npm run chat -- --continue          → Экспорт истории
+  npm run chat -- --search "API key"  → Найти "API key"
 `);
 }
 
-// Main
+// ─────────────────────────────────────────────────────────────
+// MAIN
+// ─────────────────────────────────────────────────────────────
+
 const args = process.argv.slice(2);
 
-if (args.includes('--help') || args.includes('-h')) {
+if (args.length === 0) {
+  // Без аргументов — показываем интерактивное меню
+  showMenu();
+} else if (args.includes('--help') || args.includes('-h')) {
   showHelp();
-} else if (args.includes('--interactive') || args.includes('-i')) {
-  interactiveMode();
 } else if (args.includes('--continue') || args.includes('-c')) {
   const nIndex = args.findIndex(a => a === '-n' || a === '--number');
   const limit = nIndex !== -1 ? parseInt(args[nIndex + 1]) : null;
@@ -306,96 +367,13 @@ if (args.includes('--help') || args.includes('-h')) {
   const sIndex = args.findIndex(a => a === '-s' || a === '--search');
   const query = args[sIndex + 1];
   if (!query) {
-    console.log('❌ Please provide a search query: --search "your query"');
+    console.log('❌ Укажи запрос: npm run chat -- --search "запрос"');
   } else {
     searchContinueSessions(query);
   }
-} else if (args.length >= 2) {
-  const [topic, summary, ...decisions] = args;
-  logChatSession(topic, summary, decisions, []);
+} else if (args.includes('--interactive') || args.includes('-i')) {
+  const rl = createReadline();
+  manualEntry(rl).then(() => rl.close());
 } else {
   showHelp();
-}
-
----
-`;
-    fs.writeFileSync(CHAT_LOG_PATH, header);
-  }
-
-  // Добавляем запись
-  fs.appendFileSync(CHAT_LOG_PATH, entry);
-  
-  console.log(`✅ Chat session logged to ${CHAT_LOG_PATH}`);
-  console.log(`   Topic: ${topic}`);
-  console.log(`   Decisions: ${decisions.length}`);
-  console.log(`   Files: ${files.length}`);
-}
-
-/**
- * Интерактивный режим
- */
-async function interactiveMode() {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
-  const question = (prompt) => new Promise(resolve => rl.question(prompt, resolve));
-
-  console.log('\n📝 Copilot Chat Export - Interactive Mode\n');
-
-  const topic = await question('Topic/Title: ');
-  const summary = await question('Summary (what was discussed): ');
-  
-  console.log('\nDecisions (enter each on new line, empty line to finish):');
-  const decisions = [];
-  let decision;
-  while ((decision = await question('  - ')) !== '') {
-    decisions.push(decision);
-  }
-
-  console.log('\nFiles affected (enter each on new line, empty line to finish):');
-  const files = [];
-  let file;
-  while ((file = await question('  - ')) !== '') {
-    files.push(file);
-  }
-
-  rl.close();
-
-  logChatSession(topic, summary, decisions, files);
-}
-
-/**
- * Режим командной строки
- */
-function cliMode(args) {
-  if (args.length < 2) {
-    console.log(`
-Usage: node scripts/export-chat.js <topic> <summary> [decision1] [decision2] ...
-
-Options:
-  --interactive, -i    Interactive mode
-  --help, -h          Show this help
-
-Examples:
-  node scripts/export-chat.js "API Key Storage" "Discussed backend storage for API keys" "Store in SQLite" "Use encryption"
-  node scripts/export-chat.js -i
-`);
-    process.exit(1);
-  }
-
-  const [topic, summary, ...decisions] = args;
-  logChatSession(topic, summary, decisions, []);
-}
-
-// Main
-const args = process.argv.slice(2);
-
-if (args.includes('--interactive') || args.includes('-i')) {
-  interactiveMode();
-} else if (args.includes('--help') || args.includes('-h')) {
-  cliMode([]);
-} else {
-  cliMode(args);
 }

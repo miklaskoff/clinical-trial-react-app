@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "dev:backend": "cd server && npm start",
+    "chat": "node scripts/export-chat.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\" --names \"frontend,backend\" --prefix-colors \"cyan,magenta\"",
     "build": "vite build",
     "preview": "vite preview",
