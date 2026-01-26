@@ -1,5 +1,75 @@
 # Lessons Learned
 
+## 2026-01-27: AI Response Truncation - max_tokens Too Low
+
+### Problem
+Treatment follow-up questions showed "AI Configuration Required" error despite API key being correctly configured and stored in database.
+
+### Symptoms
+- API key status: `configured: true`
+- API response: `{ questions: [], aiGenerated: false }`
+- Backend logs: `Claude API question generation error: Unexpected token '\`', "\`\`\`json...`
+
+### Root Cause
+**`max_tokens: 1024` was too low for complex JSON responses**.
+
+Claude's response for treatment questions includes:
+- Multiple questions (3-5)
+- Each with `slotMapping` object (5-8 options mapped to slot values)
+- `criterionIds` arrays
+- Verbose option labels
+
+The response was being truncated mid-JSON, leaving an unclosed markdown code block:
+```
+```json
+{
+  "questions": [
+    { "id": "timing", ... }
+  // Response cut off here, no closing ``` or }
+```
+
+The regex `/```(?:json)?\s*([\s\S]*?)```/` requires closing backticks, so it failed to match.
+
+### Solution
+
+**1. Increased max_tokens:**
+```javascript
+// ClaudeClient.js line 267
+max_tokens: 2048  // Was 1024
+```
+
+**2. Added fallback parsing for unclosed code blocks:**
+```javascript
+// If standard regex fails, try removing opening ``` manually
+if (text.startsWith('```')) {
+  jsonText = text.replace(/^```(?:json)?\s*/, '').trim();
+}
+```
+
+### Verification
+```bash
+# Before fix:
+aiGenerated: false, questions: 0
+
+# After fix:
+aiGenerated: true, questions: 5
+```
+
+### Lesson
+- **Complex JSON responses need higher token limits** - slotMapping adds significant size
+- **Check raw response length** - `console.log('Response length:', text.length)` reveals truncation
+- **Regex patterns must handle edge cases** - Unclosed code blocks are common with truncation
+- **API key validity ≠ API working** - Many other failure modes exist
+- **Backend logs reveal parsing errors** - Check for "Unexpected token" errors
+
+### Prevention Checklist
+- [ ] Set max_tokens based on expected response complexity
+- [ ] Add response length logging for debugging
+- [ ] Handle malformed/truncated responses gracefully
+- [ ] Test with actual AI responses, not just mocks
+
+---
+
 ## 2026-01-27: Test Isolation with SQLite - Parallel Test File Execution
 
 ### Problem

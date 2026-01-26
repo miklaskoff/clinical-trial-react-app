@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.0.7] - 2026-01-27
+
+### 🔧 AI Response Truncation Fix & Dropdown UI
+
+Fixed critical bug where AI-generated treatment questions failed due to response truncation.
+
+### Fixed
+
+- **AI Response Truncation** - Increased `max_tokens` from 1024 to 2048 in ClaudeClient.js
+  - Claude API responses were being cut off mid-JSON, causing parse failures
+  - Symptom: "AI Configuration Required" error despite valid API key
+  - Root cause: Complex JSON responses with slotMapping exceeded 1024 tokens
+
+- **Markdown Code Block Parsing** - Handle responses without closing backticks
+  - Added fallback parsing for `\`\`\`json` blocks that don't close properly
+  - More robust JSON extraction from AI responses
+
+### Changed
+
+- **Radio → Dropdown Conversion** - All follow-up questions now render as dropdowns
+  - Changed `type: 'radio'` to render as `<select>` elements
+  - More space-efficient UI for mobile and compact displays
+  - Backend post-processing ensures no `type: 'text'` questions
+
+### Added
+
+- **TDD Tests for Dropdown Rendering** (4 tests)
+  - `dropdownRendering.test.jsx` - Verifies radio/select types render as dropdowns
+  - Tests for proper option rendering and text input fields
+
+---
+
 ## [5.0.6] - 2026-01-27
 
 ### 🗄️ Cache Parity & Structured Questions
