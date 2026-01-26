@@ -506,6 +506,75 @@ TrialCard.propTypes = {
 export default TrialCard;
 ```
 
+### Drug-to-Criteria Search Pattern (v5.0.5)
+
+When searching for drug-related criteria in treatment history, use **three-level matching**:
+
+```javascript
+// File: server/services/FollowUpGenerator.js
+
+import { 
+  resolveDrugCategory, 
+  getClassSearchTerms, 
+  getGenericSearchTerms 
+} from './DrugCategoryResolver.js';
+
+function findMatchingCriteria(database, drugName, drugClass, targetCluster = 'CLUSTER_PTH') {
+  // 1. Get drug information
+  const drugInfo = resolveDrugCategory(drugName);
+
+  // 2. Build comprehensive search terms (3 levels)
+  const baseTerms = [
+    drugName.toLowerCase(),                      // Level 1: Direct name match
+    ...getClassSearchTerms(drugClass),           // Level 2: Drug class terms
+    ...getGenericSearchTerms(drugInfo)           // Level 3: Generic categories
+  ];
+
+  // 3. Expand IL subtypes and deduplicate
+  const searchTerms = [...new Set(
+    baseTerms.flatMap(term => expandILTerms(term))
+  )];
+
+  // 4. Search in target cluster only
+  const clusterData = database[targetCluster];
+  return clusterData.criteria.filter(criterion => 
+    searchTerms.some(term => 
+      criterion.raw_text.toLowerCase().includes(term)
+    )
+  );
+}
+```
+
+**Generic Categories by Drug Type:**
+
+```javascript
+// Biologics → includes these terms:
+['biologic', 'biologic agent', 'biological therapy', 
+ 'monoclonal antibody', 'antibody', 'mAb']
+
+// bDMARDs (biologic DMARDs) → includes:
+['bDMARD', 'DMARD', 'biologic DMARD']
+
+// csDMARDs (conventional synthetic DMARDs) → includes:
+['csDMARD', 'conventional DMARD', 'conventional synthetic DMARD']
+
+// Small molecules → includes:
+['small molecule', 'targeted synthetic', 'tsDMARD']
+
+// Immunosuppressants → includes:
+['immunosuppressive', 'immunosuppressant']
+```
+
+**Why Three Levels?**
+- Criteria may mention "TNF inhibitor" without naming specific drugs
+- Criteria may mention "biologic therapy" without specifying class
+- Ensures ALL relevant criteria are found for AI question generation
+
+**Results:**
+- adalimumab: 23 search terms → 10 PTH criteria matched
+- methotrexate: 9 search terms → 3 PTH criteria matched
+- IL-17A inhibitor: 6 search terms → 2 PTH criteria matched
+
 ---
 
 ## Testing Requirements

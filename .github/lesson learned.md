@@ -1,5 +1,65 @@
 # Lessons Learned
 
+## 2026-01-26: White Screen After Commit - Servers Not Running
+
+### Problem
+After successful git commit, user opened browser and saw white screen. Reported "it did not start again."
+
+### Root Cause
+**Frontend dev server (port 3000) was not running**, only backend (port 3001) was running.
+
+After git operations or terminal switches, dev servers may stop running but terminal output can be misleading.
+
+### Diagnostic Process
+```bash
+# Check which ports are listening
+Get-NetTCPConnection -LocalPort 3000,3001
+
+# Result:
+LocalPort  State   OwningProcess
+3001       Listen  40028          # Backend running ✅
+# Port 3000 missing                # Frontend NOT running ❌
+```
+
+### Solution
+```bash
+# Start frontend dev server
+Push-Location "c:\Users\lasko\Downloads\clinical-trial-react-app"
+npm run dev
+
+# Or use the batch file to start both
+start-dev.bat
+```
+
+### Lesson
+- **White screen usually = server not running** - Check ports FIRST before debugging code
+- **After git operations, verify servers are running** - Don't assume they survived
+- **Use Get-NetTCPConnection to verify** - Shows actual listening ports, not just process list
+- **Browser refresh ≠ server start** - Need to actually start the dev server
+- **Simple check saves time** - 5 seconds to check ports vs 5 minutes debugging code
+
+### Prevention Checklist
+- [ ] Check port 3000 (frontend) is listening before debugging UI issues
+- [ ] Check port 3001 (backend) is listening before debugging API issues
+- [ ] Use browser dev tools Network tab to see if requests reach server
+- [ ] After long terminal operations, verify both servers are running
+- [ ] Use start-dev.bat to start both servers simultaneously
+
+### Quick Diagnostic Commands
+```powershell
+# Check if servers are running
+Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue
+
+# Expected output (both running):
+LocalPort  State   OwningProcess
+3000       Listen  12345
+3001       Listen  67890
+
+# If port missing → start that server
+```
+
+---
+
 ## 2026-01-25: Comprehensive Drug Search - Three-Level Matching Required
 
 ### Problem
