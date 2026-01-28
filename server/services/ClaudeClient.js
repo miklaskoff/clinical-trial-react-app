@@ -264,20 +264,51 @@ Respond ONLY with valid JSON in this exact format:
     try {
       const response = await this.#client.messages.create({
         model: this.#model,
-        max_tokens: 1024,
+        max_tokens: 2048,  // Increased to avoid truncation
         messages: [{ role: 'user', content: prompt }]
       });
 
       const text = response.content[0]?.text || '{}';
       
       // Parse JSON from response - handle potential markdown code blocks
-      let jsonText = text;
+      let jsonText = text.trim();
+      
+      // Try to extract from markdown code blocks (with or without closing ```)
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
-        jsonText = jsonMatch[1];
+        jsonText = jsonMatch[1].trim();
+      } else if (text.startsWith('```')) {
+        // Handle case where response starts with ``` but doesn't close
+        // Remove the opening ```json or ```
+        jsonText = text.replace(/^```(?:json)?\s*/, '').trim();
+        // If it ends with ``` remove that too
+        if (jsonText.endsWith('```')) {
+          jsonText = jsonText.slice(0, -3).trim();
+        }
       }
       
       const result = JSON.parse(jsonText);
+      
+      // Log raw AI response for debugging criterion IDs
+      console.log('📋 Raw AI response questions:', JSON.stringify(result.questions?.slice(0, 2), null, 2));
+      
+      // Normalize criterionId/criterionIds format for backward compatibility
+      if (result.questions && Array.isArray(result.questions)) {
+        result.questions.forEach(q => {
+          // If old format (single criterionId), convert to array
+          if (q.criterionId && !q.criterionIds) {
+            q.criterionIds = [q.criterionId];
+            delete q.criterionId;
+          }
+          // If criterionIds is not an array, wrap it
+          if (q.criterionIds && !Array.isArray(q.criterionIds)) {
+            q.criterionIds = [q.criterionIds];
+          }
+        });
+      }
+      
+      // Log normalized questions
+      console.log('✅ Normalized questions:', JSON.stringify(result.questions?.slice(0, 2), null, 2));
 
       // Cache the result
       this.#setCache(cacheKey, result);

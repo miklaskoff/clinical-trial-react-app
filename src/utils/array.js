@@ -7,7 +7,7 @@
  * Check if two arrays have any overlapping elements
  * @param {Array} arr1 - First array
  * @param {Array} arr2 - Second array
- * @param {Function} [compareFn] - Optional comparison function
+ * @param {Function|boolean} [compareFn] - Optional comparison function or boolean for partial matching
  * @returns {boolean} True if arrays have overlapping elements
  */
 export function arraysOverlap(arr1, arr2, compareFn = null) {
@@ -18,14 +18,52 @@ export function arraysOverlap(arr1, arr2, compareFn = null) {
   const normalizedArr1 = Array.isArray(arr1) ? arr1 : [arr1];
   const normalizedArr2 = Array.isArray(arr2) ? arr2 : [arr2];
 
-  if (compareFn) {
+  // Handle boolean parameter for partial matching
+  const allowPartialMatch = compareFn === true;
+  const hasCustomCompareFn = typeof compareFn === 'function';
+
+  if (hasCustomCompareFn) {
     return normalizedArr1.some((item1) =>
       normalizedArr2.some((item2) => compareFn(item1, item2))
     );
   }
 
-  const set2 = new Set(normalizedArr2.map((item) => String(item).toLowerCase()));
-  return normalizedArr1.some((item) => set2.has(String(item).toLowerCase()));
+  // Exact match check
+  const set1 = new Set(normalizedArr1.map((item) => String(item).toLowerCase().trim()));
+  const set2 = new Set(normalizedArr2.map((item) => String(item).toLowerCase().trim()));
+  
+  for (const item of set1) {
+    if (set2.has(item)) {
+      return true;
+    }
+  }
+
+  // Partial match check for medical compound terms
+  if (allowPartialMatch) {
+    for (const item1 of set1) {
+      for (const item2 of set2) {
+        // Check if either term contains the other
+        // e.g., "malignant tumors" contains "tumor"
+        if (item1.includes(item2) || item2.includes(item1)) {
+          return true;
+        }
+        
+        // Check for word-level overlap for compound terms
+        // e.g., "malignant tumors" and "tumor" share "tumor" word
+        const words1 = item1.split(/\s+/);
+        const words2 = item2.split(/\s+/);
+        
+        for (const word1 of words1) {
+          // Only match significant words (length > 3) to avoid false positives
+          if (word1.length > 3 && words2.includes(word1)) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  
+  return false;
 }
 
 /**

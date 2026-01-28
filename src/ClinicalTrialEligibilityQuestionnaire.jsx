@@ -347,6 +347,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             conditionName: data.conditionName || conditionName,
             conditionType: data.conditionType || 'medical condition',
             questions: data.questions || [],
+            matchedCriteriaIds: data.matchedCriteriaIds || [], // Criterion IDs from CMB cluster search
             source: data.source || 'backend',
             matchingCriteriaCount: data.matchingCriteriaCount || 0,
             aiGenerated: data.aiGenerated !== undefined ? data.aiGenerated : true  // Track if AI generated
@@ -390,6 +391,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             drugName: treatmentName,
             drugClass: data.drugClass || 'unknown',
             questions: data.questions || [],
+            matchedCriteriaIds: data.matchedCriteriaIds || [], // Criterion IDs from PTH cluster search
             source: data.source || 'backend',
             aiGenerated: data.aiGenerated !== undefined ? data.aiGenerated : true  // Track if AI generated
           }
@@ -726,7 +728,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                 <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
                   {question.text || question}
                 </label>
-                {question.type === 'select' && question.options ? (
+                {/* Render both 'select' and 'radio' type questions as dropdowns for space efficiency */}
+                {(question.type === 'select' || question.type === 'radio') && question.options ? (
                   <select
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
@@ -1058,7 +1061,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                 <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
                   {question.text || question}
                 </label>
-                {question.type === 'select' && question.options ? (
+                {/* Render both 'select' and 'radio' type questions as dropdowns for space efficiency */}
+                {(question.type === 'select' || question.type === 'radio') && question.options ? (
                   <select
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
@@ -1092,92 +1096,6 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             ))}
           </div>
         )}
-        
-        {/* Default questions (always shown) */}
-        {/* Pattern: Currently using or used previously? */}
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-            Are you currently using this treatment?
-          </label>
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            <input
-              type="radio"
-              name={`pattern_${idx}`}
-              value="ongoing"
-              checked={details.pattern === 'ongoing'}
-              onChange={(e) => {
-                const newDetails = { ...pth_treatmentDetails };
-                if (!newDetails[idx]) newDetails[idx] = {};
-                newDetails[idx].pattern = e.target.value;
-                setPth_treatmentDetails(newDetails);
-              }}
-            />
-            {' '}Yes, currently using
-          </label>
-          <label style={{ display: 'block' }}>
-            <input
-              type="radio"
-              name={`pattern_${idx}`}
-              value="used previously"
-              checked={details.pattern === 'used previously'}
-              onChange={(e) => {
-                const newDetails = { ...pth_treatmentDetails };
-                if (!newDetails[idx]) newDetails[idx] = {};
-                newDetails[idx].pattern = e.target.value;
-                setPth_treatmentDetails(newDetails);
-              }}
-            />
-            {' '}No, used previously
-          </label>
-        </div>
-        
-        {/* Timeframe (if used previously) */}
-        {details.pattern === 'used previously' && (
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-              When did you last use this treatment?
-            </label>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <input
-                type="number"
-                placeholder="Number"
-                value={details.timeframe_weeks || ''}
-                onChange={(e) => {
-                  const newDetails = { ...pth_treatmentDetails };
-                  if (!newDetails[idx]) newDetails[idx] = {};
-                  newDetails[idx].timeframe_weeks = e.target.value;
-                  setPth_treatmentDetails(newDetails);
-                }}
-                style={{ width: '80px', padding: '6px' }}
-              />
-              <span>weeks ago</span>
-            </div>
-          </div>
-        )}
-        
-        {/* Treatment Response */}
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-            How did you respond to this treatment?
-          </label>
-          <select
-            value={details.response || 'not_specified'}
-            onChange={(e) => {
-              const newDetails = { ...pth_treatmentDetails };
-              if (!newDetails[idx]) newDetails[idx] = {};
-              newDetails[idx].response = e.target.value;
-              setPth_treatmentDetails(newDetails);
-            }}
-            style={{ width: '100%', padding: '6px' }}
-          >
-            <option value="not_specified">Not specified</option>
-            <option value="good_response">Good response</option>
-            <option value="partial_response">Partial response</option>
-            <option value="no_response">No response</option>
-            <option value="lost_response">Lost response over time</option>
-            <option value="intolerant">Could not tolerate (side effects)</option>
-          </select>
-        </div>
       </div>
     );
   }
@@ -1732,6 +1650,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     if (cmb_hasConditions === 'yes') {
       cmb_selectedConditions.forEach((condition, idx) => {
         const details = cmb_conditionDetails[idx] || {};
+        const dynamicData = cmb_dynamicQuestions[idx];
+        
         builder.addComorbidCondition(
           [condition],
           details.pattern || [],
@@ -1744,6 +1664,24 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
           } : null,
           []
         );
+        
+        // Get the response and add dynamic questions to the last entry
+        const response = builder.getResponse();
+        if (response.responses.CMB && response.responses.CMB.length > 0) {
+          const lastEntry = response.responses.CMB[response.responses.CMB.length - 1];
+          
+          // Include AI-generated questions and answers
+          if (dynamicData?.questions && dynamicData.aiGenerated) {
+            lastEntry.dynamicQuestions = dynamicData.questions;
+            // Include answers to dynamic questions
+            dynamicData.questions.forEach((q, qIdx) => {
+              const answerKey = `dynamic_${qIdx}`;
+              if (details[answerKey]) {
+                lastEntry[q.id] = details[answerKey];
+              }
+            });
+          }
+        }
       });
     }
     
@@ -1751,6 +1689,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     if (pth_hasTreatment === 'yes') {
       pth_selectedTreatments.forEach((treatment, idx) => {
         const details = pth_treatmentDetails[idx] || {};
+        const dynamicData = pth_dynamicQuestions[idx];
+        
         builder.addTreatmentHistory(
           [treatment],
           [details.pattern || 'not_specified'],
@@ -1762,6 +1702,24 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
           } : null,
           null // Drug classification would come from medication database lookup
         );
+        
+        // Get the response and add dynamic questions to the last entry
+        const response = builder.getResponse();
+        if (response.responses.PTH && response.responses.PTH.length > 0) {
+          const lastEntry = response.responses.PTH[response.responses.PTH.length - 1];
+          
+          // Include AI-generated questions and answers
+          if (dynamicData?.questions && dynamicData.aiGenerated) {
+            lastEntry.dynamicQuestions = dynamicData.questions;
+            // Include answers to dynamic questions
+            dynamicData.questions.forEach((q, qIdx) => {
+              const answerKey = `dynamic_${qIdx}`;
+              if (details[answerKey]) {
+                lastEntry[q.id] = details[answerKey];
+              }
+            });
+          }
+        }
       });
     }
     

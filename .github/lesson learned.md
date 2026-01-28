@@ -1,5 +1,592 @@
 # Lessons Learned
 
+## 2026-01-27: AI Response Truncation - max_tokens Too Low
+
+### Problem
+Treatment follow-up questions showed "AI Configuration Required" error despite API key being correctly configured and stored in database.
+
+### Symptoms
+- API key status: `configured: true`
+- API response: `{ questions: [], aiGenerated: false }`
+- Backend logs: `Claude API question generation error: Unexpected token '\`', "\`\`\`json...`
+
+### Root Cause
+**`max_tokens: 1024` was too low for complex JSON responses**.
+
+Claude's response for treatment questions includes:
+- Multiple questions (3-5)
+- Each with `slotMapping` object (5-8 options mapped to slot values)
+- `criterionIds` arrays
+- Verbose option labels
+
+The response was being truncated mid-JSON, leaving an unclosed markdown code block:
+```
+```json
+{
+  "questions": [
+    { "id": "timing", ... }
+  // Response cut off here, no closing ``` or }
+```
+
+The regex `/```(?:json)?\s*([\s\S]*?)```/` requires closing backticks, so it failed to match.
+
+### Solution
+
+**1. Increased max_tokens:**
+```javascript
+// ClaudeClient.js line 267
+max_tokens: 2048  // Was 1024
+```
+
+**2. Added fallback parsing for unclosed code blocks:**
+```javascript
+// If standard regex fails, try removing opening ``` manually
+if (text.startsWith('```')) {
+  jsonText = text.replace(/^```(?:json)?\s*/, '').trim();
+}
+```
+
+### Verification
+```bash
+# Before fix:
+aiGenerated: false, questions: 0
+
+# After fix:
+aiGenerated: true, questions: 5
+```
+
+### Lesson
+- **Complex JSON responses need higher token limits** - slotMapping adds significant size
+- **Check raw response length** - `console.log('Response length:', text.length)` reveals truncation
+- **Regex patterns must handle edge cases** - Unclosed code blocks are common with truncation
+- **API key validity ≠ API working** - Many other failure modes exist
+- **Backend logs reveal parsing errors** - Check for "Unexpected token" errors
+
+### Prevention Checklist
+- [ ] Set max_tokens based on expected response complexity
+- [ ] Add response length logging for debugging
+- [ ] Handle malformed/truncated responses gracefully
+- [ ] Test with actual AI responses, not just mocks
+
+---
+
+## 2026-01-27: Test Isolation with SQLite - Parallel Test File Execution
+
+### Problem
+Cache test passed when run individually (`npm test -- --run FollowUpGenerator.cache.test.js`) but failed when run with all tests (`npm test -- --run`).
+
+### Root Cause
+**Vitest runs test files in parallel by default**. Multiple test files accessing the same SQLite database caused race conditions:
+- Test A clears cache in beforeEach
+- Test B writes to cache
+- Test A reads empty cache (Test B's writes interfered)
+
+### Evidence
+```javascript
+// When run alone:
+All cache entries: [ 'condition:metabolic', 'treatment:TNF_inhibitors' ]
+
+// When run with other tests:
+All cache entries: [ 'condition:metabolic' ]  // treatment missing!
+```
+
+### Solution
+Added `fileParallelism: false` to vitest.config.js:
+
+```javascript
+// server/vitest.config.js
+export default defineConfig({
+  test: {
+    // ... other options
+    fileParallelism: false,  // ← Run test files sequentially
+  },
+});
+```
+
+### When to Use Sequential Tests
+- Tests that share SQLite database
+- Tests that use module-level singleton state
+- Tests that modify global state (environment variables, etc.)
+
+### Lesson
+- **SQLite tests MUST run sequentially** - No built-in transaction isolation
+- **Check if test passes alone but fails in suite** - Classic isolation symptom
+- **`fileParallelism: false`** - Simple fix for database-dependent tests
+- **Add debug logging** - `console.log('All cache entries:', ...)` quickly reveals state issues
+
+---
+
+## 2026-01-26: Dynamic Import Fetch Error - Vite/HMR Issue
+
+### Problem
+Browser console shows: `Failed to fetch dynamically imported module`
+
+### Root Causes (Multiple Possible)
+1. **Vite Hot Module Replacement (HMR) glitch** - Module references become stale
+2. **Browser cache** - Old module URLs cached
+3. **Stale Vite cache** - `node_modules/.vite` contains outdated pre-bundled modules
+4. **Build/dev mode conflict** - Running preview after dev without clean build
+
+### Solutions (Try in Order)
+
+**1. Hard Refresh Browser:**
+```
+Windows/Linux: Ctrl+Shift+R
+Mac: Cmd+Shift+R
+```
+
+**2. Restart Vite Dev Server:**
+```bash
+# Stop current server, then:
+npm run dev
+```
+
+**3. Clear Vite Cache:**
+```bash
+rm -rf node_modules/.vite
+npm run dev
+```
+
+**4. Clean Build (if persists):**
+```bash
+rm -rf build dist node_modules/.vite
+npm run build
+npm run preview
+```
+
+### Lesson
+- **Dynamic imports are fragile** - HMR doesn't always update them correctly
+- **Browser caching is aggressive** - Always hard refresh after code changes
+- **Vite cache can become stale** - Clear `node_modules/.vite` if issues persist
+- **Check console first** - Error message tells you which module failed
+
+---
+
+## 2026-01-26: PowerShell Encoding Corruption
+
+### Problem
+PowerShell commands fail with Cyrillic character `с` prepended to command text.
+
+### Root Cause
+Terminal encoding mismatch between UTF-8 and Windows code page.
+
+### Quick Fix
+```powershell
+chcp 437
+```
+
+### Permanent Fix
+Add to PowerShell profile or restart VS Code terminal.
+
+### Lesson
+- **Encoding issues = garbled characters** - Look for unexpected characters at command start
+- **Code page 437 is ASCII-safe** - Works for all English commands
+- **Restarting terminal often helps** - Fresh terminal = fresh encoding
+
+---
+
+## 2026-01-26: Files Not Showing in GitHub After Commit
+
+### Problem
+User committed changes but files not visible in GitHub repository.
+
+### Root Cause
+**Forgot `git push`**. Local commit succeeded but changes not pushed to remote.
+
+### Solution
+```bash
+git push
+```
+
+### Verification
+```bash
+# Check if ahead of remote
+git status
+
+# Should show "Your branch is ahead of 'origin/main' by X commits"
+# After push, should show "Your branch is up to date"
+```
+
+### Lesson
+- **Commit ≠ Push** - Commit is local, push sends to remote
+- **Check git status** - Shows if you're ahead of remote
+- **Add push to workflow** - `git add -A && git commit -m "..." && git push`
+
+---
+
+## 2026-01-26: Browser Shows Old Content Despite Code Changes
+
+### Problem
+Frontend code changes not visible in browser even after saving files and server restart.
+
+### Root Cause
+Browser cache serving old JavaScript/CSS files.
+
+### Solution
+**Hard Refresh:**
+```
+Windows/Linux: Ctrl+Shift+R
+Mac: Cmd+Shift+R
+```
+
+**Alternative - DevTools:**
+1. Open DevTools (F12)
+2. Right-click refresh button
+3. Select "Empty Cache and Hard Reload"
+
+### When to Hard Refresh
+- After any `.jsx` or `.js` file change
+- After any `.css` file change
+- When UI doesn't match expected behavior
+- Before reporting "code not working"
+
+### Lesson
+- **Regular refresh uses cache** - F5/Ctrl+R may serve cached files
+- **Hard refresh bypasses cache** - Forces browser to re-download everything
+- **DevTools affects caching** - With DevTools open, "Disable cache" option available
+
+---
+
+## 2026-01-26: Backend Returns Stale Cached Responses
+
+### Problem
+API returns old data even after changing backend code.
+
+### Root Cause
+SQLite `followup_cache` table contains cached AI-generated questions.
+
+### Solution
+```bash
+# Use npm script (recommended)
+npm run cache:clear
+
+# Or manual SQL
+cd server
+node -e "const Database = require('better-sqlite3'); const db = new Database('./data/clinical-trials.db'); const r = db.prepare('DELETE FROM followup_cache').run(); console.log('Cleared', r.changes, 'entries'); db.close();"
+```
+
+### When to Clear Cache
+- After changing `FollowUpGenerator.js`
+- After changing `ClaudeClient.js`
+- After changing AI prompt logic
+- When seeing old follow-up questions
+- After API key configuration changes
+
+### Lesson
+- **Caching is invisible** - Old data appears without error
+- **Cache must be cleared after AI logic changes** - Database persists across restarts
+- **npm run cache:clear exists** - Use it, don't forget
+
+---
+
+## 2026-01-26: Terminal Commands Run in Wrong Directory
+
+### Problem
+VS Code terminal reuses terminals, causing commands to run in unexpected directories.
+
+### Root Cause
+Terminal state persists across command invocations. Working directory from previous command affects next command.
+
+### Solution
+1. **Check current directory:**
+   ```powershell
+   Get-Location  # or pwd
+   ```
+
+2. **Use absolute paths:**
+   ```bash
+   cd c:\Users\lasko\Downloads\clinical-trial-react-app
+   npm run dev
+   ```
+
+3. **Open new terminal:**
+   VS Code → Terminal → New Terminal
+
+### Lesson
+- **Always verify directory before running commands** - Especially after long sessions
+- **Use absolute paths for safety** - Avoids directory confusion
+- **New terminal = clean state** - When in doubt, open fresh terminal
+
+---
+
+## 2026-01-26: White Screen After Commit - Servers Not Running
+
+### Problem
+After successful git commit, user opened browser and saw white screen. Reported "it did not start again."
+
+### Root Cause
+**Frontend dev server (port 3000) was not running**, only backend (port 3001) was running.
+
+After git operations or terminal switches, dev servers may stop running but terminal output can be misleading.
+
+### Diagnostic Process
+```bash
+# Check which ports are listening
+Get-NetTCPConnection -LocalPort 3000,3001
+
+# Result:
+LocalPort  State   OwningProcess
+3001       Listen  40028          # Backend running ✅
+# Port 3000 missing                # Frontend NOT running ❌
+```
+
+### Solution
+```bash
+# Start frontend dev server
+Push-Location "c:\Users\lasko\Downloads\clinical-trial-react-app"
+npm run dev
+
+# Or use the batch file to start both
+start-dev.bat
+```
+
+### Lesson
+- **White screen usually = server not running** - Check ports FIRST before debugging code
+- **After git operations, verify servers are running** - Don't assume they survived
+- **Use Get-NetTCPConnection to verify** - Shows actual listening ports, not just process list
+- **Browser refresh ≠ server start** - Need to actually start the dev server
+- **Simple check saves time** - 5 seconds to check ports vs 5 minutes debugging code
+
+### Prevention Checklist
+- [ ] Check port 3000 (frontend) is listening before debugging UI issues
+- [ ] Check port 3001 (backend) is listening before debugging API issues
+- [ ] Use browser dev tools Network tab to see if requests reach server
+- [ ] After long terminal operations, verify both servers are running
+- [ ] Use start-dev.bat to start both servers simultaneously
+
+### Quick Diagnostic Commands
+```powershell
+# Check if servers are running
+Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue
+
+# Expected output (both running):
+LocalPort  State   OwningProcess
+3000       Listen  12345
+3001       Listen  67890
+
+# If port missing → start that server
+```
+
+---
+
+## 2026-01-25: Comprehensive Drug Search - Three-Level Matching Required
+
+### Problem
+User reported that searching for treatments like "adalimumab" wasn't finding ALL relevant criteria. The search was only matching the drug name directly, missing criteria that mentioned the drug's CLASS (e.g., "TNF inhibitors") or GENERIC CATEGORY (e.g., "biologic", "monoclonal antibody", "DMARD").
+
+### Requirements (User Clarification)
+1. **ALL criteria containing the drug name** (direct match)
+2. **ALL criteria containing the drug's CLASS** (e.g., TNF inhibitors, IL-17 inhibitors)
+3. **ALL criteria containing GENERIC categories** (e.g., biologic, DMARD, monoclonal antibody)
+
+### Solution Implemented
+
+**1. Three-Level Search Terms:**
+```javascript
+// getGenericSearchTerms() - New function in DrugCategoryResolver.js
+function getGenericSearchTerms(drugInfo) {
+  const terms = [];
+  if (drugInfo.isBiologic) {
+    terms.push('biologic', 'biologic agent', 'biological therapy',
+               'monoclonal antibody', 'antibody', 'mAb');
+  }
+  if (biologicDMARDClasses.includes(drugInfo.drugClass)) {
+    terms.push('bDMARD', 'DMARD', 'biologic DMARD');
+  }
+  if (conventionalDMARDClasses.includes(drugInfo.drugClass)) {
+    terms.push('csDMARD', 'conventional DMARD', 'conventional synthetic DMARD');
+  }
+  // ... more categories
+  return terms;
+}
+```
+
+**2. Comprehensive Search in findMatchingCriteria():**
+```javascript
+const searchTerms = [
+  drugName.toLowerCase(),                              // Direct name
+  ...getClassSearchTerms(drugClass),                   // Class terms
+  ...getGenericSearchTerms(drugInfo)                   // Generic categories
+].flatMap(term => expandILTerms(term));               // IL subtype expansion
+```
+
+**3. Results:**
+- **adalimumab**: 23 search terms → 10 PTH criteria matched
+- **secukinumab**: 23 search terms (IL-17 specific) → matches IL-17 criteria
+- **methotrexate**: 9 search terms → 3 PTH criteria matched
+
+### TDD Process Used
+1. ✅ Created failing tests first (`DrugCategoryResolver.test.js`)
+2. ✅ Implemented `getGenericSearchTerms()` function
+3. ✅ All 12 new tests passed
+4. ✅ Updated `FollowUpGenerator.js` to use new function
+5. ✅ All 75 backend tests + 345 frontend tests passed
+6. ✅ Manual API verification confirmed correct behavior
+
+### Lesson
+- **Drug matching requires three-level search**: name → class → generic category
+- **TDD works well for NEW functionality**: Write test → verify fail → implement → verify pass
+- **Cluster-scoped search is critical**: Treatment follow-ups should ONLY search CLUSTER_PTH
+- **IL subtype expansion prevents missed matches**: "IL-17A" → "IL-17", "IL17", "interleukin-17"
+
+### Prevention Checklist
+- [ ] New drug search features need all three levels
+- [ ] Check that cluster scoping is correct (PTH for treatments, CMB for conditions)
+- [ ] Verify search terms are deduplicated
+- [ ] Test with both biologic and small molecule drugs
+
+---
+
+## 2026-01-25: Already-Implemented Features Discovered During Investigation
+
+### Problem
+User requested two features:
+1. Remove hardcoded base questions from PTH cluster (only AI questions)
+2. Label AI-generated questions with criterion IDs in report
+
+After creating tests and starting implementation, discovered features were ALREADY implemented in the codebase.
+
+### Root Cause
+- **Assumed features missing** without checking existing code first
+- **Jumped to TDD** before understanding current state
+- **Created failing tests** for features that already worked
+- **Wasted time** writing implementation that existed
+
+### What Was Actually There
+
+**Feature 1 - PTH Questions:**
+- `renderTreatmentFollowUps()` already showed ONLY AI questions
+- No hardcoded questions present (lines 996-1095 in questionnaire)
+- Blocking message for AI failures already implemented
+
+**Feature 2 - Report Labels:**
+- `generatePatientNarrative()` already included `🤖 AI Follow-up Questions:` label
+- Already showed `(Criterion: ${q.criterionId})` for each question
+- `buildSlotFilledResponse()` already stored `dynamicQuestions` array in responses
+
+### Discovery Process
+1. Created tests expecting missing features
+2. Tests failed on UI navigation (couldn't find elements)
+3. Inspected actual questionnaire code
+4. Found complete implementation already present
+5. Deleted unnecessary tests
+6. All 341 existing tests passed ✅
+
+### Lesson
+- **ALWAYS investigate existing code BEFORE starting TDD**
+- **Search for similar function names** in the codebase first
+- **Read the actual implementation** before assuming it's missing
+- **Check recent commits** to see if features were added
+- **TDD is for NEW features**, not rediscovering existing ones
+
+### Prevention Checklist
+- [ ] Search codebase for related function names
+- [ ] Read implementation files before writing tests
+- [ ] Check git history for related changes
+- [ ] Verify feature is actually missing
+- [ ] THEN start TDD workflow
+
+### Time Saved by Discovering Early
+- Avoided rewriting 200+ lines of already-working code
+- Avoided debugging "new" implementation
+- Avoided breaking existing functionality
+- Went from "5 failing tests" to "341 passing tests" by deleting wrong tests
+
+---
+
+## 2026-01-25: Double-Negative Criteria and Compound Medical Terms
+
+### Problem
+Investigation revealed 71kg patients incorrectly excluded by weight criteria like "must not weigh < 30kg" and cancer patients not matched by "malignant tumors" exclusion.
+
+### Root Causes
+
+**Issue 1: Double-Negative Weight Criteria**
+- Criteria like "must not weigh < 30kg" without WEIGHT_MIN/MAX slot-filled fields
+- Matcher defaulted to `matches = true` when no fields present
+- BMI cluster had `aiEnabled: false` so no AI fallback
+- Double-negative logic ("must NOT weigh LESS than") wasn't parsed/inverted
+
+**Issue 2: Exact String Matching for Synonyms**
+- `arraysOverlap()` required exact string equality
+- "breast cancer" → synonyms: ["tumor", "malignancy"]
+- Criterion: ["malignant tumors"] 
+- "malignant tumors" ≠ "tumor" (not exact match) → no overlap detected
+
+### Solution Applied
+
+**For Weight Criteria:**
+1. Added `#parseWeightFromRawText()` to ClinicalTrialMatcher.js
+2. Pattern detection for:
+   - Double-negative: "must not weigh < X kg"
+   - Simple comparisons: "weighing ≤ X kg", "weighing ≥ X kg"
+3. Logic inversion for double-negatives in exclusions:
+   ```javascript
+   // "must NOT weigh < 30kg" in exclusion criterion
+   const meetsRequirement = (patientWeight >= threshold);
+   matches = !meetsRequirement; // Inverted!
+   ```
+4. Modified `#evaluateBMI()` to detect missing fields and call parser
+
+**For Synonym Matching:**
+1. Enhanced `arraysOverlap()` with partial matching (3rd param: `true`)
+2. Substring matching: "malignant tumors".includes("tumor") 
+3. Word-level matching: split by spaces, match words >3 chars
+4. Updated `#evaluateComorbidity()` to use partial matching
+5. Expanded medical-synonyms.json with cancer-specific mappings
+
+**For Report Formatting:**
+1. Added criterion IDs to all report sections
+2. Added criterion types (Inclusion/Exclusion/Mandatory Exclusion)
+3. Updated 3 sections for consistency
+
+**For Documentation:**
+1. Added OR-logic criteria section to ARCHITECTURE guide
+2. Added double-negative weight criteria section
+3. Documented AI fallback behavior
+
+### Verification
+- Created investigation_script.js with factual code simulation
+- Traced exact code paths through matcher
+- Verified fixes with actual database entries
+- No mocks used - 100% factual analysis
+
+### Lessons
+
+**Design Lessons:**
+- **Double-negatives require semantic analysis** - "must NOT be LESS than" = minimum requirement
+- **Database labels can differ from semantic meaning** - Exclusion-labeled criteria can represent inclusion requirements
+- **Exact string matching fails for compound medical terms** - Need partial/word-level matching
+- **Missing slot-filled fields need fallback parsing** - Can't rely on fields always being present
+
+**Implementation Lessons:**
+- **Parse raw_text as last resort** - When slot-filled fields missing
+- **Invert logic for semantic contradictions** - Database label vs. actual meaning
+- **Enhance matching for medical terminology** - Medical terms are often compound (e.g., "malignant tumors")
+- **Word-level matching with minimum length** - Prevents false positives on short words
+
+**Investigation Lessons:**
+- **Code simulation reveals hidden bugs** - Tracing through actual code paths found issues
+- **No mocks = factual analysis** - Real database + real code = real results
+- **Documentation prevents repeat failures** - ARCHITECTURE guide now has OR-logic behavior
+- **Pattern detection scales better than enumeration** - Regex patterns vs. exhaustive database updates
+
+**Testing Lessons:**
+- **Test with realistic edge cases** - Double-negatives, compound terms, missing fields
+- **Verify against actual database** - Slot-filled fields may be missing
+- **Check semantic meaning, not just syntax** - "must NOT weigh < 30kg" ≠ exclusion
+- **Manual verification catches semantic bugs** - Tests can pass but logic can be inverted
+
+### Prevention Checklist
+- [ ] Check for double-negative phrasing in criteria text
+- [ ] Verify slot-filled fields exist before using them
+- [ ] Test compound medical terms with partial matching
+- [ ] Trace semantic meaning vs. database label
+- [ ] Document complex parsing/matching logic
+- [ ] Add examples to ARCHITECTURE guide
+
+---
+
 ## 2026-01-19: Claimed "AI-driven" but Implemented Hardcoded Questions
 
 ### Problem

@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:backend": "cd server && npm start",
+    "chat": "node scripts/export-chat.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\" --names \"frontend,backend\" --prefix-colors \"cyan,magenta\"",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
@@ -16,6 +19,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install chromium",
+    "cache:clear": "cd server && node -e \"const Database = require('better-sqlite3'); const db = new Database('./data/clinical-trials.db'); try { const r = db.prepare('DELETE FROM followup_cache').run(); console.log('Cleared', r.changes, 'cached entries'); } catch(e) { console.log('Cache table not found or error:', e.message); } db.close();\"",
     "verify": "powershell -ExecutionPolicy Bypass -File scripts/verify-implementation.ps1",
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix",
@@ -47,7 +51,8 @@
     "msw": "^2.7.0",
     "prettier": "^3.4.2",
     "vite": "^6.0.6",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "concurrently": "^9.1.2"
   },
   "lint-staged": {
     "src/**/*.{js,jsx}": [

@@ -211,6 +211,13 @@ export async function initDatabase(dbPath) {
       value TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    -- App version table for cache invalidation
+    CREATE TABLE IF NOT EXISTS app_version (
+      id INTEGER PRIMARY KEY,
+      version TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
 
   return dbInstance;

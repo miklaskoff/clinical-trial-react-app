@@ -51,6 +51,18 @@ function generatePatientNarrative(patientResponse) {
       const condition = c.CONDITION_TYPE || c.condition || c;
       const severity = c.SEVERITY || c.severity || '';
       lines.push(`  - ${condition}${severity ? ` (${severity})` : ''}`);
+      
+      // Show AI-generated follow-up questions if present
+      if (c.dynamicQuestions && Array.isArray(c.dynamicQuestions)) {
+        lines.push(`    🤖 AI Follow-up Questions:`);
+        c.dynamicQuestions.forEach((q) => {
+          const answer = c[q.id] || 'not answered';
+          // Handle both old (criterionId) and new (criterionIds) formats
+          const ids = q.criterionIds || (q.criterionId ? [q.criterionId] : []);
+          const criterionLabel = ids.length > 0 ? ` (Criteria: ${ids.join(', ')})` : '';
+          lines.push(`      - ${q.text} → ${answer}${criterionLabel}`);
+        });
+      }
     });
   } else {
     lines.push('• No comorbid conditions reported');
@@ -63,6 +75,18 @@ function generatePatientNarrative(patientResponse) {
       const treatment = t.TREATMENT_TYPE || t.treatment || t;
       const pattern = t.TREATMENT_PATTERN || t.pattern || '';
       lines.push(`  - ${treatment}${pattern ? ` (${pattern})` : ''}`);
+      
+      // Show AI-generated follow-up questions if present
+      if (t.dynamicQuestions && Array.isArray(t.dynamicQuestions)) {
+        lines.push(`    🤖 AI Follow-up Questions:`);
+        t.dynamicQuestions.forEach((q) => {
+          const answer = t[q.id] || 'not answered';
+          // Handle both old (criterionId) and new (criterionIds) formats
+          const ids = q.criterionIds || (q.criterionId ? [q.criterionId] : []);
+          const criterionLabel = ids.length > 0 ? ` (Criteria: ${ids.join(', ')})` : '';
+          lines.push(`      - ${q.text} → ${answer}${criterionLabel}`);
+        });
+      }
     });
   } else {
     lines.push('• No previous psoriasis treatments reported');
@@ -185,7 +209,11 @@ function generateTextReport(results) {
             const text = c.rawText || c.criterionId;
             const conf = `${(c.confidence * 100).toFixed(0)}%`;
             const ai = c.requiresAI ? ' [AI]' : '';
-            lines.push(`   ┌─ Criterion: ${text}`);
+            const criterionType = c.exclusionStrength === 'inclusion' ? 'Inclusion' : 'Exclusion';
+            
+            lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+            lines.push(`   │  Type: ${criterionType}`);
+            lines.push(`   │  Text: ${text}`);
             lines.push(`   │  Confidence: ${conf}${ai}`);
             if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
             if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
@@ -206,7 +234,12 @@ function generateTextReport(results) {
       if (trial.flaggedCriteria && trial.flaggedCriteria.length > 0) {
         lines.push('   Flagged criteria:');
         trial.flaggedCriteria.forEach((c) => {
-          lines.push(`   ┌─ Criterion: ${c.rawText || c.criterionId}`);
+          const text = c.rawText || c.criterionId;
+          const criterionType = c.exclusionStrength === 'inclusion' ? 'Inclusion' : 'Exclusion';
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: ${criterionType}`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${(c.confidence * 100).toFixed(0)}%${c.requiresAI ? ' [AI]' : ''}`);
           if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
           if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
@@ -236,7 +269,10 @@ function generateTextReport(results) {
           const text = c.rawText || c.criterionId;
           const conf = `${(c.confidence * 100).toFixed(0)}%`;
           const ai = c.requiresAI ? ' [AI]' : '';
-          lines.push(`   ┌─ Criterion: ${text}`);
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: Inclusion`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${conf}${ai}`);
           if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
           if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
@@ -250,7 +286,11 @@ function generateTextReport(results) {
           const text = c.rawText || c.criterionId;
           const conf = `${(c.confidence * 100).toFixed(0)}%`;
           const ai = c.requiresAI ? ' [AI]' : '';
-          lines.push(`   ┌─ Criterion: ${text}`);
+          const criterionType = c.exclusionStrength === 'mandatory_exclude' ? 'Mandatory Exclusion' : 'Exclusion';
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: ${criterionType}`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${conf}${ai}`);
           if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
           if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
@@ -290,6 +330,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAdminRoute, setIsAdminRoute] = useState(false);
   
+  // API key status for header indicator
+  const [apiKeyStatus, setApiKeyStatus] = useState('unknown'); // 'unknown' | 'configured' | 'not-configured' | 'backend-offline'
+  
   // Confidence thresholds
   const [confidenceThresholds, setConfidenceThresholds] = useState({
     exclude: 0.8,  // High confidence = exclude patient
@@ -318,11 +361,17 @@ function App() {
           if (data.configured) {
             // API key is configured on server - set a placeholder to indicate configured
             setApiKey('configured-on-server');
+            setApiKeyStatus('configured');
+          } else {
+            setApiKeyStatus('not-configured');
           }
+        } else {
+          setApiKeyStatus('not-configured');
         }
       } catch (error) {
         // Backend might not be running, that's ok
         console.log('Backend not available, using local mode');
+        setApiKeyStatus('backend-offline');
       }
     };
     checkApiKeyStatus();
@@ -393,8 +442,10 @@ function App() {
       await fetch(`${BACKEND_URL}/api/config/apikey`, {
         method: 'DELETE'
       });
+      setApiKeyStatus('not-configured');
     } catch (error) {
       console.error('Failed to clear API key:', error);
+      setApiKeyStatus('backend-offline');
     }
     setApiKey('');
   }, []);
@@ -427,8 +478,10 @@ function App() {
         // Clear the key from state after saving to backend
         // Keep a flag that it's configured
         setApiKey('configured-on-server');
+        setApiKeyStatus('configured');
       } catch (err) {
         setError('Failed to save API key to server: ' + err.message);
+        setApiKeyStatus('not-configured');
         setIsLoading(false);
         return;
       } finally {
@@ -509,6 +562,29 @@ function App() {
       <header className="app-header">
         <h1>Clinical Trial Matching System</h1>
         <p className="app-subtitle">AI-powered patient-trial matching</p>
+        {/* API Key Status Indicator */}
+        <div className="api-status-indicator" data-testid="api-status-indicator">
+          {apiKeyStatus === 'configured' && (
+            <span className="status-badge status-configured" title="AI features enabled">
+              🟢 AI Ready
+            </span>
+          )}
+          {apiKeyStatus === 'not-configured' && (
+            <span className="status-badge status-not-configured" title="Configure API key in settings">
+              🟡 AI Not Configured
+            </span>
+          )}
+          {apiKeyStatus === 'backend-offline' && (
+            <span className="status-badge status-offline" title="Backend server not running">
+              🔴 Backend Offline
+            </span>
+          )}
+          {apiKeyStatus === 'unknown' && (
+            <span className="status-badge status-checking" title="Checking status...">
+              ⏳ Checking...
+            </span>
+          )}
+        </div>
         {/* Admin link removed from patient-facing UI for security */}
         {/* Access admin via direct URL: /admin */}
       </header>
@@ -866,3 +942,4 @@ function App() {
 }
 
 export default App;
+export { generatePatientNarrative };

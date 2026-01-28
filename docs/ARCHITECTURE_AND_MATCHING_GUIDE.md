@@ -247,6 +247,107 @@ Pass 3: AI SEMANTIC (if enabled)
 - Model selection: Use Haiku for simple, Sonnet for complex
 
 
+### Complex Criteria Handling
+
+**OR-Logic Criteria:**
+
+Criteria that require "at least 1 of the following" conditions are handled specially in the matching system.
+
+**Example:**
+```
+Have at least 1 of the following cardiovascular risk factors:
+- Current cigarette smoker
+- Diagnosis of hypertension
+- Diagnosis of hyperlipidemia
+- Diabetes mellitus type 1 or 2
+- Obesity
+- Family history of premature CHD
+```
+
+**Current Implementation:**
+- Stored as **single criterion** in database with all sub-conditions in `raw_text`
+- No slot-filled fields for individual sub-conditions
+- Sub-conditions embedded in `raw_text`, NOT as separate criteria
+- `LOGICAL_OPERATOR: "OR"` field indicates OR-logic requirement
+
+**Evaluation Behavior:**
+1. **Rule-based matching:** Cannot evaluate sub-conditions independently
+2. **AI fallback:** For clusters with `aiEnabled: true`, AI analyzes `raw_text` semantically
+3. **AI understanding:** Can interpret OR-logic and match if patient has ANY listed condition
+4. **Limitation:** Granular tracking not available (cannot identify which specific sub-condition matched)
+
+**Clusters with AI Enabled for OR-Logic:**
+```json
+{
+  "CMB": { "aiEnabled": true },  // Comorbidities + AI follow-up questions
+  "PTH": { "aiEnabled": true },  // Treatment history + AI follow-up questions (NO hardcoded questions)
+  "AIC": { "aiEnabled": true },  // Active infections
+  "SEV": { "aiEnabled": true }   // Severity scores
+}
+```
+
+**PTH and CMB AI-Driven Follow-up Questions (v5.0+):**
+- **PTH Cluster:** Shows ONLY AI-generated follow-up questions (no hardcoded default questions)
+- **CMB Cluster:** Shows AI-generated follow-up questions for each condition
+- **Blocking Behavior:** If AI is unavailable (`aiGenerated: false`), shows blocking message instead of fallback questions
+- **Report Labeling:** Generated report includes `🤖 AI Follow-up Questions:` label with criterion IDs for each question
+- **Criterion Tracking (v5.0.3+):** Each AI question can reference **multiple** criteria via `criterionIds` array
+  - Single criterion: `{ id: "q1", text: "...", criterionIds: ["PTH_1234"] }`
+  - Multiple criteria: `{ id: "q1", text: "How long have you had gastritis?", criterionIds: ["CMB_2391", "CMB_2392"] }`
+  - **AI Intelligence:** Claude can consolidate related criteria into one question (e.g., "gastritis for 2 years" + "gastritis for 23 months" → one duration question)
+  - **Report Display:** Shows all relevant IDs: `"How long have you had gastritis? → 18 months (Criteria: CMB_2391, CMB_2392)"`
+  - **Backward Compatible:** Supports old single `criterionId` format (automatically converted to array)
+- **Prompt Consistency (v5.0.4):** AI prompts now consistently request `criterionIds` array format
+  - Both JSON example and instructions specify plural `criterionIds`
+  - Previous inconsistency (example showed array, instruction said singular) fixed
+  - Ensures reliable criterion ID inclusion in both treatment and condition questions
+- **Comprehensive Criteria Search (v5.0.5):** Enhanced search finds ALL relevant criteria using three-level matching:
+  1. **Drug Name Match:** Direct name/brand name substring matching (e.g., "adalimumab", "Humira")
+  2. **Drug Class Match:** Therapeutic class terms (e.g., for TNF inhibitors: "tnf", "tumor necrosis factor", "anti-tnf", other TNF drugs)
+  3. **Generic Category Match:** Higher-level classification terms:
+     - Biologics: "biologic", "biologic agent", "biological therapy", "monoclonal antibody", "antibody", "mAb"
+     - bDMARDs: "bDMARD", "DMARD", "biologic DMARD"
+     - csDMARDs: "csDMARD", "conventional DMARD", "conventional synthetic DMARD"
+     - Small molecules: "small molecule", "targeted synthetic", "tsDMARD"
+     - Immunosuppressants: "immunosuppressive", "immunosuppressant"
+  - **IL Subtype Expansion:** Automatically expands IL terms (e.g., "IL-17A" → includes "IL-17", "IL17", "interleukin-17")
+  - **Cluster-Scoped Search (v5.0.5):** Treatment follow-ups search ONLY in CLUSTER_PTH (not FLR or CMB)
+  - **Example:** Searching "adalimumab" generates 23 search terms → matches 10 PTH criteria
+  - **Implementation:** `findMatchingCriteria()`, `getGenericSearchTerms()`, `getClassSearchTerms()`, `expandILTerms()` in `FollowUpGenerator.js` and `DrugCategoryResolver.js`
+
+**Future Enhancement:**
+- Parser rewrite will split OR-criteria into separate entries with shared group ID
+- Add `LOGICAL_OPERATOR: "OR"` field support in matcher
+- Enable rule-based evaluation for OR-logic without AI dependency
+
+
+### Weight Criteria with Double-Negatives
+
+**Challenge:** Criteria like "must not weigh < 30kg" or "weighing ≤ 18kg" without slot-filled fields.
+
+**Solution:** Raw text parsing with pattern detection (implemented as of v5.0.1)
+
+**Patterns Detected:**
+```javascript
+// Double-negative pattern (inverted logic)
+"must not weigh < 30kg" → patient MUST weigh ≥ 30kg
+
+// Simple comparison patterns
+"weighing ≤ 18kg" → patient MUST weigh ≤ 18kg
+"weighing ≥ 50kg" → patient MUST weigh ≥ 50kg
+```
+
+**Logic Inversion:**
+For double-negatives in exclusion criteria, the matcher inverts the result:
+- Criterion: "must NOT weigh < 30kg" (exclusion)
+- Semantically means: "minimum weight 30kg" (inclusion-like requirement)
+- Patient 71kg: meets requirement (≥30kg)
+- Inversion: `matches = !meetsRequirement` = false
+- Result: Patient NOT excluded ✅
+
+**Implementation:** See `#parseWeightFromRawText()` in `ClinicalTrialMatcher.js`
+
+
 ### Confidence Scoring
 
 

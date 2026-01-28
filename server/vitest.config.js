@@ -8,5 +8,7 @@ export default defineConfig({
     exclude: ['node_modules', 'data'],
     testTimeout: 10000,
     hookTimeout: 10000,
+    // Run test files sequentially to avoid database contention
+    fileParallelism: false,
   },
 });

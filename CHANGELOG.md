@@ -7,6 +7,290 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.0.7] - 2026-01-27
+
+### 🔧 AI Response Truncation Fix & Dropdown UI
+
+Fixed critical bug where AI-generated treatment questions failed due to response truncation.
+
+### Fixed
+
+- **AI Response Truncation** - Increased `max_tokens` from 1024 to 2048 in ClaudeClient.js
+  - Claude API responses were being cut off mid-JSON, causing parse failures
+  - Symptom: "AI Configuration Required" error despite valid API key
+  - Root cause: Complex JSON responses with slotMapping exceeded 1024 tokens
+
+- **Markdown Code Block Parsing** - Handle responses without closing backticks
+  - Added fallback parsing for `\`\`\`json` blocks that don't close properly
+  - More robust JSON extraction from AI responses
+
+### Changed
+
+- **Radio → Dropdown Conversion** - All follow-up questions now render as dropdowns
+  - Changed `type: 'radio'` to render as `<select>` elements
+  - More space-efficient UI for mobile and compact displays
+  - Backend post-processing ensures no `type: 'text'` questions
+
+### Added
+
+- **TDD Tests for Dropdown Rendering** (4 tests)
+  - `dropdownRendering.test.jsx` - Verifies radio/select types render as dropdowns
+  - Tests for proper option rendering and text input fields
+
+---
+
+## [5.0.6] - 2026-01-27
+
+### 🗄️ Cache Parity & Structured Questions
+
+Enhanced cache management with database persistence for conditions and structured question format with slot mapping.
+
+### Added
+
+- **Cache Parity for Conditions (CMB Cluster)**
+  - `generateConditionFollowUpQuestions()` now stores to SQLite DB cache (matching PTH behavior)
+  - Uses `condition:{conditionType}` prefix to avoid collision with treatment cache
+  - DB cache lookup before generating new questions
+  - Persists across server restarts
+
+- **Version-Based Cache Invalidation**
+  - New `app_version` table in SQLite to track application version
+  - `checkAndInvalidateCache(currentVersion)` function clears all caches when version changes
+  - Ensures stale AI responses are cleared on code updates
+
+- **Structured Questions with Slot Mapping**
+  - `deriveTimingOptions(criteria)` extracts timeframe boundaries from matched criteria
+  - Generates options like "Currently taking", "Stopped within last 12 weeks", etc.
+  - `slotMapping` field maps option labels to slot-filled field values
+  - `postProcessQuestions()` ensures all questions have valid types (no `text` type)
+  - `getDefaultQuestionsWithSlotMapping()` replaces `getDefaultQuestions()`
+
+- **New Test Files**
+  - `server/__tests__/services/FollowUpGenerator.cache.test.js` (7 tests)
+  - `server/__tests__/services/FollowUpGenerator.structured.test.js` (8 tests)
+
+### Changed
+
+- **AI Prompt Updated** to require `slotMapping` in response format
+- **Backend vitest.config.js** - Added `fileParallelism: false` to prevent database contention
+- **Cache prefixes standardized**: `treatment:{drugClass}` and `condition:{conditionType}`
+
+### Fixed
+
+- **Cache inconsistency** - CMB (conditions) cache now persists in DB like PTH (treatments)
+- **Test isolation** - Sequential test file execution prevents SQLite contention
+- **Function name error** - Fixed `getDefaultQuestions is not defined` for unknown drugs
+
+### Results
+
+| Feature | Before | After |
+|---------|--------|-------|
+| CMB Cache Persistence | Memory only | Memory + SQLite DB |
+| PTH Cache Persistence | Memory + SQLite DB | Memory + SQLite DB |
+| Cache Invalidation | Manual only | Automatic on version change |
+| Question Format | `text` type allowed | `select`/`radio` only |
+| Slot Mapping | Not included | Included for all questions |
+
+---
+
+## [5.0.5] - 2026-01-25
+
+### 🔍 Comprehensive Drug Criteria Search
+
+Enhanced drug-to-criteria matching with three-level search terms (drug name, class, and generic category).
+
+### Added
+
+- **`getGenericSearchTerms()` function** (`DrugCategoryResolver.js`)
+  - Returns higher-level classification terms for each drug type
+  - Biologics: "biologic", "biologic agent", "biological therapy", "monoclonal antibody", "antibody", "mAb"
+  - bDMARDs: "bDMARD", "DMARD", "biologic DMARD"
+  - csDMARDs: "csDMARD", "conventional DMARD", "conventional synthetic DMARD"
+  - Small molecules: "small molecule", "targeted synthetic", "tsDMARD"
+  - Immunosuppressants: "immunosuppressive", "immunosuppressant"
+
+- **Unit Tests** (`server/__tests__/services/DrugCategoryResolver.test.js`)
+  - Test: `resolveDrugCategory()` for adalimumab, secukinumab, methotrexate
+  - Test: `getClassSearchTerms()` for TNF, IL-17 inhibitors
+  - Test: `getGenericSearchTerms()` returns correct terms per drug type
+  - Test: Small molecules do NOT include biologic terms
+  - Test: Unknown drugs return empty array
+  - **Total: 12 new tests (all passing)**
+
+### Changed
+
+- **`findMatchingCriteria()` in `FollowUpGenerator.js`**
+  - Now uses all three search term levels: name + class + generic
+  - Deduplicates search terms with `[...new Set()]`
+  - Logs term count for debugging (e.g., "23 terms" for adalimumab)
+
+### Fixed
+
+- **Cluster-Scoped Search** - Treatment follow-ups now ONLY search CLUSTER_PTH (not FLR or CMB)
+
+### Results
+
+| Drug | Search Terms | Matched Criteria |
+|------|--------------|-----------------|
+| adalimumab | 23 | 10 (PTH_005, PTH_009, PTH_012, PTH_013, PTH_019, PTH_020, PTH_021, PTH_025, PTH_027, PTH_030) |
+| methotrexate | 9 | 3 (PTH_013, PTH_017, PTH_029) |
+| IL-17A inhibitor | 6 | 2 |
+
+### Verified
+
+- ✅ All 75 backend tests passing
+- ✅ All 345 frontend tests passing
+- ✅ TDD workflow followed: tests failed first, then implemented
+- ✅ Documentation updated (lesson learned, architecture guide)
+
+---
+
+## [5.0.4] - 2026-01-25
+
+### 🔧 Fixed Treatment Criterion IDs Prompt
+
+**Issue**: AI prompt inconsistency prevented criterion IDs from being reliably included in treatment follow-up questions.
+
+### Fixed
+
+- **Prompt Inconsistency in `FollowUpGenerator.js`** (line 169)
+  - **Before**: JSON example showed `criterionIds` array but instruction said `criterionId` (singular)
+  - **After**: Both example and instruction now consistently request `criterionIds` array
+  - **Impact**: Claude AI now correctly includes `criterionIds: ["PTH_XXXX", "PTH_YYYY"]` in treatment questions
+
+### Added
+
+- **Integration Tests** (`server/__tests__/services/FollowUpGenerator.treatmentCriteria.test.js`)
+  - Test: Database loading from CLUSTER_PTH
+  - Test: Criteria filtering by TREATMENT_TYPE/TREATMENT_PATTERN
+  - Test: criterionIds in AI responses
+  - Test: Criteria context in AI prompts
+  - Test: aiGenerated:false blocking behavior
+  - **Total: 5 new tests (all passing)**
+
+### Technical Details
+
+**Root Cause**: Mixed messaging in AI prompt
+```javascript
+// Line 163: Shows array format
+"criterionIds": ["PTH_XXXX", "PTH_YYYY"]
+
+// Line 169: Asked for singular (INCONSISTENT!)
+"include the 'criterionId' field"
+```
+
+**Solution**: Updated instruction to match example format
+```javascript
+"include the 'criterionIds' field as an array with ALL relevant criterion IDs"
+```
+
+### Verified
+
+- ✅ All 404 tests passing (59 backend + 345 frontend)
+- ✅ Database loading logic confirmed working (loads 7 criteria for adalimumab)
+- ✅ Prompt now consistently requests array format
+- ✅ Backward compatibility preserved (normalization in ClaudeClient)
+
+### Notes
+
+- **Discovery**: Database loading was ALREADY implemented correctly
+- **Issue**: Only prompt wording was inconsistent, causing AI confusion
+- **Impact**: Treatment questions should now include criterion IDs like conditions already do
+
+---
+
+## [5.0.3] - 2026-01-25
+
+### 🎯 Enhanced AI Follow-Up Questions
+
+AI-generated follow-up questions now support referencing **multiple related criteria** with a single question.
+
+### Added
+
+- **Multiple Criterion IDs Support** (Backend + Frontend)
+  - `ClaudeClient.js`: Normalizes `criterionId` to `criterionIds` array automatically
+  - `FollowUpGenerator.js`: AI prompts request `criterionIds` array for each question
+  - `App.jsx`: Report displays multiple IDs as "Criteria: ID1, ID2, ID3"
+  - Backward compatible with old single-ID format
+
+- **Integration Tests** (`src/__tests__/integration/multipleCriterionIds.test.jsx`)
+  - Test: Multiple IDs in CMB cluster (conditions)
+  - Test: Multiple IDs in PTH cluster (treatments)
+  - Test: Backward compatibility with old format
+  - Test: Graceful handling of missing IDs
+  - **Total: 4 new tests**
+
+### Changed
+
+- AI can now consolidate related criteria intelligently
+  - Example: "gastritis for 2 years" + "gastritis for 23 months" → ONE question: "How long have you had gastritis?"
+  - Question labeled with BOTH criterion IDs: `(Criteria: CMB_2391, CMB_2392)`
+
+### Verified
+
+- ✅ All 345 tests passing (341 existing + 4 new)
+- ✅ Backend normalization handles both old and new formats
+- ✅ Frontend report generation supports arrays
+- ✅ No breaking changes to existing functionality
+
+---
+
+## [5.0.2] - 2026-01-25
+
+### 🔴 Critical Fixes + Enhanced Matching
+
+Investigation and fix of clinical trial evaluation anomalies based on code simulation analysis.
+
+### Added
+
+- **Double-Negative Weight Parsing** (`ClinicalTrialMatcher.js`)
+  - New `#parseWeightFromRawText()` method to parse criteria without slot-filled fields
+  - Pattern detection: "must not weigh < X kg", "weighing ≤ X kg", "weighing ≥ X kg"
+  - Logic inversion for double-negatives in exclusion criteria
+  - Fixes BMI_1916 (NCT06979453) and NCT04772079 weight criteria bugs
+
+- **Enhanced Synonym Matching** (`utils/array.js`, `medical-synonyms.json`)
+  - Partial matching support in `arraysOverlap()` for compound medical terms
+  - Substring matching and word-level matching (>3 chars)
+  - New cancer-related synonyms: "malignant tumors", "breast cancer", "lung cancer", etc.
+  - Fixes cancer exclusion matching (Issues 2e/4: NCT07150988)
+
+- **Improved Report Formatting** (`App.jsx`)
+  - Criterion IDs now displayed in all report sections
+  - Criterion types shown (Inclusion/Exclusion/Mandatory Exclusion)
+  - Updated 3 sections: non-exact matches, flagged criteria, failed/matched criteria
+  - Better traceability and debugging
+
+- **Documentation Updates** (`ARCHITECTURE_AND_MATCHING_GUIDE.md`)
+  - New section: "Complex Criteria Handling" with OR-logic documentation
+  - New section: "Weight Criteria with Double-Negatives"
+  - Documented AI fallback behavior for OR-logic criteria
+
+- **Investigation Documentation** (7 files)
+  - Complete investigation package with factual code simulation
+  - Implementation plan and analysis documents
+
+### Fixed
+
+- **Issue 2a:** 71kg patients incorrectly excluded by "must not weigh < 30kg" criteria
+- **Issue 2e/4:** "breast cancer" now properly matches "malignant tumors" exclusion criteria
+- **Issue 1:** Reports missing criterion IDs and types
+
+### Changed
+
+- `arraysOverlap()` signature: 3rd parameter can now be boolean `true` for partial matching
+- `#evaluateComorbidity()` now uses partial matching for condition arrays
+- `medical-synonyms.json` version bumped to 1.0.1
+
+### Verified
+
+- Investigation based on actual code simulation (no mocks)
+- 7 issues analyzed with factual outputs
+- 3 critical/high priority issues fixed
+- 3 issues confirmed working correctly
+
+---
+
 ## [5.0.1] - 2026-01-20
 
 ### 🔧 Cache Key Collision Fix
