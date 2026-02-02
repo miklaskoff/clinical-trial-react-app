@@ -331,6 +331,7 @@ router.post('/upload', async (req, res) => {
     });
     
     res.json({
+      success: true,
       jobId,
       criteriaCount: criteria.length,
       alreadyParsed,

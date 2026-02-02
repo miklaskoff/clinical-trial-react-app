@@ -145,10 +145,12 @@ export default function ParserPage() {
         
         const data = await response.json();
         
-        if (data.success) {
-          setUploadData(data);
+        if (!response.ok) {
+          setError(data.error || `Upload failed: ${response.status}`);
+        } else if (data.error) {
+          setError(data.error);
         } else {
-          setError(data.error || 'Upload failed');
+          setUploadData(data);
         }
       } catch (err) {
         setError(`Failed to parse JSON file: ${err.message}`);
