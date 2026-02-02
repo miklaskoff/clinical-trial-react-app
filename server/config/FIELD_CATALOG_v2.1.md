@@ -1409,6 +1409,8 @@ Output:
       "treatment": "TNF inhibitor",           // String: treatment name or category
       "treatment_class": "biologic",          // String: drug class
       "response": "failed",                   // String: response status
+      "indication": "psoriasis",              // String: what condition was treated (v2.2)
+      "route": "intravenous",                 // String: administration route (optional)
       "duration": {                           // Object: treatment duration (optional)
         "amount": 12,
         "unit": "weeks"
@@ -1425,6 +1427,26 @@ Output:
   ]
 }
 ```
+
+**⚠️ VALID TREATMENT_HISTORY SUBFIELDS (v2.2):**
+
+| Subfield | Type | Description |
+|----------|------|-------------|
+| `treatment` | string | Treatment name or category (required) |
+| `treatment_class` | string | Drug class (biologic, conventional, etc.) |
+| `response` | string | Response status (failed, naive, etc.) |
+| `indication` | string | What condition was treated |
+| `route` | string | Administration route (oral, IV, etc.) |
+| `dose` | string | Dosage information |
+| `frequency` | string | How often administered |
+| `duration` | object | How long treatment lasted |
+| `timing` | object | When treatment occurred (TIMEFRAME structure) |
+| `count` | number | Minimum number of treatments |
+| `requires_hospitalization` | boolean | Whether hospitalization was required |
+| `confidence` | number | Parsing confidence |
+| `unfamiliar_term_flag` | boolean | Term not in reference lists |
+
+**❌ FORBIDDEN - Do NOT invent new subfields**
 
 **Reference List:** See `treatment_classes` in reference_lists.json
 

@@ -28,6 +28,7 @@
     "route",
     "dose",
     "frequency",
+    "indication",
     "unfamiliar_term_flag"
   ],
   
