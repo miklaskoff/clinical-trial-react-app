@@ -138,8 +138,8 @@ export default function ParserPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            clusterType: detectClusterType(jsonData),
-            criteria: jsonData.criteria || jsonData
+            data: jsonData,
+            filename: file.name
           })
         });
         
