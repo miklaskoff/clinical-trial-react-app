@@ -1,5 +1,82 @@
 # Lessons Learned
 
+## 2026-02-02: LLM Invents Ad-Hoc Fields Not Defined in Schema
+
+### Problem
+User discovered that the LLM parser was inventing field names and types that weren't defined in FIELD_CATALOG or output-schemas.json.
+
+### Symptoms
+- `NESTED_CONDITION.nested_items[].type` contained invented values like `infection_category`, `requirement`
+- Parser output had no validation against a whitelist of allowed values
+- Tests passed but parser was silently creating non-standard data
+- No way to detect invented fields until manual inspection
+
+### Root Cause
+**No schema enforcement for nested structure types.** The FIELD_CATALOG defined the structure of `NESTED_CONDITION` but didn't explicitly list valid `nested_items.type` values. The LLM filled in types that "made sense" contextually but weren't standardized:
+- `infection_category` — invented instead of using `CONDITION_TYPE`
+- `requirement` — invented instead of using `TREATMENT_REQUIREMENT`
+
+### Discovery Process
+1. User asked about `infection_category` field in parsed output
+2. Checked FIELD_CATALOG — not defined anywhere
+3. Created audit script to scan ALL parsed output for ad-hoc fields
+4. Found 2 ad-hoc nested types across 30 AIC criteria
+
+### Solution
+**Implemented Ad-Hoc Field Prevention System (Iteration 2.3):**
+
+1. **Added whitelists to schemas:**
+   ```json
+   // output-schemas.json
+   "validNestedItemTypes": [
+     "CONDITION_TYPE", "ANATOMICAL_LOCATION", "SEVERITY",
+     "TIMEFRAME", "TREATMENT_HISTORY", "CONDITION_PATTERN",
+     "MEASUREMENT", "TREATMENT_REQUIREMENT", "EXCEPTION"
+   ]
+   ```
+
+2. **Added detection functions:**
+   - `detectAdhocFields()` — comprehensive ad-hoc detection
+   - `validateNestedItemsTypes()` — validates nested_items.type
+   - `validateTreatmentHistorySubfields()` — validates TREATMENT_HISTORY
+   - `validateNegationDetectedStructure()` — validates NEGATION_DETECTED
+
+3. **Updated FIELD_CATALOG with valid types table:**
+   ```markdown
+   | Type | Description |
+   |------|-------------|
+   | `CONDITION_TYPE` | Disease or medical condition |
+   | `TREATMENT_REQUIREMENT` | Treatment requirement |
+   ...
+   
+   **❌ FORBIDDEN - Do NOT invent new types**
+   ```
+
+4. **Added 16 tests** for ad-hoc field detection
+
+### Lesson
+- **LLMs will invent plausible-sounding fields** — They fill gaps creatively
+- **Whitelists are MANDATORY** — Every nested structure type must be explicitly listed
+- **Validation must run on EVERY parse** — Not just manual spot-checks
+- **Audit existing output** — Ad-hoc fields may already be in parsed data
+- **Document forbidden patterns** — Tell LLM what NOT to do, not just what to do
+
+### Prevention Checklist
+- [ ] Every nested structure type has explicit whitelist
+- [ ] Validator checks ALL fields against schema, not just required ones
+- [ ] FIELD_CATALOG includes "FORBIDDEN" section for each complex field
+- [ ] Integration tests validate real parser output, not just mocks
+- [ ] Audit script runs periodically on parsed output files
+
+### Files Changed
+- `server/config/output-schemas.json` — Added validNestedItemTypes, etc.
+- `server/config/output-validator.js` — Added 6 detection functions
+- `server/config/reference-lists.json` — Added valid_* arrays
+- `server/config/FIELD_CATALOG_v2.1.md` — Added valid types tables
+- `server/__tests__/config/output-validator.adhoc.test.js` — 16 new tests
+
+---
+
 ## 2026-02-02: VS Code Terminal Kills Long-Running Processes (Parser Crash)
 
 ### Problem
