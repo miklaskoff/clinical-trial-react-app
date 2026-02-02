@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import ClinicalTrialEligibilityQuestionnaire from '../ClinicalTrialEligibilityQuestionnaire';
 import DrugReviewDashboard from './Admin/DrugReviewDashboard.jsx';
+import ParserPage from './Parser/ParserPage.jsx';
 import './App.css';
 
 /**
@@ -329,6 +330,7 @@ function App() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdminRoute, setIsAdminRoute] = useState(false);
+  const [isParserRoute, setIsParserRoute] = useState(false);
   
   // API key status for header indicator
   const [apiKeyStatus, setApiKeyStatus] = useState('unknown'); // 'unknown' | 'configured' | 'not-configured' | 'backend-offline'
@@ -340,11 +342,12 @@ function App() {
     ignore: 0.3,   // Low confidence = ignore match
   });
 
-  // Check if we're on admin route
+  // Check if we're on admin or parser route
   useEffect(() => {
     const checkRoute = () => {
       const path = window.location.pathname;
       setIsAdminRoute(path === '/admin' || path === '/admin/');
+      setIsParserRoute(path === '/parser' || path === '/parser/');
     };
     checkRoute();
     window.addEventListener('popstate', checkRoute);
@@ -552,6 +555,27 @@ function App() {
         </main>
         <footer className="app-footer">
           <p>Clinical Trial Matching System v4.0 - Admin Dashboard</p>
+        </footer>
+      </div>
+    );
+  }
+
+  // Render parser testing UI if on /parser route
+  if (isParserRoute) {
+    return (
+      <div className="app">
+        <header className="app-header">
+          <h1>Clinical Trial Matching System</h1>
+          <nav className="app-nav">
+            <a href="/" className="nav-link">← Back to Main App</a>
+            <a href="/admin" className="nav-link">Admin Dashboard</a>
+          </nav>
+        </header>
+        <main className="app-main">
+          <ParserPage />
+        </main>
+        <footer className="app-footer">
+          <p>Clinical Trial Matching System v4.0 - Parser Testing UI</p>
         </footer>
       </div>
     );

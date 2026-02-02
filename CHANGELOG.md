@@ -7,6 +7,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.2.0] - 2026-02-02
+
+### 🧪 Parser Testing UI — Full Implementation
+
+Added a complete Parser Testing UI for collaborative criteria parsing testing with model selection, cost estimation, pause/resume capability, and job history tracking.
+
+### Added
+
+- **Parser Testing UI** (`/parser` route)
+  - File upload with drag-and-drop support for JSON criteria files
+  - Model selection: Claude Opus 4, Sonnet 4, Haiku 3.5
+  - Real-time cost and time estimation before parsing
+  - Start/Pause/Resume job controls
+  - Live progress tracking with percentage and cost display
+  - Results table with parsed criteria and validation status
+  - "Skip already parsed" with force-reparse option
+  - Budget limit enforcement
+  - Job history with clickable entries
+  - API usage balance display
+
+- **Backend Parser Routes** (`server/routes/parser.js`)
+  - `GET /api/parser/version` — Parser version info
+  - `POST /api/parser/upload` — Upload and analyze criteria JSON
+  - `POST /api/parser/job/start` — Start parsing job
+  - `POST /api/parser/job/pause` — Pause active job
+  - `POST /api/parser/job/resume` — Resume paused job
+  - `GET /api/parser/job/:jobId/status` — Get job progress
+  - `GET /api/parser/job/:jobId/results` — Get parsed results
+  - `GET /api/parser/history` — Get all job history
+  - `GET /api/parser/balance` — Get API usage balance
+  - `POST /api/parser/estimate` — Calculate cost estimate
+  - `DELETE /api/parser/cache/:criterionId` — Clear criterion cache
+
+- **Database Tables** (SQLite)
+  - `parser_jobs` — Job metadata, status, progress, costs
+  - `parsed_criteria` — Individual parsed criterion results
+  - `api_usage` — Token and cost tracking per API call
+
+- **Parser Version Config** (`server/config/parser-version.js`)
+  - `PARSER_VERSION = '2.2.0'`
+  - `MODEL_PRICING` — Per-model token costs with cache read/write rates
+  - `calculateCostEstimate()` — Pre-parsing cost calculation
+  - `calculateActualCost()` — Post-parsing cost tracking
+
+- **Frontend Tests** (`ParserPage.test.jsx`)
+  - 28 unit/integration tests covering all UI functionality
+  - TDD approach: tests written before implementation
+
+- **Backend Tests** (`parser.test.js`)
+  - 24 API route tests covering all endpoints
+  - Upload, job lifecycle, history, balance, caching tests
+
+- **E2E Tests** (`e2e/parser.spec.js`)
+  - 20 Playwright end-to-end tests
+  - Navigation, file upload, model selection, workflow integration
+
+### Changed
+
+- **App.jsx** — Added `/parser` route with navigation
+- **Navigation** — Parser page includes links to main app and admin dashboard
+
+### Technical Details
+
+| Feature | Implementation |
+|---------|---------------|
+| File Upload | FileReader API (JSDOM compatible) |
+| Job State | In-memory `activeJobs` Map with pause support |
+| Polling | 2-second interval for running jobs |
+| Cost Model | Per-model rates from Anthropic pricing |
+| Cache | SQLite-based criterion-level caching |
+| UUID | `uuid` package for job IDs |
+
+### Test Summary
+
+| Test Type | Count | Status |
+|-----------|-------|--------|
+| Frontend Unit | 391 | ✅ Pass |
+| Backend Unit | 240 | ✅ Pass |
+| E2E (Playwright) | 9/20 | ⚠️ Partial |
+
+---
+
 ## [5.1.2] - 2026-02-02
 
 ### 🔀 Semicolon Branch Separation & Timeframe Scope Rules — Iteration 2.4
