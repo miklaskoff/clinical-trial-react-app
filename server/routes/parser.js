@@ -263,11 +263,19 @@ router.post('/upload', async (req, res) => {
     }
     
     // Extract criteria from data (supports both 'members' and 'criteria' arrays)
-    const criteria = data.members || data.criteria || [];
+    const rawCriteria = data.members || data.criteria || [];
     
-    if (!Array.isArray(criteria) || criteria.length === 0) {
+    if (!Array.isArray(rawCriteria) || rawCriteria.length === 0) {
       return res.status(400).json({ error: 'No criteria found in uploaded data' });
     }
+    
+    // Normalize criteria field names (some exports use 'text' instead of 'raw_text')
+    const criteria = rawCriteria.map(c => ({
+      ...c,
+      id: c.id || c.criterion_id,
+      raw_text: c.raw_text || c.text,
+      nct_id: c.nct_id || c.nctId
+    }));
     
     // Extract cluster type
     const clusterType = (data.cluster || '').replace('CLUSTER_', '');

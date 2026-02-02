@@ -317,12 +317,44 @@ export default function ParserPage() {
       const response = await fetch(`${API_BASE}/job/${jobId}/results`);
       const data = await response.json();
       
-      if (data.success) {
+      if (response.ok && !data.error) {
         setResults(data.results || []);
       }
     } catch (err) {
       console.error('Failed to fetch results:', err);
     }
+  };
+
+  // Download results as JSON
+  const handleDownloadResults = () => {
+    if (results.length === 0) {
+      return;
+    }
+    
+    const exportData = {
+      jobId,
+      parserVersion: parserVersion,
+      exportedAt: new Date().toISOString(),
+      criteriaCount: results.length,
+      results: results.map(r => ({
+        criterionId: r.criterionId,
+        nctId: r.nctId,
+        clusterType: r.clusterType,
+        parsedOutput: r.parsedOutput,
+        validationStatus: r.validationStatus,
+        parsedAt: r.parsedAt
+      }))
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `parsed-results-${jobId.substring(0, 8)}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // API: Fetch history
@@ -537,6 +569,15 @@ export default function ParserPage() {
       {results.length > 0 && (
         <section className="parser-section results-section">
           <h2>Results</h2>
+          <div className="results-header">
+            <span>{results.length} criteria parsed</span>
+            <button
+              className="btn btn-secondary"
+              onClick={handleDownloadResults}
+            >
+              📥 Download JSON
+            </button>
+          </div>
           <table className="results-table">
             <thead>
               <tr>
