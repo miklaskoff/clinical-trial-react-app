@@ -36,6 +36,7 @@ describe('Parser Testing UI', () => {
           ok: true,
           json: async () => ({
             success: true,
+            jobId: mockJobId,
             clusterType: 'CLUSTER_PTH',
             criteriaCount: 30,
             alreadyParsed: 10,

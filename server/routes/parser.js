@@ -351,7 +351,7 @@ router.post('/upload', async (req, res) => {
  */
 router.post('/job/start', async (req, res) => {
   try {
-    const { jobId, model, count, forceReparse } = req.body;
+    const { jobId, model, count, parseLimit, forceReparse } = req.body;
     
     if (!jobId) {
       return res.status(400).json({ error: 'Missing jobId' });
@@ -383,11 +383,11 @@ router.post('/job/start', async (req, res) => {
       }
     }
     
-    // Update job status
+    // Update job status (parseLimit takes precedence over count)
     job.status = 'running';
     job.model = model || 'claude-sonnet-4-5-20250929';
     job.forceReparse = forceReparse || false;
-    job.maxCount = count || job.criteria.length;
+    job.maxCount = parseLimit || count || job.criteria.length;
     job.shouldPause = false;
     
     // Update database

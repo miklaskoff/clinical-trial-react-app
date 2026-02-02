@@ -52,6 +52,7 @@ export default function ParserPage() {
   // State: Options
   const [forceReparse, setForceReparse] = useState(false);
   const [budgetLimit, setBudgetLimit] = useState('');
+  const [parseLimit, setParseLimit] = useState('');
   
   // State: History
   const [history, setHistory] = useState([]);
@@ -194,7 +195,7 @@ export default function ParserPage() {
 
   // API: Start parsing job
   const handleStartParsing = async () => {
-    if (!uploadData) {
+    if (!uploadData || !uploadData.jobId) {
       return;
     }
     
@@ -206,22 +207,24 @@ export default function ParserPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clusterType: uploadData.clusterType,
-          criteria: uploadData.criteria,
+          jobId: uploadData.jobId,
           model: selectedModel,
           forceReparse,
-          budgetLimit: budgetLimit ? parseFloat(budgetLimit) : undefined
+          budgetLimit: budgetLimit ? parseFloat(budgetLimit) : undefined,
+          parseLimit: parseLimit ? parseInt(parseLimit, 10) : undefined
         })
       });
       
       const data = await response.json();
       
-      if (data.success) {
-        setJobId(data.jobId);
-        setJobStatus('running');
-        setProgress({ parsed: 0, total: data.totalCriteria, percentage: 0 });
+      if (!response.ok) {
+        setError(data.error || `Failed to start: ${response.status}`);
+      } else if (data.error) {
+        setError(data.error);
       } else {
-        setError(data.error || 'Failed to start parsing');
+        setJobId(data.jobId || uploadData.jobId);
+        setJobStatus('running');
+        setProgress({ parsed: 0, total: uploadData.needsParsing, percentage: 0 });
       }
     } catch (err) {
       setError(`Failed to start parsing: ${err.message}`);
@@ -435,6 +438,19 @@ export default function ParserPage() {
             placeholder="No limit"
             min="0"
             step="0.01"
+          />
+        </div>
+
+        <div className="config-row">
+          <label htmlFor="parse-limit">Parse Limit (criteria count)</label>
+          <input
+            type="number"
+            id="parse-limit"
+            value={parseLimit}
+            onChange={(e) => setParseLimit(e.target.value)}
+            placeholder={uploadData ? `All ${uploadData.needsParsing}` : 'No limit'}
+            min="1"
+            max={uploadData?.needsParsing || undefined}
           />
         </div>
 
