@@ -105,14 +105,14 @@ describe('Parser Testing UI', () => {
         return Promise.resolve({
           ok: true,
           json: async () => ({
-            success: true,
             status: 'running',
-            progress: {
-              parsed: 5,
-              total: 20,
-              percentage: 25
-            },
-            cost: 0.05
+            total: 20,
+            fullTotal: 30,
+            parsed: 5,
+            skipped: 0,
+            clusterType: 'CLUSTER_PTH',
+            currentCriterion: 'PTH_005',
+            actualCost: 0.05
           })
         });
       }

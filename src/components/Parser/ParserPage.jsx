@@ -222,9 +222,10 @@ export default function ParserPage() {
       } else if (data.error) {
         setError(data.error);
       } else {
+        const effectiveTotal = parseLimit ? Math.min(parseInt(parseLimit, 10), uploadData.needsParsing) : uploadData.needsParsing;
         setJobId(data.jobId || uploadData.jobId);
         setJobStatus('running');
-        setProgress({ parsed: 0, total: uploadData.needsParsing, percentage: 0 });
+        setProgress({ parsed: 0, total: effectiveTotal, percentage: 0 });
       }
     } catch (err) {
       setError(`Failed to start parsing: ${err.message}`);
@@ -287,14 +288,18 @@ export default function ParserPage() {
       const response = await fetch(`${API_BASE}/job/${jobId}/status`);
       const data = await response.json();
       
-      if (data.success) {
+      if (response.ok && !data.error) {
         setJobStatus(data.status);
-        setProgress(data.progress);
-        setCurrentCost(data.cost || 0);
+        const total = data.total || 0;
+        const parsed = data.parsed || 0;
+        const percentage = total > 0 ? Math.round((parsed / total) * 100) : 0;
+        setProgress({ parsed, total, percentage });
+        setCurrentCost(data.actualCost || 0);
         
         if (data.status === 'completed' || data.status === 'failed') {
           fetchHistory();
           fetchBalance();
+          fetchJobResults();
         }
       }
     } catch (err) {

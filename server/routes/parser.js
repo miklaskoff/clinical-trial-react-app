@@ -520,9 +520,11 @@ router.get('/job/:jobId/status', async (req, res) => {
     // Check in-memory first
     const job = activeJobs.get(jobId);
     if (job) {
+      const effectiveTotal = job.maxCount || job.criteria.length;
       return res.json({
         status: job.status,
-        total: job.criteria.length,
+        total: effectiveTotal,
+        fullTotal: job.criteria.length,
         parsed: job.parsedCount,
         skipped: job.skippedCount,
         clusterType: job.clusterType,
@@ -711,15 +713,29 @@ router.delete('/cache/:criterionId', async (req, res) => {
  */
 async function parseJobInBackground(jobId) {
   const job = activeJobs.get(jobId);
-  if (!job) return;
+  if (!job) {
+    console.log(`[Parser] Job ${jobId} not found`);
+    return;
+  }
+  
+  console.log(`[Parser] Starting job ${jobId}, maxCount=${job.maxCount}, criteria=${job.criteria.length}`);
   
   const db = getDatabase();
   const parser = getParser();
   const claudeClient = getClaudeClient();
   await claudeClient.initFromDatabase();
   
+  if (!claudeClient.isConfigured()) {
+    console.log(`[Parser] Claude API not configured`);
+    job.status = 'failed';
+    job.error = 'API key not configured';
+    return;
+  }
+  
   const startIndex = job.parsedCount || 0;
   const maxIndex = Math.min(startIndex + (job.maxCount || job.criteria.length), job.criteria.length);
+  
+  console.log(`[Parser] Will parse from index ${startIndex} to ${maxIndex}`);
   
   for (let i = startIndex; i < maxIndex; i++) {
     // Check if should pause
@@ -745,15 +761,18 @@ async function parseJobInBackground(jobId) {
       );
       
       if (existing && existing.parserVersion === PARSER_VERSION) {
+        console.log(`[Parser] Skipping ${criterion.id} - already parsed`);
         job.skippedCount++;
         continue;
       }
     }
     
     try {
+      console.log(`[Parser] Parsing criterion ${i + 1}/${maxIndex}: ${criterion.id}`);
       // Parse the criterion
       const rawResult = await parser.parseCriterion(criterion, job.clusterType);
       const validation = validateCriterion(rawResult, job.clusterType);
+      console.log(`[Parser] Parsed ${criterion.id}, valid=${validation.errors.length === 0}`);
       
       // Calculate cost (mock for now - would come from actual API response)
       const costUsd = 0.008;  // Approximate cost per criterion
