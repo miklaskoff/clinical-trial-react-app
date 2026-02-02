@@ -150,9 +150,9 @@ describe('Parser Testing UI', () => {
         return Promise.resolve({
           ok: true,
           json: async () => ({
-            success: true,
-            totalSpent: 1.25,
-            lastUpdated: new Date().toISOString()
+            usedAmount: 1.25,
+            budgetLimit: 100,
+            remaining: 98.75
           })
         });
       }

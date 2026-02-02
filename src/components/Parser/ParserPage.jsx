@@ -185,7 +185,7 @@ export default function ParserPage() {
       });
       
       const data = await response.json();
-      if (data.success) {
+      if (response.ok && !data.error) {
         setEstimate(data);
       }
     } catch (err) {
@@ -248,7 +248,7 @@ export default function ParserPage() {
       });
       
       const data = await response.json();
-      if (data.success) {
+      if (response.ok && !data.error) {
         setJobStatus('paused');
       }
     } catch (err) {
@@ -270,7 +270,7 @@ export default function ParserPage() {
       });
       
       const data = await response.json();
-      if (data.success) {
+      if (response.ok && !data.error) {
         setJobStatus('running');
       }
     } catch (err) {
@@ -363,7 +363,7 @@ export default function ParserPage() {
       const response = await fetch(`${API_BASE}/history`);
       const data = await response.json();
       
-      if (data.success) {
+      if (response.ok && !data.error) {
         setHistory(data.jobs || []);
       }
     } catch (err) {
@@ -377,8 +377,8 @@ export default function ParserPage() {
       const response = await fetch(`${API_BASE}/balance`);
       const data = await response.json();
       
-      if (data.success) {
-        setBalance(data);
+      if (response.ok && !data.error) {
+        setBalance({ totalSpent: data.usedAmount || 0 });
       }
     } catch (err) {
       console.error('Failed to fetch balance:', err);
