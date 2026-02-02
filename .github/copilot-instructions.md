@@ -1,5 +1,24 @@
 # Copilot Instructions — Clinical Trial Matching System
 
+## ⛔ EXECUTE ALL INSTRUCTIONS — КРИТИЧЕСКИ ВАЖНО
+
+**Правило #0: Выполняй ВСЕ инструкции по пунктам**
+
+1. **ПЕРЕД началом работы** — прочитай ВСЕ релевантные инструкции
+2. **ВО ВРЕМЯ работы** — сверяйся с чеклистами
+3. **ПОСЛЕ завершения** — проверь ДВАЖДЫ: все ли пункты выполнены?
+4. **НЕ говори "готово"** — пока не убедился что ВСЕ пункты отмечены ✅
+
+**Запрещено:**
+- ❌ Пропускать "неудобные" или "медленные" пункты
+- ❌ Выполнять только часть чеклиста
+- ❌ Говорить "готово" без двойной проверки
+- ❌ Cherry-picking — выбирать только легкие пункты
+
+**Если пункт не выполнен — НЕ ПРОДОЛЖАЙ. Сначала выполни.**
+
+---
+
 ## 📋 CUSTOM COMMANDS — Используй в чате
 
 Полная документация команд: `.vscode/copilot-commands.md`
@@ -477,6 +496,37 @@ const drugs = await db.getAllAsync('SELECT * FROM approved_drugs');
 const cache = await db.getAsync('SELECT * FROM followup_cache WHERE drug_class = ?', [drugClass]);
 ```
 
+### Anthropic Prompt Caching — Cost Optimization (v5.1)
+
+```javascript
+// ✅ CORRECT - with cache_control for large system prompts
+const response = await client.messages.create({
+  model,
+  max_tokens,
+  system: [{
+    type: 'text',
+    text: largeSystemPrompt,  // e.g., 75KB FIELD_CATALOG
+    cache_control: { type: 'ephemeral' }  // 5-min cache TTL
+  }],
+  messages
+});
+
+// ❌ WRONG - no caching for repeated large prompts
+const response = await client.messages.create({
+  model,
+  max_tokens,
+  system: largeSystemPrompt,  // Re-sent every call, no caching
+  messages
+});
+```
+
+**When to use prompt caching:**
+- System prompt >1000 tokens
+- Batch operations with same system prompt
+- Repeated API calls within 5 minutes
+
+**Savings:** ~70% on input tokens for cached prompts
+
 ---
 
 ## Project Overview
@@ -485,7 +535,7 @@ const cache = await db.getAsync('SELECT * FROM followup_cache WHERE drug_class =
 **Type**: Full-Stack Web Application (React + Express Backend)  
 **Purpose**: Match patients with clinical trials using hybrid AI + rule-based matching  
 **Tech Stack**: React 19, Node.js/Express, SQLite, Anthropic Claude API, Vitest  
-**Version**: 5.0 (Full Backend Integration)
+**Version**: 5.1 (Parser Infrastructure Iteration 2.2)
 
 ---
 
@@ -498,15 +548,19 @@ clinical-trial-react-app/
 ├── server/                          # EXPRESS BACKEND
 │   ├── index.js                     # Entry point
 │   ├── db.js                        # SQLite setup + schema
+│   ├── parse-utils.js               # Disease folder organization (v5.1)
 │   ├── .env                         # ANTHROPIC_API_KEY, ADMIN_PASSWORD
 │   ├── routes/
 │   │   ├── match.js                 # /api/match
 │   │   ├── followups.js             # /api/followups/generate
 │   │   └── admin.js                 # /api/admin/*
 │   ├── services/
-│   │   ├── ClaudeClient.js          # Anthropic SDK wrapper
+│   │   ├── ClaudeClient.js          # Anthropic SDK wrapper + prompt cache
 │   │   ├── FollowUpGenerator.js     # AI question generation
 │   │   └── DrugCategoryResolver.js  # Drug → category mapping
+│   ├── config/
+│   │   ├── output-validator.js      # Consistency validation (v5.1)
+│   │   └── FIELD_CATALOG.md         # Slot-filled field definitions
 │   ├── middleware/
 │   │   └── rateLimiter.js           # Rate limiting
 │   ├── data/

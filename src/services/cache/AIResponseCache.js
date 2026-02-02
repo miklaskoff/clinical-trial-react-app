@@ -122,7 +122,7 @@ export class AIResponseCache {
     const key = generateCacheKey(patientTerm, criterionTerm, context);
     const entry = this.#cache.get(key);
     
-    if (!entry) return false;
+    if (!entry) {return false;}
     if (Date.now() > entry.expiresAt) {
       this.#cache.delete(key);
       return false;
@@ -183,10 +183,10 @@ export class AIResponseCache {
    */
   #loadFromStorage() {
     try {
-      if (typeof localStorage === 'undefined') return;
+      if (typeof localStorage === 'undefined') {return;}
       
       const stored = localStorage.getItem(this.#storageKey);
-      if (!stored) return;
+      if (!stored) {return;}
 
       const data = JSON.parse(stored);
       const now = Date.now();
@@ -207,7 +207,7 @@ export class AIResponseCache {
    */
   #saveToStorage() {
     try {
-      if (typeof localStorage === 'undefined') return;
+      if (typeof localStorage === 'undefined') {return;}
       
       const data = Object.fromEntries(this.#cache.entries());
       localStorage.setItem(this.#storageKey, JSON.stringify(data));

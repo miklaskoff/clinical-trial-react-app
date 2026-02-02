@@ -1,5 +1,151 @@
 # Lessons Learned
 
+## 2026-02-02: @check Command Ignored — Cherry-Picking Checklist Items
+
+### Problem
+After completing Iteration 2.2 implementation, user ran `@check` command. Agent only ran tests (1 item) and skipped the other 6 checklist items.
+
+### What Happened
+```markdown
+## @check — Verify before finalizing:
+
+1. [ ] Documentation updated (CHANGELOG.md, README.md)     ← SKIPPED
+2. [ ] Copilot instructions followed                       ← SKIPPED
+3. [ ] Lessons learned applied                             ← SKIPPED
+4. [ ] Code commented appropriately                        ← SKIPPED
+5. [x] All tests pass (`npm test`)                         ← ONLY THIS DONE
+6. [ ] Manual verification done                            ← SKIPPED
+7. [ ] git push executed                                   ← SKIPPED
+```
+
+### Root Cause
+**Laziness/rushing.** Running tests is quick (one command). Checking documentation requires reading and comparing what changed vs what was documented. Agent took the easy path.
+
+### Consequence
+- User had to ask twice: "а документация обновлена?"
+- User caught the mistake, not the agent
+- Trust damaged — if agent skips checklist, what else is skipped?
+
+### Lesson
+- **`@check` = execute ALL items** — Not just the convenient ones
+- **Checklist exists for a reason** — Each item catches different failures
+- **Documentation check is NOT optional** — Code without docs = incomplete delivery
+- **Don't announce "ready to commit"** — Until ALL checklist items verified
+
+### Prevention
+When `@check` is invoked:
+1. Go through EACH item explicitly
+2. Show status for EACH item (✅/❌)
+3. If ANY item ❌, fix before saying "ready"
+4. Never skip items because they're "tedious"
+
+### ⚠️ MANDATORY RULE ADDED TO ALL DOCS
+
+This failure resulted in adding explicit reminders to:
+- **copilot-commands.md** — Critical Rule section at the top
+- **copilot-instructions.md** — Rule #0: Execute ALL instructions
+- **Each @command** — "ВЫПОЛНИ ВСЕ ПУНКТЫ. НЕ ПРОПУСКАЙ НИ ОДИН."
+
+**The rule:** 
+1. ПЕРЕД началом — прочитай ВСЕ пункты
+2. ВО ВРЕМЯ работы — сверяйся с чеклистами  
+3. ПОСЛЕ завершения — проверь ДВАЖДЫ
+4. НЕ говори "готово" — пока ВСЕ пункты не ✅
+
+---
+
+## 2026-02-02: Test Interface Mismatch - TDD Contract Verification
+
+### Problem
+During Iteration 2.2 implementation of `validateConsistency()`, tests failed because the implementation returned a different interface than tests expected.
+
+### Symptoms
+```javascript
+// Test expected:
+{ isConsistent: boolean, inconsistencies: Array }
+
+// Implementation returned:
+{ errors: Array, warnings: Array }
+```
+
+### Root Cause
+**Tests were written first (TDD) but implementation used a different return interface.**
+
+When writing tests before implementation, the expected interface must be documented in the Implementation Contract. Otherwise, the implementer may choose a different (equally valid) interface.
+
+### Solution
+Updated implementation to match test expectations:
+```javascript
+// BEFORE
+return { errors, warnings };
+
+// AFTER
+return {
+  isConsistent: inconsistencies.length === 0,
+  inconsistencies
+};
+```
+
+### Lesson
+- **TDD requires interface contract** — Tests define the interface, implementation must match
+- **Document return types in Implementation Contract** — Before coding, agree on:
+  - Return object shape
+  - Property names
+  - Data types
+- **"Tests first" means interface first** — The test IS the specification
+- **Check test expectations carefully** — Before implementing, read what tests expect
+
+### Prevention Checklist
+- [ ] Implementation Contract includes return interface definition
+- [ ] Tests document expected object shape clearly
+- [ ] Implementation matches test expectations exactly
+- [ ] Run tests BEFORE claiming "done"
+
+---
+
+## 2026-02-02: Anthropic Prompt Caching - 70% Cost Reduction
+
+### Discovery
+Anthropic supports `cache_control` for system prompts, providing significant cost savings on repeated API calls.
+
+### Implementation
+```javascript
+// ClaudeClient.js complete() method
+const response = await this.#client.messages.create({
+  model,
+  max_tokens,
+  system: [{
+    type: 'text',
+    text: system,
+    cache_control: { type: 'ephemeral' }
+  }],
+  messages
+});
+```
+
+### Cost Savings
+- **System prompt**: ~75KB (FIELD_CATALOG for parser)
+- **Cache TTL**: 5 minutes (ephemeral)
+- **Savings**: ~70% on input tokens for cached prompts
+- **Best for**: Batch parsing operations (same system prompt, different criteria)
+
+### When to Use
+- Large system prompts (>1000 tokens)
+- Batch operations with same prompt
+- Repeated API calls within 5-minute window
+
+### When NOT to Use
+- Unique system prompts per request
+- Infrequent API calls (>5 min apart)
+- Small system prompts (overhead not worth it)
+
+### Lesson
+- **Check API features for cost optimization** — Anthropic docs have hidden gems
+- **Batch operations benefit most** — Same prompt + different inputs = cache hit
+- **5-minute TTL** — Plan batch operations accordingly
+
+---
+
 ## 2026-01-27: AI Response Truncation - max_tokens Too Low
 
 ### Problem

@@ -22,7 +22,7 @@ If there is a conflict, those 3 above mentioned documents takes precedence.
 **Type**: Full-Stack Web Application (React + Express Backend)
 **Purpose**: Match patients with suitable clinical trials using hybrid AI + rule-based matching
 **Tech Stack**: React 19, Node.js/Express, SQLite, Anthropic Claude API
-**Version**: 5.0 (with Full Backend Integration)
+**Version**: 5.1 (Parser Infrastructure Iteration 2.2)
 
 
 ---
@@ -94,12 +94,18 @@ If there is a conflict, those 3 above mentioned documents takes precedence.
 
 
 4. **Services**
-   - `ClaudeClient.js` - Anthropic SDK wrapper with caching
+   - `ClaudeClient.js` - Anthropic SDK wrapper with caching + prompt caching (v5.1)
    - `DrugCategoryResolver.js` - Drug → therapeutic class
    - `FollowUpGenerator.js` - AI question generation
+   - `parse-utils.js` - Disease-based file organization (v5.1)
 
 
-5. **Middleware**
+5. **Config** (v5.1)
+   - `output-validator.js` - Post-processing validation with consistency checks
+   - `FIELD_CATALOG.md` - Slot-filled field definitions for LLM parser
+
+
+6. **Middleware**
    - `rateLimiter.js` - SQLite-backed rate limiting
 
 

@@ -40,6 +40,7 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "git push": true
+        "git push": true,
+        "Copy-Item": true
     }
 }

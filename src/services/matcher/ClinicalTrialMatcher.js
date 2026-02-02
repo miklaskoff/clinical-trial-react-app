@@ -119,6 +119,222 @@ export class ClinicalTrialMatcher {
   }
 
   /**
+   * Check if EXCEPTION_CONDITION applies to patient
+   * Per FIELD_CATALOG_v2.1.md: Exception clauses override exclusion criteria
+   * Example: "History of cancer except basal cell carcinoma" - BCC patients ARE eligible
+   * 
+   * @param {Object} criterion - Criterion with EXCEPTION_CONDITION
+   * @param {Array} patientConditions - Patient's conditions (array of {CONDITION_TYPE: [...], ...})
+   * @returns {Object} { applies: boolean, reason: string }
+   */
+  #checkExceptionCondition(criterion, patientConditions) {
+    const exception = criterion.EXCEPTION_CONDITION;
+    if (!exception || !exception.excluded_types || !Array.isArray(exception.excluded_types)) {
+      return { applies: false, reason: null };
+    }
+
+    // Normalize exception types to lowercase for case-insensitive matching
+    const excludedTypes = exception.excluded_types.map(t => t.toLowerCase());
+
+    // Check if ANY patient condition matches an exception type
+    for (const patientCondition of patientConditions) {
+      const patientTypes = (patientCondition.CONDITION_TYPE || []).map(t => t.toLowerCase());
+      
+      // Check for direct match
+      for (const patientType of patientTypes) {
+        if (excludedTypes.includes(patientType)) {
+          return {
+            applies: true,
+            reason: `Exception applies: "${patientType}" is in excluded types. Patient eligible despite general exclusion.`
+          };
+        }
+        
+        // Check for partial match (patient type contains exception type or vice versa)
+        for (const excludedType of excludedTypes) {
+          if (patientType.includes(excludedType) || excludedType.includes(patientType)) {
+            return {
+              applies: true,
+              reason: `Exception applies: "${patientType}" matches excluded type "${excludedType}". Patient eligible despite general exclusion.`
+            };
+          }
+        }
+      }
+    }
+
+    return { applies: false, reason: null };
+  }
+
+  /**
+   * Evaluate NESTED_CONDITION per FIELD_CATALOG_v2.1.md
+   * Handles: main_condition + nested_operator + nested_items
+   * 
+   * Operators:
+   * - at_least_one: Patient must match at least one nested item
+   * - at_least_n: Patient must match at least nested_count items
+   * - all: Patient must match ALL nested items
+   * 
+   * @param {Object} nestedCondition - The NESTED_CONDITION object
+   * @param {Object} patientData - Patient's response data for the cluster
+   * @returns {Object} { mainConditionMet: boolean, nestedConditionMet: boolean, reason: string }
+   */
+  #evaluateNestedCondition(nestedCondition, patientData) {
+    if (!nestedCondition || !patientData) {
+      return { mainConditionMet: false, nestedConditionMet: false, reason: 'Missing nested condition or patient data' };
+    }
+
+    // Step 1: Evaluate main condition (e.g., PASI 10-12)
+    const mainCond = nestedCondition.main_condition;
+    let mainConditionMet = false;
+    let mainReason = '';
+
+    if (mainCond && mainCond.parameter) {
+      const patientMeasurements = patientData.MEASUREMENTS || [];
+      const patientMeasurement = patientMeasurements.find(m => 
+        m.parameter?.toLowerCase() === mainCond.parameter.toLowerCase()
+      );
+
+      if (!patientMeasurement) {
+        // Try direct property access (PASI, BSA, etc.)
+        const directValue = patientData[mainCond.parameter] || patientData[mainCond.parameter.toLowerCase()];
+        if (directValue !== undefined) {
+          mainConditionMet = this.#evaluateMainConditionValue(mainCond, directValue);
+          mainReason = `${mainCond.parameter}: ${directValue}`;
+        } else {
+          mainReason = `Missing ${mainCond.parameter} measurement`;
+        }
+      } else {
+        mainConditionMet = this.#evaluateMainConditionValue(mainCond, patientMeasurement.value);
+        mainReason = `${mainCond.parameter}: ${patientMeasurement.value}`;
+      }
+    } else {
+      // No main condition specified - consider it met
+      mainConditionMet = true;
+      mainReason = 'No main condition required';
+    }
+
+    // Step 2: Evaluate nested items using operator
+    const operator = nestedCondition.nested_operator || 'at_least_one';
+    const nestedItems = nestedCondition.nested_items || [];
+    const nestedCount = nestedCondition.nested_count || 1;
+
+    if (nestedItems.length === 0) {
+      return { 
+        mainConditionMet, 
+        nestedConditionMet: true, 
+        reason: `${mainReason}. No nested items to evaluate.` 
+      };
+    }
+
+    let matchedCount = 0;
+    const matchedItems = [];
+
+    for (const item of nestedItems) {
+      const itemType = item.type; // e.g., 'ANATOMICAL_LOCATION'
+      const itemValues = (item.values || []).map(v => v.toLowerCase());
+
+      // Get patient's values for this type
+      const patientValues = (patientData[itemType] || []).map(v => v.toLowerCase());
+
+      // Count how many item values the patient has
+      for (const val of itemValues) {
+        if (patientValues.includes(val)) {
+          matchedCount++;
+          matchedItems.push(val);
+        }
+      }
+    }
+
+    let nestedConditionMet = false;
+    let nestedReason = '';
+
+    switch (operator) {
+      case 'at_least_one':
+        nestedConditionMet = matchedCount >= 1;
+        nestedReason = `Matched ${matchedCount} item(s): [${matchedItems.join(', ')}]. Required: at least 1.`;
+        break;
+      case 'at_least_n':
+        nestedConditionMet = matchedCount >= nestedCount;
+        nestedReason = `Matched ${matchedCount} item(s): [${matchedItems.join(', ')}]. Required: at least ${nestedCount}.`;
+        break;
+      case 'all':
+        const totalRequired = nestedItems.reduce((sum, item) => sum + (item.values?.length || 0), 0);
+        nestedConditionMet = matchedCount >= totalRequired;
+        nestedReason = `Matched ${matchedCount}/${totalRequired} item(s): [${matchedItems.join(', ')}]. Required: all.`;
+        break;
+      default:
+        nestedConditionMet = matchedCount >= 1;
+        nestedReason = `Unknown operator "${operator}". Defaulted to at_least_one. Matched ${matchedCount}.`;
+    }
+
+    return {
+      mainConditionMet,
+      nestedConditionMet,
+      reason: `${mainReason}. ${nestedReason}`
+    };
+  }
+
+  /**
+   * Helper to evaluate main condition value against threshold
+   * @param {Object} mainCond - Main condition object
+   * @param {number} value - Patient's value
+   * @returns {boolean} Whether condition is met
+   */
+  #evaluateMainConditionValue(mainCond, value) {
+    const numValue = typeof value === 'object' ? value.value : value;
+    
+    // Handle range (min/max)
+    if (mainCond.min !== undefined && mainCond.max !== undefined) {
+      return numValue >= mainCond.min && numValue < mainCond.max;
+    }
+    
+    // Handle comparison operators
+    const comparison = mainCond.comparison || '>=';
+    const threshold = mainCond.value || mainCond.min;
+    
+    if (threshold === undefined) {return true;}
+    
+    switch (comparison) {
+      case '>=': return numValue >= threshold;
+      case '>': return numValue > threshold;
+      case '<=': return numValue <= threshold;
+      case '<': return numValue < threshold;
+      case '==': 
+      case '=': return numValue === threshold;
+      case 'range':
+        return numValue >= (mainCond.min || 0) && numValue < (mainCond.max || Infinity);
+      default:
+        return numValue >= threshold;
+    }
+  }
+
+  /**
+   * Format patient severity values for display
+   * @param {Object} patientSeverity - Patient severity data
+   * @returns {string} Formatted string
+   */
+  #formatPatientSeverityValue(patientSeverity) {
+    if (!patientSeverity) {return 'No severity data';}
+    
+    const parts = [];
+    const scoreTypes = ['PASI', 'PGA', 'IGA', 'DLQI', 'PHQ', 'BSA'];
+    
+    for (const type of scoreTypes) {
+      const value = patientSeverity[type]?.value ?? patientSeverity[type] ?? 
+                    patientSeverity[type.toLowerCase()]?.value ?? patientSeverity[type.toLowerCase()];
+      if (value !== undefined && value !== null) {
+        parts.push(`${type}: ${value}`);
+      }
+    }
+    
+    // Add anatomical locations if present
+    if (patientSeverity.ANATOMICAL_LOCATION?.length > 0) {
+      parts.push(`Locations: ${patientSeverity.ANATOMICAL_LOCATION.join(', ')}`);
+    }
+    
+    return parts.length > 0 ? parts.join(', ') : 'No severity scores';
+  }
+
+  /**
    * Get all unique trial IDs
    * @returns {Set<string>} Set of NCT IDs
    */
@@ -252,6 +468,8 @@ export class ClinicalTrialMatcher {
     let needsAdminReview = false;
     let matchMethod = '';
     let reviewPayload = null;
+    let exceptionApplied = false;
+    let nestedConditionMet = null;
 
     try {
       // Route to appropriate evaluation method based on cluster
@@ -270,6 +488,8 @@ export class ClinicalTrialMatcher {
       needsAdminReview = evalResult.needsAdminReview || false;
       matchMethod = evalResult.matchMethod || '';
       reviewPayload = evalResult.reviewPayload || null;
+      exceptionApplied = evalResult.exceptionApplied || false;
+      nestedConditionMet = evalResult.nestedConditionMet;
     } catch (error) {
       console.error(`Error evaluating criterion ${criterion.id}:`, error);
       matches = false;
@@ -291,6 +511,8 @@ export class ClinicalTrialMatcher {
       needsAdminReview,
       matchMethod,
       reviewPayload,
+      exceptionApplied,
+      nestedConditionMet,
     });
   }
 
@@ -544,6 +766,7 @@ export class ClinicalTrialMatcher {
 
   /**
    * Evaluate comorbidity criterion
+   * Supports EXCEPTION_CONDITION per FIELD_CATALOG_v2.1.md
    */
   async #evaluateComorbidity(criterion, patientComorbidities) {
     if (!patientComorbidities || !Array.isArray(patientComorbidities)) {
@@ -558,6 +781,21 @@ export class ClinicalTrialMatcher {
     const conditions = criterion.conditions || [criterion];
     const criterionConditions = conditions.map(c => (c.CONDITION_TYPE || []).join(', ')).join('; ');
     const patientConditions = patientComorbidities.map(c => (c.CONDITION_TYPE || []).join(', ')).join('; ');
+
+    // Check for EXCEPTION_CONDITION FIRST (per FIELD_CATALOG_v2.1.md)
+    // If exception applies, patient is eligible despite general exclusion
+    if (criterion.EXCEPTION_CONDITION) {
+      const exceptionResult = this.#checkExceptionCondition(criterion, patientComorbidities);
+      if (exceptionResult.applies) {
+        return {
+          matches: false, // Does NOT match exclusion - patient is eligible
+          confidence: getConfidenceByMatchType('directMatch'),
+          exceptionApplied: true,
+          patientValue: `Patient: ${patientConditions}`,
+          confidenceReason: exceptionResult.reason
+        };
+      }
+    }
 
     for (const condition of conditions) {
       for (const patientCondition of patientComorbidities) {
@@ -916,13 +1154,13 @@ export class ClinicalTrialMatcher {
    * - "BSA covered 2% to 20%" → { value: 2, max: 20, operator: 'between' }
    */
   #parseThresholdFromRawText(rawText, measurementType) {
-    if (!rawText || !measurementType) return null;
+    if (!rawText || !measurementType) {return null;}
     
     const text = rawText.toLowerCase();
     const type = measurementType.toLowerCase();
     
     // Check if this criterion mentions this measurement type
-    if (!text.includes(type)) return null;
+    if (!text.includes(type)) {return null;}
     
     // Pattern: "BSA ≥10%" or "BSA involvement ≥10%" or "BSA >= 10"
     // Use [^0-9]* to match any non-digit characters between type and number
@@ -971,6 +1209,7 @@ export class ClinicalTrialMatcher {
   /**
    * Evaluate severity criterion
    * Handles PASI, PGA, IGA, DLQI, PHQ-9 scores
+   * Supports NESTED_CONDITION per FIELD_CATALOG_v2.1.md
    */
   #evaluateSeverity(criterion, patientSeverity) {
     if (!patientSeverity) {
@@ -982,7 +1221,24 @@ export class ClinicalTrialMatcher {
       };
     }
 
-    // Check various severity score types
+    // Check for NESTED_CONDITION FIRST (per FIELD_CATALOG_v2.1.md)
+    // Example: "PASI 10-12 with at least one of facial/scalp involvement"
+    if (criterion.NESTED_CONDITION) {
+      const nestedResult = this.#evaluateNestedCondition(criterion.NESTED_CONDITION, patientSeverity);
+      
+      // Both main AND nested conditions must be met
+      const overallMatch = nestedResult.mainConditionMet && nestedResult.nestedConditionMet;
+      
+      return {
+        matches: overallMatch,
+        confidence: overallMatch ? getConfidenceByMatchType('exactMatch') : getConfidenceByMatchType('partialMatch'),
+        nestedConditionMet: nestedResult.nestedConditionMet,
+        patientValue: this.#formatPatientSeverityValue(patientSeverity),
+        confidenceReason: `NESTED_CONDITION evaluation. ${nestedResult.reason}`
+      };
+    }
+
+    // Check various severity score types (original logic)
     const scoreTypes = ['PASI', 'PGA', 'IGA', 'DLQI', 'PHQ'];
     const patientValues = [];
     const requirements = [];

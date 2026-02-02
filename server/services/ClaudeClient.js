@@ -323,6 +323,57 @@ Respond ONLY with valid JSON in this exact format:
   }
 
   /**
+   * Generic completion for 100% LLM parsing
+   * Used by UniversalParserV2 for criteria parsing
+   * 
+   * Uses Anthropic prompt caching to reduce costs:
+   * - System prompt (FIELD_CATALOG ~75KB) is cached with cache_control
+   * - First call creates cache (25% extra cost)
+   * - Subsequent calls get 90% discount on cached tokens
+   * 
+   * @param {Object} options - Completion options
+   * @param {string} options.system - System prompt (contains FIELD_CATALOG)
+   * @param {string} options.prompt - User prompt (criterion to parse)
+   * @param {number} [options.maxTokens=4096] - Max tokens for response
+   * @returns {Promise<string>} Raw response text from Claude
+   */
+  async complete({ system, prompt, maxTokens = 4096 }) {
+    if (!this.#client) {
+      throw new Error('Claude client not configured. Set ANTHROPIC_API_KEY or configure via admin.');
+    }
+
+    try {
+      const response = await this.#client.messages.create({
+        model: this.#model,
+        max_tokens: maxTokens,
+        // Use cache_control for prompt caching - saves ~70% on batch parsing
+        system: [
+          {
+            type: 'text',
+            text: system,
+            cache_control: { type: 'ephemeral' }
+          }
+        ],
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      // Log cache statistics for monitoring
+      const usage = response.usage;
+      if (usage?.cache_creation_input_tokens) {
+        console.log(`📝 Cache created: ${usage.cache_creation_input_tokens} tokens cached`);
+      }
+      if (usage?.cache_read_input_tokens) {
+        console.log(`⚡ Cache HIT: ${usage.cache_read_input_tokens} tokens saved!`);
+      }
+
+      return response.content[0]?.text || '';
+    } catch (error) {
+      console.error('Claude API complete() error:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Batch semantic matching
    * @param {Array<{ patientTerm: string, criterionTerm: string, context?: string }>} queries 
    * @returns {Promise<Array<{ match: boolean, confidence: number, reasoning: string }>>}

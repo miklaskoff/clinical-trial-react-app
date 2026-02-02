@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.1.0] - 2026-02-02
+
+### 🚀 Parser Infrastructure — Iteration 2.2
+
+Major improvements to the 100% LLM criteria parser with cost optimization, file organization, and quality validation.
+
+### Added
+
+- **Anthropic Prompt Caching** — 70% cost reduction on batch parsing
+  - System prompt (~75KB FIELD_CATALOG) now cached via `cache_control: { type: 'ephemeral' }`
+  - First API call creates cache, subsequent calls within 5 minutes use cached prompt
+  - New tests: `ClaudeClient.promptCache.test.js` (5 tests)
+  - Expected savings: ~$1.40 per 30-criterion batch
+
+- **Disease-Based File Organization**
+  - Output now goes to `server/data/{disease}/CLUSTER_{code}.json`
+  - One file per cluster per disease (no duplicates)
+  - Automatic backup before overwriting existing files
+  - New utility module: `server/parse-utils.js`
+  - New tests: `parse-utils.test.js` (12 tests)
+
+- **Cross-Criterion Consistency Validation**
+  - `validateConsistency()` checks ALL fields for parsing consistency
+  - `findSimilarCriteria()` finds 3 similar criteria for comparison
+  - Flags when same patterns are parsed differently
+  - 9 consistency rules covering: CONDITION_PATTERN, SEVERITY, LOGICAL_OPERATOR, REQUIRES_CLINICAL_JUDGMENT, EXCEPTION_CONDITION, NEGATION_DETECTED
+  - New tests: `output-validator.consistency.test.js` (16 tests)
+
+### Removed
+
+- **Duplicate Files Cleanup**
+  - Deleted `slot-filled-cmb-clean.json` (legacy format)
+  - Deleted `slot-filled-cmb-output-clean.json` (duplicate)
+
+### Technical Details
+
+- Backend tests: 190 passing
+- Frontend tests: 363 passing
+- Total new tests: 33 tests added
+
+### Validator Integration (2026-02-02)
+
+- **Output Validator Integration into Parser Route**
+  - Parser route (`/api/parser/criterion`) now calls `validateCriterion()` automatically
+  - All optional fields are now added with proper defaults:
+    - Array fields: `[]` (MEASUREMENTS, TREATMENT_HISTORY, PSORIASIS_VARIANT)
+    - Boolean fields: `false` (REQUIRES_CLINICAL_JUDGMENT, AMBIGUITY_FLAG, SUBJECTIVE_ESTIMATE)
+    - Unit fields: `'years'` (AGE_UNIT), `'kg'` (WEIGHT_UNIT)
+    - Object fields: `null` (NESTED_CONDITION, NEGATION_DETECTED, TIMEFRAME, EXCEPTION_CONDITION)
+  - Ensures consistent field presence across all parsed criteria
+  - 40 validator tests + 16 consistency tests passing
+
+- **AIC Cluster Parsed (30/30 criteria)**
+  - Cluster: Active Infection History Criteria
+  - Output file: `server/data/slot-filled-aic-output.json`
+  - Infection-related exclusion criteria for clinical trials
+
+- **Reference Lists Updated**
+  - Added: `herpes zoster`, `herpes simplex`, `herpes` to `base_medical_terms`
+
+---
+
 ## [5.0.7] - 2026-01-27
 
 ### 🔧 AI Response Truncation Fix & Dropdown UI

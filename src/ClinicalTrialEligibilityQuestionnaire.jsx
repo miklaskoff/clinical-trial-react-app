@@ -20,7 +20,7 @@ import React, { useState, useEffect } from 'react';
 // ==============================================================================
 // IMPORT SLOT-FILLED DATABASE
 // ==============================================================================
-import SLOT_FILLED_DATABASE from './data/slot-filled-database.json';
+import SLOT_FILLED_DATABASE from './data/improved_slot_filled_database.json';
 
 // ==============================================================================
 // UTILITY FUNCTIONS
@@ -78,7 +78,7 @@ class SlotFilledResponseBuilder {
   }
 
   addComorbidCondition(conditionType, pattern, severity, timeframe, location) {
-    if (!this.responses.CMB) this.responses.CMB = [];
+    if (!this.responses.CMB) {this.responses.CMB = [];}
     
     this.responses.CMB.push({
       CONDITION_TYPE: conditionType,
@@ -90,7 +90,7 @@ class SlotFilledResponseBuilder {
   }
 
   addTreatmentHistory(treatmentType, pattern, timeframe, drugClassification) {
-    if (!this.responses.PTH) this.responses.PTH = [];
+    if (!this.responses.PTH) {this.responses.PTH = [];}
     
     this.responses.PTH.push({
       TREATMENT_TYPE: treatmentType,
@@ -101,7 +101,7 @@ class SlotFilledResponseBuilder {
   }
 
   addInfectionHistory(infectionType, pattern, severity, timeframe, treatment) {
-    if (!this.responses.AIC) this.responses.AIC = [];
+    if (!this.responses.AIC) {this.responses.AIC = [];}
     
     this.responses.AIC.push({
       INFECTION_TYPE: infectionType,
@@ -113,7 +113,7 @@ class SlotFilledResponseBuilder {
   }
 
   addAffectedArea(measurementType, value, threshold) {
-    if (!this.responses.AAO) this.responses.AAO = {};
+    if (!this.responses.AAO) {this.responses.AAO = {};}
     
     this.responses.AAO[measurementType] = {
       value: value,
@@ -137,7 +137,7 @@ class SlotFilledResponseBuilder {
   }
 
   setSeverityScore(scoreType, value) {
-    if (!this.responses.SEV) this.responses.SEV = {};
+    if (!this.responses.SEV) {this.responses.SEV = {};}
     this.responses.SEV[scoreType] = value;
   }
 
@@ -734,7 +734,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
                       const newDetails = { ...cmb_conditionDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
                       setCmb_conditionDetails(newDetails);
                     }}
@@ -751,7 +751,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
                       const newDetails = { ...cmb_conditionDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
                       setCmb_conditionDetails(newDetails);
                     }}
@@ -778,8 +778,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                   checked={details.pattern?.includes('current') || false}
                   onChange={(e) => {
                     const newDetails = { ...cmb_conditionDetails };
-                    if (!newDetails[idx]) newDetails[idx] = { pattern: [] };
-                    if (!newDetails[idx].pattern) newDetails[idx].pattern = [];
+                    if (!newDetails[idx]) {newDetails[idx] = { pattern: [] };}
+                    if (!newDetails[idx].pattern) {newDetails[idx].pattern = [];}
                     
                     if (e.target.checked) {
                       newDetails[idx].pattern = [...newDetails[idx].pattern, 'current'];
@@ -797,8 +797,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                   checked={details.pattern?.includes('history') || false}
                   onChange={(e) => {
                     const newDetails = { ...cmb_conditionDetails };
-                    if (!newDetails[idx]) newDetails[idx] = { pattern: [] };
-                    if (!newDetails[idx].pattern) newDetails[idx].pattern = [];
+                    if (!newDetails[idx]) {newDetails[idx] = { pattern: [] };}
+                    if (!newDetails[idx].pattern) {newDetails[idx].pattern = [];}
                     
                     if (e.target.checked) {
                       newDetails[idx].pattern = [...newDetails[idx].pattern, 'history'];
@@ -825,7 +825,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details.timeframe_amount || ''}
                     onChange={(e) => {
                       const newDetails = { ...cmb_conditionDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx].timeframe_amount = e.target.value;
                       setCmb_conditionDetails(newDetails);
                     }}
@@ -835,7 +835,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details.timeframe_unit || 'weeks'}
                     onChange={(e) => {
                       const newDetails = { ...cmb_conditionDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx].timeframe_unit = e.target.value;
                       setCmb_conditionDetails(newDetails);
                     }}
@@ -859,7 +859,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                 value={details.severity || 'none_specified'}
                 onChange={(e) => {
                   const newDetails = { ...cmb_conditionDetails };
-                  if (!newDetails[idx]) newDetails[idx] = {};
+                  if (!newDetails[idx]) {newDetails[idx] = {};}
                   newDetails[idx].severity = e.target.value;
                   setCmb_conditionDetails(newDetails);
                 }}
@@ -1067,7 +1067,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
                       const newDetails = { ...pth_treatmentDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
                       setPth_treatmentDetails(newDetails);
                     }}
@@ -1084,7 +1084,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
                       const newDetails = { ...pth_treatmentDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
                       setPth_treatmentDetails(newDetails);
                     }}
@@ -1738,9 +1738,9 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     
     // AAO - Affected Area
     if (aao_bsa || aao_pasi || aao_pga) {
-      if (aao_bsa) builder.addAffectedArea('BSA', parseFloat(aao_bsa), null);
-      if (aao_pasi) builder.addAffectedArea('PASI', parseFloat(aao_pasi), null);
-      if (aao_pga) builder.addAffectedArea('PGA', parseFloat(aao_pga), null);
+      if (aao_bsa) {builder.addAffectedArea('BSA', parseFloat(aao_bsa), null);}
+      if (aao_pasi) {builder.addAffectedArea('PASI', parseFloat(aao_pasi), null);}
+      if (aao_pga) {builder.addAffectedArea('PGA', parseFloat(aao_pga), null);}
     }
     
     // AGE
@@ -1759,9 +1759,9 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     }
     
     // SEV
-    if (sev_pasiValue) builder.setSeverityScore('PASI', parseFloat(sev_pasiValue));
-    if (sev_bsaValue) builder.setSeverityScore('BSA', parseFloat(sev_bsaValue));
-    if (sev_pgaValue) builder.setSeverityScore('PGA', parseFloat(sev_pgaValue));
+    if (sev_pasiValue) {builder.setSeverityScore('PASI', parseFloat(sev_pasiValue));}
+    if (sev_bsaValue) {builder.setSeverityScore('BSA', parseFloat(sev_bsaValue));}
+    if (sev_pgaValue) {builder.setSeverityScore('PGA', parseFloat(sev_pgaValue));}
     
     // BMI
     if (bmi_weight && bmi_height) {

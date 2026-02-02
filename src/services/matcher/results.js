@@ -22,6 +22,8 @@ export class CriterionMatchResult {
    * @param {boolean} [params.needsAdminReview=false] - Whether this needs admin review
    * @param {string} [params.matchMethod=''] - How match was made (database, direct_unverified, ai_fallback)
    * @param {Object|null} [params.reviewPayload=null] - Data for admin review
+   * @param {boolean} [params.exceptionApplied=false] - Whether EXCEPTION_CONDITION was applied
+   * @param {boolean|null} [params.nestedConditionMet=null] - Whether NESTED_CONDITION was satisfied
    */
   constructor({
     criterionId,
@@ -37,6 +39,8 @@ export class CriterionMatchResult {
     needsAdminReview = false,
     matchMethod = '',
     reviewPayload = null,
+    exceptionApplied = false,
+    nestedConditionMet = null,
   }) {
     this.criterionId = criterionId;
     this.nctId = nctId;
@@ -51,6 +55,8 @@ export class CriterionMatchResult {
     this.needsAdminReview = needsAdminReview;
     this.matchMethod = matchMethod;
     this.reviewPayload = reviewPayload;
+    this.exceptionApplied = exceptionApplied;
+    this.nestedConditionMet = nestedConditionMet;
   }
 
   /**
@@ -95,6 +101,8 @@ export class CriterionMatchResult {
       needsAdminReview: this.needsAdminReview,
       matchMethod: this.matchMethod,
       reviewPayload: this.reviewPayload,
+      exceptionApplied: this.exceptionApplied,
+      nestedConditionMet: this.nestedConditionMet,
     };
   }
 }

@@ -181,7 +181,7 @@ export class BackendClient {
    * Logout from admin panel
    */
   async adminLogout() {
-    if (!this.authToken) return;
+    if (!this.authToken) {return;}
 
     try {
       await this._request('/api/admin/logout', {
@@ -403,8 +403,8 @@ export class BackendClient {
    * @returns {boolean}
    */
   isAuthenticated() {
-    if (!this.authToken) return false;
-    if (!this.tokenExpiresAt) return true;
+    if (!this.authToken) {return false;}
+    if (!this.tokenExpiresAt) {return true;}
     return new Date(this.tokenExpiresAt) > new Date();
   }
 }

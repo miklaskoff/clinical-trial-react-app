@@ -76,12 +76,14 @@ import followupRoutes from './routes/followups.js';
 import adminRoutes from './routes/admin.js';
 import configRoutes from './routes/config.js';
 import termsRoutes from './routes/terms.js';
+import parserRoutes from './routes/parser.js';
 
 app.use('/api/match', matchRoutes);
 app.use('/api/followups', followupRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/terms', termsRoutes);
+app.use('/api/parser', parserRoutes);
 
 // ============================================
 // ERROR HANDLING

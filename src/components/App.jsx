@@ -39,8 +39,8 @@ function generatePatientNarrative(patientResponse) {
     const weight = responses.BMI.weight;
     const height = responses.BMI.height;
     let bmiLine = `• BMI: ${bmi}`;
-    if (weight) bmiLine += `, Weight: ${weight.value || weight} ${weight.unit || 'kg'}`;
-    if (height) bmiLine += `, Height: ${height.value || height} ${height.unit || 'cm'}`;
+    if (weight) {bmiLine += `, Weight: ${weight.value || weight} ${weight.unit || 'kg'}`;}
+    if (height) {bmiLine += `, Height: ${height.value || height} ${height.unit || 'cm'}`;}
     lines.push(bmiLine);
   }
   
@@ -119,10 +119,10 @@ function generatePatientNarrative(patientResponse) {
   // Severity
   if (responses.SEV) {
     lines.push('• Severity scores:');
-    if (responses.SEV.PASI) lines.push(`  - PASI: ${responses.SEV.PASI}`);
-    if (responses.SEV.BSA) lines.push(`  - BSA: ${responses.SEV.BSA}%`);
-    if (responses.SEV.PGA) lines.push(`  - PGA: ${responses.SEV.PGA}`);
-    if (responses.SEV.DLQI) lines.push(`  - DLQI: ${responses.SEV.DLQI}`);
+    if (responses.SEV.PASI) {lines.push(`  - PASI: ${responses.SEV.PASI}`);}
+    if (responses.SEV.BSA) {lines.push(`  - BSA: ${responses.SEV.BSA}%`);}
+    if (responses.SEV.PGA) {lines.push(`  - PGA: ${responses.SEV.PGA}`);}
+    if (responses.SEV.DLQI) {lines.push(`  - DLQI: ${responses.SEV.DLQI}`);}
   }
   
   // Affected Areas
@@ -195,10 +195,10 @@ function generateTextReport(results) {
         
         lines.push(`   Criteria breakdown:`);
         lines.push(`   • Total criteria evaluated: ${trial.matchedCriteria.length}`);
-        if (exactMatches > 0) lines.push(`   • Exact matches (100%): ${exactMatches}`);
-        if (ruleBased > 0) lines.push(`   • Rule-based matches (70-99%): ${ruleBased}`);
-        if (aiMatches > 0) lines.push(`   • AI semantic matches: ${aiMatches}`);
-        if (lowConf > 0) lines.push(`   • Low confidence (<70%): ${lowConf}`);
+        if (exactMatches > 0) {lines.push(`   • Exact matches (100%): ${exactMatches}`);}
+        if (ruleBased > 0) {lines.push(`   • Rule-based matches (70-99%): ${ruleBased}`);}
+        if (aiMatches > 0) {lines.push(`   • AI semantic matches: ${aiMatches}`);}
+        if (lowConf > 0) {lines.push(`   • Low confidence (<70%): ${lowConf}`);}
         
         // Show non-exact criteria with details
         const nonExact = trial.matchedCriteria.filter(c => c.confidence < 1.0);
@@ -215,8 +215,8 @@ function generateTextReport(results) {
             lines.push(`   │  Type: ${criterionType}`);
             lines.push(`   │  Text: ${text}`);
             lines.push(`   │  Confidence: ${conf}${ai}`);
-            if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
-            if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+            if (c.patientValue) {lines.push(`   │  Patient: ${c.patientValue}`);}
+            if (c.confidenceReason) {lines.push(`   │  Reason: ${c.confidenceReason}`);}
             lines.push(`   └────────────────────────────────────`);
           });
         }
@@ -241,9 +241,9 @@ function generateTextReport(results) {
           lines.push(`   │  Type: ${criterionType}`);
           lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${(c.confidence * 100).toFixed(0)}%${c.requiresAI ? ' [AI]' : ''}`);
-          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
-          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
-          if (c.aiReasoning) lines.push(`   │  AI Analysis: ${c.aiReasoning}`);
+          if (c.patientValue) {lines.push(`   │  Patient: ${c.patientValue}`);}
+          if (c.confidenceReason) {lines.push(`   │  Reason: ${c.confidenceReason}`);}
+          if (c.aiReasoning) {lines.push(`   │  AI Analysis: ${c.aiReasoning}`);}
           lines.push(`   └────────────────────────────────────`);
         });
       }
@@ -274,8 +274,8 @@ function generateTextReport(results) {
           lines.push(`   │  Type: Inclusion`);
           lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${conf}${ai}`);
-          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
-          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+          if (c.patientValue) {lines.push(`   │  Patient: ${c.patientValue}`);}
+          if (c.confidenceReason) {lines.push(`   │  Reason: ${c.confidenceReason}`);}
           lines.push(`   └────────────────────────────────────`);
         });
       }
@@ -292,8 +292,8 @@ function generateTextReport(results) {
           lines.push(`   │  Type: ${criterionType}`);
           lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${conf}${ai}`);
-          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
-          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+          if (c.patientValue) {lines.push(`   │  Patient: ${c.patientValue}`);}
+          if (c.confidenceReason) {lines.push(`   │  Reason: ${c.confidenceReason}`);}
           lines.push(`   └────────────────────────────────────`);
         });
       }
