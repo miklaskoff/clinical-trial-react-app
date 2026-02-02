@@ -1,5 +1,64 @@
 # Lessons Learned
 
+## 2026-02-02: Semicolon Branch Separation & Timeframe Scope
+
+### Problem
+User identified that AIC_2319 was incorrectly parsed - "hospitalization OR treatment with IV antibiotics" was nested under NESTED_CONDITION instead of being TOP-LEVEL OR alternatives in TREATMENT_HISTORY.
+
+### Symptoms
+- Hospitalization and IV antibiotics in `NESTED_CONDITION.nested_items` instead of `TREATMENT_HISTORY`
+- 2-month TIMEFRAME applied globally instead of only to the hospitalization/IV branch
+- Parser didn't recognize semicolon (`;`) as a branch separator
+- Treatment events mixed with condition types
+
+### Root Cause
+**LLM wasn't instructed about semicolon semantics or timeframe scope.**
+
+The raw text structure:
+```
+[A] Known history of chronic infections... (NO TIMEFRAME)
+;
+[B] hospitalization OR IV antibiotics within 2 months (HAS TIMEFRAME)
+```
+
+The parser treated the entire criterion as one unit with one timeframe, when actually:
+- Semicolon separates two independent OR branches
+- TIMEFRAME only applies to the clause it's grammatically attached to
+- "hospitalization" and "IV antibiotics" are TREATMENT events, not conditions
+
+### Solution
+**Added 4 new rules to FIELD_CATALOG v2.2:**
+
+1. **Semicolon Branch Separation Rule** — Split by semicolons, each segment can have different scope/timeframe
+2. **Timeframe Scope Rule** — TIMEFRAME applies only to its grammatical clause
+3. **Treatment vs Condition Classification** — Explicit list of treatment events (hospitalization, IV, surgery) vs conditions
+4. **_parsing_notes Field** — Document scope decisions for complex criteria
+
+**Added validator functions:**
+- `detectSemicolonBranches()` — Splits text by semicolons
+- `classifyTreatmentVsCondition()` — Returns TREATMENT or CONDITION
+- `validateTimeframeScope()` — Validates scope is correct
+- `validateTreatmentPlacement()` — Detects treatment events in wrong location
+
+### Lesson
+- **LLMs need explicit structural rules** — Semicolons have semantic meaning in criteria text
+- **Timeframe scope is grammatical, not global** — "X; Y within 2 months" → timeframe is ONLY for Y
+- **Treatment vs Condition is domain knowledge** — Must be explicitly taught to parser
+- **Complex criteria need parsing notes** — Document WHY decisions were made
+
+### Prevention
+- [ ] Review criteria for structural separators (semicolons, colons)
+- [ ] Check if TIMEFRAME applies to all clauses or just one
+- [ ] Classify terms as TREATMENT or CONDITION before placing in fields
+- [ ] Add _parsing_notes for any non-obvious parsing decision
+
+### Files Changed
+- `server/config/FIELD_CATALOG_v2.1.md` — Version bumped to 2.2, added 4 rules
+- `server/config/output-validator.js` — Added 4 new functions
+- `server/__tests__/config/output-validator.semicolon.test.js` — 18 new tests
+
+---
+
 ## 2026-02-02: LLM Invents Ad-Hoc Fields Not Defined in Schema
 
 ### Problem

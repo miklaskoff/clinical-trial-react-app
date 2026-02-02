@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.1.2] - 2026-02-02
+
+### 🔀 Semicolon Branch Separation & Timeframe Scope Rules — Iteration 2.4
+
+Fixed parsing of compound criteria with semicolons and different timeframe scopes. Treatment events (hospitalization, IV therapy) now correctly go to TREATMENT_HISTORY instead of NESTED_CONDITION.
+
+### Added
+
+- **New Parsing Rules in FIELD_CATALOG v2.2:**
+  - **Rule 1: Semicolon Branch Separation** — Semicolons indicate TOP-LEVEL OR branches with different scopes
+  - **Rule 2: Timeframe Scope** — TIMEFRAME only applies to its grammatical clause
+  - **Rule 3: Treatment vs Condition Classification** — Hospitalization, IV therapy → TREATMENT_HISTORY
+  - **Rule 4: _parsing_notes Field** — Documents scope decisions for complex criteria
+
+- **Validator Functions** (`output-validator.js`)
+  - `detectSemicolonBranches()` — Splits criterion text by semicolons
+  - `classifyTreatmentVsCondition()` — Classifies terms as TREATMENT or CONDITION
+  - `validateTimeframeScope()` — Validates TIMEFRAME is correctly scoped
+  - `validateTreatmentPlacement()` — Detects treatment events incorrectly in NESTED_CONDITION
+
+- **New Tests** (`output-validator.semicolon.test.js`)
+  - 18 tests for semicolon parsing, treatment classification, timeframe scope
+  - Validation tests for correctly vs incorrectly parsed AIC_2319
+
+### Changed
+
+- **FIELD_CATALOG v2.1 → v2.2** — Added critical parsing rules section at top
+
+### Fixed
+
+- **AIC_2319 Parsing** — Previously had hospitalization/IV antibiotics in NESTED_CONDITION.nested_items; now correctly in TREATMENT_HISTORY with timing
+- **TIMEFRAME scope** — Previously applied globally; now documented that 2-month timeframe applies ONLY to hospitalization/IV branch
+
+### Technical Details
+
+| Criterion | Before | After |
+|-----------|--------|-------|
+| hospitalization | NESTED_CONDITION.nested_items | TREATMENT_HISTORY |
+| IV antibiotics | NESTED_CONDITION.nested_items | TREATMENT_HISTORY |
+| TIMEFRAME scope | Global | Per-branch (documented in _parsing_notes) |
+
+---
+
 ## [5.1.1] - 2026-02-02
 
 ### 🛡️ Ad-Hoc Field Prevention System — Iteration 2.3

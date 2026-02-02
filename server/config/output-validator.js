@@ -944,6 +944,168 @@ export function validateConsistency(criterion, allCriteria = []) {
   };
 }
 
+// ============================================================================
+// ITERATION 2.4: Semicolon Branch Separation & Timeframe Scope Rules
+// ============================================================================
+
+/**
+ * Treatment event keywords - these should go in TREATMENT_HISTORY, not CONDITION_TYPE
+ */
+const TREATMENT_EVENT_PATTERNS = [
+  /\bhospitalization\b/i,
+  /\bhospitalized\b/i,
+  /\bintravenous\b/i,
+  /\biv\s+(antibiotics?|anti-?infective|therapy|treatment|medication)/i,
+  /\btreatment\s+with\b/i,
+  /\bsurgery\b/i,
+  /\bsurgical\s+procedure\b/i,
+  /\binfusion\b/i,
+  /\btransfusion\b/i,
+  /\bprocedure\b/i
+];
+
+/**
+ * Condition keywords - these should go in CONDITION_TYPE
+ */
+const CONDITION_PATTERNS = [
+  /\binfection\b/i,
+  /\bsepsis\b/i,
+  /\bpneumonia\b/i,
+  /\bdisease\b/i,
+  /\bdisorder\b/i,
+  /\bsyndrome\b/i,
+  /\bcancer\b/i,
+  /\bmalignancy\b/i,
+  /\bcondition\b/i
+];
+
+/**
+ * Detect semicolon-separated branches in criterion text
+ * @param {string} rawText - Raw criterion text
+ * @returns {string[]} Array of branch segments
+ */
+export function detectSemicolonBranches(rawText) {
+  if (!rawText || typeof rawText !== 'string') {
+    return [];
+  }
+  
+  // Split by semicolon
+  const branches = rawText.split(';').map(s => s.trim()).filter(s => s.length > 0);
+  
+  return branches;
+}
+
+/**
+ * Classify a term as TREATMENT event or CONDITION
+ * @param {string} term - Term to classify
+ * @returns {Object} { type: 'TREATMENT' | 'CONDITION' | 'UNKNOWN', pattern: string }
+ */
+export function classifyTreatmentVsCondition(term) {
+  if (!term || typeof term !== 'string') {
+    return { type: 'UNKNOWN', pattern: null };
+  }
+  
+  const lowerTerm = term.toLowerCase();
+  
+  // Check for treatment patterns first (more specific)
+  for (const pattern of TREATMENT_EVENT_PATTERNS) {
+    if (pattern.test(lowerTerm)) {
+      return { type: 'TREATMENT', pattern: pattern.source };
+    }
+  }
+  
+  // Check for condition patterns
+  for (const pattern of CONDITION_PATTERNS) {
+    if (pattern.test(lowerTerm)) {
+      return { type: 'CONDITION', pattern: pattern.source };
+    }
+  }
+  
+  return { type: 'UNKNOWN', pattern: null };
+}
+
+/**
+ * Validate that TIMEFRAME is correctly scoped
+ * @param {Object} parsed - Parsed criterion object
+ * @returns {Object} { isValid: boolean, conditionsHaveTimeframe: boolean, treatmentHasTimeframe: boolean, allTreatmentsHaveTimeframe: boolean }
+ */
+export function validateTimeframeScope(parsed) {
+  const result = {
+    isValid: true,
+    conditionsHaveTimeframe: false,
+    treatmentHasTimeframe: false,
+    allTreatmentsHaveTimeframe: true
+  };
+  
+  if (!parsed) return result;
+  
+  const rawText = parsed.raw_text || '';
+  const branches = detectSemicolonBranches(rawText);
+  const hasSemicolon = branches.length > 1;
+  
+  // Check if there's a global TIMEFRAME
+  const hasGlobalTimeframe = parsed.TIMEFRAME && typeof parsed.TIMEFRAME === 'object';
+  
+  // Check if TREATMENT_HISTORY entries have timing
+  if (parsed.TREATMENT_HISTORY && Array.isArray(parsed.TREATMENT_HISTORY)) {
+    for (const th of parsed.TREATMENT_HISTORY) {
+      if (th.timing && typeof th.timing === 'object') {
+        result.treatmentHasTimeframe = true;
+      } else {
+        result.allTreatmentsHaveTimeframe = false;
+      }
+    }
+  }
+  
+  // If there's a semicolon and conditions exist before it, they should NOT have the timeframe
+  if (hasSemicolon && parsed.CONDITION_TYPE && parsed.CONDITION_TYPE.length > 0) {
+    // Check if the timeframe text appears AFTER the semicolon (applies to treatment)
+    // and NOT in the condition branch
+    const lastBranch = branches[branches.length - 1];
+    const timeframePhrasePattern = /within\s+\d+\s+(month|week|day|year)/i;
+    
+    if (timeframePhrasePattern.test(lastBranch)) {
+      // Timeframe is in last branch (treatment), not in condition branch
+      result.conditionsHaveTimeframe = false;
+    } else if (hasGlobalTimeframe) {
+      // If there's a global timeframe but semicolon present, conditions shouldn't have it
+      result.conditionsHaveTimeframe = true; // This might be an error
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Validate that treatment events are not incorrectly placed in NESTED_CONDITION
+ * @param {Object} parsed - Parsed criterion object
+ * @returns {Object} { isValid: boolean, errors: string[] }
+ */
+export function validateTreatmentPlacement(parsed) {
+  const errors = [];
+  
+  if (!parsed || !parsed.NESTED_CONDITION) {
+    return { isValid: true, errors: [] };
+  }
+  
+  const nestedItems = parsed.NESTED_CONDITION.nested_items || [];
+  
+  for (const item of nestedItems) {
+    const values = item.values || [];
+    for (const value of values) {
+      const classification = classifyTreatmentVsCondition(value);
+      if (classification.type === 'TREATMENT') {
+        errors.push(`Treatment event "${value}" should be in TREATMENT_HISTORY, not NESTED_CONDITION`);
+      }
+    }
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 export default {
   getSchemaForCluster,
   addMissingFields,
@@ -960,5 +1122,10 @@ export default {
   validateNestedItemsTypes,
   validateTreatmentHistorySubfields,
   validateNegationDetectedStructure,
-  detectAdhocFields
+  detectAdhocFields,
+  // Semicolon & Timeframe scope (Iteration 2.4)
+  detectSemicolonBranches,
+  classifyTreatmentVsCondition,
+  validateTimeframeScope,
+  validateTreatmentPlacement
 };

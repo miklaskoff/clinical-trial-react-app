@@ -1,8 +1,14 @@
 # Clinical Trial Criteria Parser - Field Catalog
 
-**Version:** 2.1  
-**Date:** January 31, 2026  
+**Version:** 2.2  
+**Date:** February 2, 2026  
 **Purpose:** Comprehensive field definitions for LLM-based parsing with admin review workflow
+
+**Changes in v2.2:**
+- ✅ Added SEMICOLON PARSING RULE - semicolons indicate top-level OR branches with different scopes
+- ✅ Added TIMEFRAME SCOPE RULE - timeframes apply only to their grammatical clause
+- ✅ Added TREATMENT vs CONDITION CLASSIFICATION - hospitalization, IV therapy → TREATMENT_HISTORY
+- ✅ Added parsing notes field for scope documentation
 
 **Changes in v2.1:**
 - ✅ Added complete admin workflow documentation with UI mockup
@@ -13,6 +19,101 @@
 - ✅ Added unfamiliar term detection algorithm (3-stage matching)
 - ✅ Added complete NEGATION_DETECTED examples with parsing to normal fields
 - ✅ Added patient matching code examples for all complex fields
+
+---
+
+## ⚠️ CRITICAL PARSING RULES (v2.2)
+
+### RULE 1: SEMICOLON BRANCH SEPARATION
+
+Semicolons (`;`) in criteria text indicate **TOP-LEVEL OR branches** with potentially different scopes.
+
+**Before parsing, analyze the structure:**
+1. Split text by semicolons
+2. Each segment may have:
+   - Its own TIMEFRAME (or no timeframe)
+   - Different field types (conditions vs treatments)
+3. Final output should have `LOGICAL_OPERATOR: "OR"` connecting branches
+
+**Example:**
+```
+"Known history of chronic infections; hospitalization for infections within 2 months"
+```
+
+**Structure Analysis:**
+- Segment A: "Known history of chronic infections" → CONDITION_TYPE + CONDITION_PATTERN, NO TIMEFRAME
+- Segment B: "hospitalization for infections within 2 months" → TREATMENT_HISTORY with TIMEFRAME
+
+**⚠️ DO NOT put treatment events (hospitalization, IV antibiotics) in NESTED_CONDITION.nested_items!**
+
+---
+
+### RULE 2: TIMEFRAME SCOPE
+
+TIMEFRAME only applies to the clause it's grammatically attached to.
+
+**Patterns:**
+| Text Pattern | TIMEFRAME applies to |
+|--------------|---------------------|
+| "X within 2 months" | X only |
+| "X; Y within 2 months" | Y only, NOT X |
+| "X and Y within 2 months" | BOTH X and Y |
+| "X, or Y within 2 months" | Y only (comma + or = new scope) |
+
+**When scopes differ:**
+- Document which elements have timeframes in `_parsing_notes`
+- Set TIMEFRAME to the most relevant one for the primary clause
+- Treatment timing should go in `TREATMENT_HISTORY[].timing`, not global TIMEFRAME
+
+---
+
+### RULE 3: TREATMENT vs CONDITION CLASSIFICATION
+
+**TREATMENT EVENTS → Use TREATMENT_HISTORY:**
+| Term | Classification |
+|------|---------------|
+| hospitalization | TREATMENT |
+| treatment with [drug/therapy] | TREATMENT |
+| intravenous (IV) [anything] | TREATMENT |
+| surgery/surgical procedure | TREATMENT |
+| therapy/intervention | TREATMENT |
+| infusion | TREATMENT |
+| transfusion | TREATMENT |
+
+**CONDITIONS → Use CONDITION_TYPE:**
+| Term | Classification |
+|------|---------------|
+| infections, diseases, disorders | CONDITION |
+| symptoms (pain, fever, etc.) | CONDITION |
+| diagnoses (sepsis, pneumonia, etc.) | CONDITION |
+
+**Combined phrases - "hospitalization FOR infection":**
+```json
+{
+  "TREATMENT_HISTORY": [{
+    "treatment": "hospitalization",
+    "indication": "infection",
+    "timing": { "relation": "within", "amount": 2, "unit": "months" }
+  }],
+  "CONDITION_TYPE": ["infection"]  // Also include for matching purposes
+}
+```
+
+---
+
+### RULE 4: _parsing_notes FIELD (v2.2)
+
+When criterion has complex scope or structure, add `_parsing_notes` to document:
+- Which branches have timeframes
+- Why certain fields were chosen
+- Any ambiguity in interpretation
+
+**Example:**
+```json
+{
+  "_parsing_notes": "Semicolon separates condition history (no timeframe) from treatment events (2-month timeframe). TIMEFRAME applies ONLY to hospitalization/IV antibiotics branch."
+}
+```
 
 ---
 
