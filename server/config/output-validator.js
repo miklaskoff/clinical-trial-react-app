@@ -331,6 +331,240 @@ export function validateFieldTypes(criterion, clusterCode) {
   return { criterion: result, errors, warnings };
 }
 
+// ============================================================================
+// AD-HOC FIELD DETECTION (Iteration 2.3)
+// ============================================================================
+
+/**
+ * Get list of valid nested_items.type values from schema
+ * @returns {string[]} Array of valid type values
+ */
+export function getValidNestedItemTypes() {
+  const schema = loadSchemas();
+  return schema.validNestedItemTypes || [
+    'CONDITION_TYPE',
+    'ANATOMICAL_LOCATION',
+    'SEVERITY',
+    'TIMEFRAME',
+    'TREATMENT_HISTORY',
+    'CONDITION_PATTERN',
+    'MEASUREMENT',
+    'TREATMENT_REQUIREMENT',
+    'EXCEPTION'
+  ];
+}
+
+/**
+ * Get list of valid TREATMENT_HISTORY subfields from schema
+ * @returns {string[]} Array of valid subfield names
+ */
+export function getValidTreatmentHistorySubfields() {
+  const schema = loadSchemas();
+  return schema.validTreatmentHistorySubfields || [
+    'treatment',
+    'treatment_class',
+    'response',
+    'timing',
+    'confidence',
+    'requires_hospitalization',
+    'duration',
+    'count',
+    'route',
+    'dose',
+    'frequency'
+  ];
+}
+
+/**
+ * Get list of valid NEGATION_DETECTED fields from schema
+ * @returns {string[]} Array of valid field names
+ */
+export function getValidNegationDetectedFields() {
+  const schema = loadSchemas();
+  return schema.validNegationDetectedFields || [
+    'is_negated',
+    'negated_term',
+    'context',
+    'negation_type',
+    'interpretation',
+    'affected_fields',
+    'parsing_note'
+  ];
+}
+
+/**
+ * Validate nested_items.type values against whitelist
+ * @param {Object} criterion - Criterion with potential NESTED_CONDITION
+ * @returns {{ validTypes: string[], adhocNestedTypes: string[] }}
+ */
+export function validateNestedItemsTypes(criterion) {
+  const validTypes = getValidNestedItemTypes();
+  const result = {
+    validTypes: [],
+    adhocNestedTypes: []
+  };
+  
+  if (!criterion.NESTED_CONDITION?.nested_items) {
+    return result;
+  }
+  
+  for (const item of criterion.NESTED_CONDITION.nested_items) {
+    if (item.type) {
+      if (validTypes.includes(item.type)) {
+        if (!result.validTypes.includes(item.type)) {
+          result.validTypes.push(item.type);
+        }
+      } else {
+        if (!result.adhocNestedTypes.includes(item.type)) {
+          result.adhocNestedTypes.push(item.type);
+        }
+      }
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Validate TREATMENT_HISTORY subfields against whitelist
+ * @param {Object|Object[]} treatmentHistory - TREATMENT_HISTORY value (object or array)
+ * @returns {{ validSubfields: string[], undefinedSubfields: string[] }}
+ */
+export function validateTreatmentHistorySubfields(treatmentHistory) {
+  const validSubfields = getValidTreatmentHistorySubfields();
+  const result = {
+    validSubfields: [],
+    undefinedSubfields: []
+  };
+  
+  if (!treatmentHistory) {
+    return result;
+  }
+  
+  // Normalize to array
+  const entries = Array.isArray(treatmentHistory) ? treatmentHistory : [treatmentHistory];
+  
+  for (const entry of entries) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    
+    for (const key of Object.keys(entry)) {
+      if (validSubfields.includes(key)) {
+        if (!result.validSubfields.includes(key)) {
+          result.validSubfields.push(key);
+        }
+      } else {
+        if (!result.undefinedSubfields.includes(key)) {
+          result.undefinedSubfields.push(key);
+        }
+      }
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Validate NEGATION_DETECTED structure against whitelist
+ * @param {Object} negation - NEGATION_DETECTED value
+ * @returns {{ isValid: boolean, validFields: string[], unknownFields: string[] }}
+ */
+export function validateNegationDetectedStructure(negation) {
+  const validFields = getValidNegationDetectedFields();
+  const result = {
+    isValid: true,
+    validFields: [],
+    unknownFields: []
+  };
+  
+  if (!negation || typeof negation !== 'object') {
+    return result;
+  }
+  
+  for (const key of Object.keys(negation)) {
+    if (validFields.includes(key)) {
+      result.validFields.push(key);
+    } else {
+      result.unknownFields.push(key);
+      result.isValid = false;
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Detect all ad-hoc fields in a criterion
+ * @param {Object} criterion - Parsed criterion
+ * @param {string} clusterCode - Cluster code (CMB, AIC, etc.)
+ * @returns {{
+ *   isValid: boolean,
+ *   hasAdhocFields: boolean,
+ *   unknownTopLevel: string[],
+ *   adhocNestedTypes: string[],
+ *   undefinedTreatmentHistorySubfields: string[],
+ *   unknownNegationFields: string[]
+ * }}
+ */
+export function detectAdhocFields(criterion, clusterCode) {
+  const schema = loadSchemas();
+  const clusterSchema = schema.clusters[clusterCode];
+  
+  if (!clusterSchema) {
+    throw new Error(`Unknown cluster: ${clusterCode}`);
+  }
+  
+  const result = {
+    isValid: true,
+    hasAdhocFields: false,
+    unknownTopLevel: [],
+    adhocNestedTypes: [],
+    undefinedTreatmentHistorySubfields: [],
+    unknownNegationFields: []
+  };
+  
+  // 1. Detect unknown top-level fields
+  const allAllowedFields = new Set([
+    ...clusterSchema.required,
+    ...(clusterSchema.optional || []),
+    ...schema.commonFields.required,
+    ...(schema.commonFields.optional || [])
+  ]);
+  
+  for (const key of Object.keys(criterion)) {
+    if (!allAllowedFields.has(key)) {
+      result.unknownTopLevel.push(key);
+    }
+  }
+  
+  // 2. Detect ad-hoc nested_items.type values
+  const nestedValidation = validateNestedItemsTypes(criterion);
+  result.adhocNestedTypes = nestedValidation.adhocNestedTypes;
+  
+  // 3. Detect undefined TREATMENT_HISTORY subfields
+  if (criterion.TREATMENT_HISTORY) {
+    const thValidation = validateTreatmentHistorySubfields(criterion.TREATMENT_HISTORY);
+    result.undefinedTreatmentHistorySubfields = thValidation.undefinedSubfields;
+  }
+  
+  // 4. Detect unknown NEGATION_DETECTED fields
+  if (criterion.NEGATION_DETECTED) {
+    const negValidation = validateNegationDetectedStructure(criterion.NEGATION_DETECTED);
+    result.unknownNegationFields = negValidation.unknownFields;
+  }
+  
+  // Determine if any ad-hoc fields were found
+  result.hasAdhocFields = (
+    result.unknownTopLevel.length > 0 ||
+    result.adhocNestedTypes.length > 0 ||
+    result.undefinedTreatmentHistorySubfields.length > 0 ||
+    result.unknownNegationFields.length > 0
+  );
+  
+  result.isValid = !result.hasAdhocFields;
+  
+  return result;
+}
+
 /**
  * Validate and fix a single criterion
  * @param {Object} rawCriterion - Raw criterion from LLM output
@@ -718,5 +952,13 @@ export default {
   validateBatch,
   validateConsistency,
   findSimilarCriteria,
-  CONSISTENCY_RULES
+  CONSISTENCY_RULES,
+  // Ad-hoc field detection (Iteration 2.3)
+  getValidNestedItemTypes,
+  getValidTreatmentHistorySubfields,
+  getValidNegationDetectedFields,
+  validateNestedItemsTypes,
+  validateTreatmentHistorySubfields,
+  validateNegationDetectedStructure,
+  detectAdhocFields
 };

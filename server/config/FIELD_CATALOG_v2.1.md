@@ -2070,6 +2070,27 @@ Output:
 - `nested_items` must be array of objects
 - `nested_logical_operator` must be "AND" or "OR"
 
+**⚠️ VALID nested_items.type VALUES (v2.2):**
+
+The `type` field in `nested_items` MUST be one of these defined values:
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `CONDITION_TYPE` | Disease or medical condition | `{"type": "CONDITION_TYPE", "values": ["viral infection", "bacterial infection"]}` |
+| `ANATOMICAL_LOCATION` | Body part or organ system | `{"type": "ANATOMICAL_LOCATION", "values": ["face", "scalp"]}` |
+| `SEVERITY` | Severity level | `{"type": "SEVERITY", "values": ["severe", "moderate"]}` |
+| `TIMEFRAME` | Temporal requirement | `{"type": "TIMEFRAME", "values": ["within 6 months"]}` |
+| `TREATMENT_HISTORY` | Prior treatment | `{"type": "TREATMENT_HISTORY", "values": ["failed TNF inhibitor"]}` |
+| `CONDITION_PATTERN` | Temporal pattern | `{"type": "CONDITION_PATTERN", "values": ["history", "active"]}` |
+| `MEASUREMENT` | Lab value or score | `{"type": "MEASUREMENT", "values": ["PASI > 10"]}` |
+| `TREATMENT_REQUIREMENT` | Treatment requirement | `{"type": "TREATMENT_REQUIREMENT", "values": ["requires hospitalization"]}` |
+| `EXCEPTION` | Exception condition | `{"type": "EXCEPTION", "values": ["unless adequately treated"]}` |
+
+**❌ FORBIDDEN - Do NOT invent new types:**
+- ❌ `infection_category` → use `CONDITION_TYPE` instead
+- ❌ `requirement` → use `TREATMENT_REQUIREMENT` instead
+- ❌ Any lowercase type → use UPPERCASE from the list above
+
 ---
 
 ### **NESTED_CONDITION Examples:**
@@ -2393,7 +2414,7 @@ def matches_criterion(patient, criterion):
 {
   "NEGATION_DETECTED": {
     "negated_term": "plaque",
-    "negation_type": "prefix",  // "prefix", "absence_of", "exception"
+    "negation_type": "prefix",  // "prefix", "absence_of", "exception", "other_than", "scope_limiting"
     "interpretation": "Excludes patients with plaque psoriasis; includes all other psoriasis variants",
     "affected_fields": ["CONDITION_TYPE", "PSORIASIS_VARIANT"],
     "parsing_note": "'non-plaque' treated as distinct variant category, NOT absence of 'plaque'"
@@ -2401,9 +2422,23 @@ def matches_criterion(patient, criterion):
 }
 ```
 
+**⚠️ VALID NEGATION_DETECTED FIELDS (v2.2):**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `negated_term` | string | ✅ Yes | The term being negated |
+| `negation_type` | string | No | Type: "prefix", "absence_of", "exception", "other_than", "scope_limiting" |
+| `interpretation` | string | No | Human-readable explanation |
+| `affected_fields` | array | No | List of fields impacted by negation |
+| `parsing_note` | string | No | How negation was handled |
+| `is_negated` | boolean | No | **Legacy** - true if negation present |
+| `context` | string | No | **Legacy** - context string |
+
+**❌ FORBIDDEN - Do NOT add fields not in this list.**
+
 **Validation Rules:**
 - `negated_term` must be string
-- `negation_type` must be one of: "prefix", "absence_of", "exception", "other_than"
+- `negation_type` must be one of: "prefix", "absence_of", "exception", "other_than", "scope_limiting"
 - `interpretation` must be string (human-readable)
 - `affected_fields` must be array of field names
 - `parsing_note` must be string

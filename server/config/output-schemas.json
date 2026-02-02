@@ -1,12 +1,49 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "clinical-trial-parser-output-schemas",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Output schemas for each cluster type in clinical trial criteria parser",
+  
+  "validNestedItemTypes": [
+    "CONDITION_TYPE",
+    "ANATOMICAL_LOCATION", 
+    "SEVERITY",
+    "TIMEFRAME",
+    "TREATMENT_HISTORY",
+    "CONDITION_PATTERN",
+    "MEASUREMENT",
+    "TREATMENT_REQUIREMENT",
+    "EXCEPTION"
+  ],
+  
+  "validTreatmentHistorySubfields": [
+    "treatment",
+    "treatment_class",
+    "response",
+    "timing",
+    "confidence",
+    "requires_hospitalization",
+    "duration",
+    "count",
+    "route",
+    "dose",
+    "frequency",
+    "unfamiliar_term_flag"
+  ],
+  
+  "validNegationDetectedFields": [
+    "is_negated",
+    "negated_term",
+    "context",
+    "negation_type",
+    "interpretation",
+    "affected_fields",
+    "parsing_note"
+  ],
   
   "commonFields": {
     "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
-    "optional": ["_thought_process", "LOGICAL_OPERATOR", "NESTED_CONDITION", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "REQUIRES_CLINICAL_JUDGMENT", "SUBJECTIVE_ESTIMATE", "original"]
+    "optional": ["_thought_process", "LOGICAL_OPERATOR", "NESTED_CONDITION", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "REQUIRES_CLINICAL_JUDGMENT", "SUBJECTIVE_ESTIMATE", "original", "TREATMENT_HISTORY"]
   },
   
   "fieldTypes": {
@@ -89,8 +126,30 @@
       "properties": {
         "is_negated": "boolean",
         "negated_term": "string",
-        "context": "string"
-      }
+        "context": "string",
+        "negation_type": "string",
+        "interpretation": "string",
+        "affected_fields": "array",
+        "parsing_note": "string"
+      },
+      "description": "Supports both legacy (is_negated, context) and new schema (negation_type, interpretation, affected_fields, parsing_note)"
+    },
+    "TREATMENT_HISTORY": {
+      "type": ["array", "object", "null"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "treatment": "string",
+          "treatment_class": "string",
+          "response": "string",
+          "timing": "string",
+          "confidence": "number",
+          "requires_hospitalization": "boolean",
+          "duration": "string",
+          "count": "integer"
+        }
+      },
+      "description": "Treatment history entries with drug/class information and response details"
     },
     "NESTED_CONDITION": {
       "type": ["object", "null"],
@@ -144,7 +203,7 @@
     },
     "AIC": {
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
-      "optional": ["_thought_process", "CONDITION_TYPE", "TIMEFRAME", "NEGATION_DETECTED", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "original"]
+      "optional": ["_thought_process", "CONDITION_TYPE", "CONDITION_PATTERN", "SEVERITY", "ANATOMICAL_LOCATION", "TIMEFRAME", "NEGATION_DETECTED", "TREATMENT_HISTORY", "MEASUREMENTS", "PSORIASIS_VARIANT", "EXCEPTION_CONDITION", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "REQUIRES_CLINICAL_JUDGMENT", "original"]
     },
     "PTH": {
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],

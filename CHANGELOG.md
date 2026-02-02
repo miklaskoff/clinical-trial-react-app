@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.1.1] - 2026-02-02
+
+### 🛡️ Ad-Hoc Field Prevention System — Iteration 2.3
+
+Comprehensive system to prevent LLM parser from inventing field names, types, or values not defined in schema.
+
+### Added
+
+- **Ad-Hoc Field Detection Functions** (`output-validator.js`)
+  - `detectAdhocFields()` — Comprehensive detection of all ad-hoc fields
+  - `validateNestedItemsTypes()` — Validates nested_items.type values
+  - `validateTreatmentHistorySubfields()` — Validates TREATMENT_HISTORY subfields
+  - `validateNegationDetectedStructure()` — Validates NEGATION_DETECTED fields
+  - `getValidNestedItemTypes()` — Returns whitelist of valid nested types
+  - `getValidTreatmentHistorySubfields()` — Returns whitelist of valid subfields
+  - `getValidNegationDetectedFields()` — Returns whitelist of valid negation fields
+
+- **Schema Updates** (`output-schemas.json`)
+  - Added `validNestedItemTypes` array: CONDITION_TYPE, ANATOMICAL_LOCATION, SEVERITY, TIMEFRAME, TREATMENT_HISTORY, CONDITION_PATTERN, MEASUREMENT, TREATMENT_REQUIREMENT, EXCEPTION
+  - Added `validTreatmentHistorySubfields` array: treatment, treatment_class, response, timing, confidence, requires_hospitalization, duration, count, route, dose, frequency, unfamiliar_term_flag
+  - Added `validNegationDetectedFields` array: is_negated, negated_term, context, negation_type, interpretation, affected_fields, parsing_note
+  - Updated AIC cluster optional fields to include all valid fields
+  - Added TREATMENT_HISTORY schema with complete subfield definitions
+  - Updated NEGATION_DETECTED schema with new fields (backwards compatible)
+
+- **Reference Lists Updates** (`reference-lists.json`)
+  - Added `valid_nested_item_types`
+  - Added `valid_treatment_history_subfields`
+  - Added `valid_negation_detected_fields`
+
+- **FIELD_CATALOG Updates** (`FIELD_CATALOG_v2.1.md`)
+  - Documented valid `nested_items.type` values with examples
+  - Documented forbidden ad-hoc types (infection_category, requirement)
+  - Updated NEGATION_DETECTED format with complete field list
+  - Added v2.2 field tables
+
+- **New Tests** (`output-validator.adhoc.test.js`)
+  - 16 tests covering all ad-hoc detection scenarios
+  - Integration test validates real AIC output
+  - Detects: unknown top-level fields, ad-hoc nested types, undefined subfields
+
+### Detected Ad-Hoc Fields in AIC Output
+
+The following ad-hoc types invented by LLM were correctly detected:
+- `infection_category` → Should use `CONDITION_TYPE`
+- `requirement` → Should use `TREATMENT_REQUIREMENT`
+
+### Technical Details
+
+- Backend tests: 206 passing (+16 new)
+- Implementation follows TDD workflow
+- Implementation Contract created and fulfilled
+
+---
+
 ## [5.1.0] - 2026-02-02
 
 ### 🚀 Parser Infrastructure — Iteration 2.2

@@ -1,0 +1,61 @@
+{
+  "nestedItemTypes": [
+    "CONDITION_PATTERN",
+    "CONDITION_TYPE",
+    "TREATMENT_HISTORY",
+    "TREATMENT_REQUIREMENT",
+    "infection_category",
+    "requirement"
+  ],
+  "nestedItemFields": [
+    "requirements",
+    "type",
+    "values"
+  ],
+  "treatmentHistoryFields": [
+    "confidence",
+    "count",
+    "duration",
+    "requires_hospitalization",
+    "response",
+    "timing",
+    "treatment",
+    "treatment_class",
+    "unfamiliar_term_flag"
+  ],
+  "timeframeFields": [
+    "amount",
+    "reference",
+    "relation",
+    "timing.amount",
+    "timing.reference",
+    "timing.relation",
+    "timing.unit",
+    "unit"
+  ],
+  "exceptionConditionFields": [
+    "condition",
+    "excluded_types",
+    "makes_eligible"
+  ],
+  "negationDetectedFields": [
+    "affected_fields",
+    "interpretation",
+    "negated_term",
+    "negation_type",
+    "parsing_note"
+  ],
+  "unknownTopLevelFields": [
+    "TREATMENT_HISTORY"
+  ],
+  "mainConditionFields": [
+    "pattern",
+    "type",
+    "value",
+    "values"
+  ],
+  "requirementsFields": [
+    "timeframe",
+    "treatment"
+  ]
+}

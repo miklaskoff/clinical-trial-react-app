@@ -171,5 +171,42 @@
     "exclusion",
     "mandatory_exclude",
     "conditional_exclude"
+  ],
+  
+  "valid_nested_item_types": [
+    "CONDITION_TYPE",
+    "ANATOMICAL_LOCATION",
+    "SEVERITY",
+    "TIMEFRAME",
+    "TREATMENT_HISTORY",
+    "CONDITION_PATTERN",
+    "MEASUREMENT",
+    "TREATMENT_REQUIREMENT",
+    "EXCEPTION"
+  ],
+  
+  "valid_treatment_history_subfields": [
+    "treatment",
+    "treatment_class",
+    "response",
+    "timing",
+    "confidence",
+    "requires_hospitalization",
+    "duration",
+    "count",
+    "route",
+    "dose",
+    "frequency",
+    "unfamiliar_term_flag"
+  ],
+  
+  "valid_negation_detected_fields": [
+    "is_negated",
+    "negated_term",
+    "context",
+    "negation_type",
+    "interpretation",
+    "affected_fields",
+    "parsing_note"
   ]
 }
