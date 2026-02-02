@@ -1,5 +1,59 @@
 # Lessons Learned
 
+## 2026-02-02: VS Code Terminal Kills Frontend Server — PERMANENT FIX
+
+### Problem
+Frontend server (port 3000) keeps dying silently. User sees white screen repeatedly.
+
+### Root Cause
+**VS Code aggressively manages terminals** — With 90+ terminals open, VS Code kills idle processes to save resources. Vite dev server appears "idle" between HMR updates.
+
+### Why Previous "Fixes" Failed
+1. Starting server in VS Code terminal → VS Code kills it
+2. Background process in terminal → Still managed by VS Code
+3. `start-dev.bat` → Still runs in VS Code-managed terminal
+
+### PERMANENT Solution — Use Independent CMD Window
+```powershell
+# Start frontend in CMD window NOT managed by VS Code
+Start-Process cmd -ArgumentList "/k cd /d c:\Users\lasko\Downloads\clinical-trial-react-app && npm run dev"
+```
+
+### Created Files for Auto-Start
+
+**`keep-alive.ps1`** — Monitors both servers and auto-restarts if dead:
+```powershell
+# Run in separate PowerShell window (not VS Code):
+Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "keep-alive.ps1"
+```
+
+### Quick Command to Start Both Servers Permanently
+```powershell
+# Run this ONCE at start of session:
+Start-Process cmd -ArgumentList "/k cd /d c:\Users\lasko\Downloads\clinical-trial-react-app && npm run dev"
+Start-Process cmd -ArgumentList "/k cd /d c:\Users\lasko\Downloads\clinical-trial-react-app\server && npm run dev"
+```
+
+### Verification Command
+```powershell
+Get-NetTCPConnection -LocalPort 3000,3001 -State Listen -ErrorAction SilentlyContinue
+# Should show BOTH 3000 and 3001 in Listen state
+```
+
+### Lesson
+- **NEVER run dev servers in VS Code terminal for long sessions**
+- **Use `Start-Process cmd` for persistent processes**
+- **CMD windows are NOT managed by VS Code** — They survive terminal cleanup
+- **90+ terminals = VS Code will start killing processes**
+- **White screen = check port 3000 FIRST, before debugging code**
+
+### Prevention
+1. At start of session: Run `Start-Process cmd` for each server
+2. Or: Double-click `keep-alive.ps1` to run monitor
+3. Always verify: `Get-NetTCPConnection -LocalPort 3000,3001 -State Listen`
+
+---
+
 ## 2026-02-02: Frontend/Backend API Contract Mismatch — "Missing data" Error
 
 ### Problem
