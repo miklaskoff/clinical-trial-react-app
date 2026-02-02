@@ -335,6 +335,7 @@ router.post('/upload', async (req, res) => {
       status: 'pending',
       parsedCount: 0,
       skippedCount: 0,
+      actualCost: 0,
       shouldPause: false
     });
     
@@ -536,7 +537,8 @@ router.get('/job/:jobId/status', async (req, res) => {
         parsed: job.parsedCount,
         skipped: job.skippedCount,
         clusterType: job.clusterType,
-        currentCriterion: job.currentCriterion
+        currentCriterion: job.currentCriterion,
+        actualCost: job.actualCost || 0
       });
     }
     
@@ -611,8 +613,11 @@ router.get('/history', async (req, res) => {
       return res.json({ jobs: [] });
     }
     
+    // Select only needed fields (exclude inputData which can be huge)
     const jobs = await db.allAsync(
-      'SELECT * FROM parser_jobs ORDER BY createdAt DESC LIMIT 50'
+      `SELECT id, createdAt, status, clusterType, modelId, totalCriteria, 
+              parsedCount, skippedCount, inputFile, parserVersion, actualCost
+       FROM parser_jobs ORDER BY createdAt DESC LIMIT 50`
     );
     
     res.json({ jobs });
@@ -822,6 +827,7 @@ async function parseJobInBackground(jobId) {
       }
       
       job.parsedCount++;
+      job.actualCost = (job.actualCost || 0) + costUsd;
       
       // Rate limiting - wait between requests
       await new Promise(resolve => setTimeout(resolve, 1000));

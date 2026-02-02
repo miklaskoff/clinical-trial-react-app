@@ -623,9 +623,12 @@ export default function ParserPage() {
           <ul className="history-list">
             {history.map(job => (
               <li key={job.id}>
-                <span className="job-id">{job.id}</span>
+                <span className="job-id" title={job.id}>
+                  {job.inputFile || job.clusterType || job.id.substring(0, 8)}
+                </span>
                 <span className={`job-status status-${job.status}`}>{job.status}</span>
                 <span>{job.parsedCount}/{job.totalCriteria} criteria</span>
+                <span>${(job.actualCost || 0).toFixed(3)}</span>
                 <span>{new Date(job.createdAt).toLocaleString()}</span>
               </li>
             ))}
