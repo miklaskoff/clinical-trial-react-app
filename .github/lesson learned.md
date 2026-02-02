@@ -1,5 +1,57 @@
 # Lessons Learned
 
+## 2026-02-02: VS Code Terminal Kills Long-Running Processes (Parser Crash)
+
+### Problem
+AIC cluster parsing stopped at 10/30 criteria. Parser process was killed mid-execution without error.
+
+### Symptoms
+- Parser running in VS Code terminal suddenly stops
+- No error message, just returns to prompt
+- Output file shows partial results (10 criteria instead of 30)
+- Problem occurs after ~2-3 minutes of idle time between API calls
+
+### Root Cause
+**VS Code had ~91 open PowerShell terminals**. VS Code aggressively manages resources and kills idle processes when too many terminals are open.
+
+Parser makes API calls with 3-5 second delays between them. During these "idle" moments, VS Code marked the process as killable.
+
+### Solution
+**Run parser in external CMD window** (not VS Code terminal):
+
+```powershell
+# Launch parser in independent CMD process
+Start-Process cmd -ArgumentList "/c cd /d c:\Users\lasko\Downloads\clinical-trial-react-app\server && node parse-aic-cluster.js && pause"
+```
+
+Or use the batch file:
+```
+server\run-parser.bat
+```
+
+### Why This Works
+- External CMD window is NOT managed by VS Code
+- Process stays alive regardless of VS Code terminal count
+- `pause` at end keeps window open to see results
+
+### Prevention
+- **Close unused terminals** — Don't accumulate 90+ terminals
+- **Use batch files for long processes** — `run-parser.bat` exists for this
+- **Watch for silent process kills** — No error = likely VS Code killed it
+- **Check output file count** — Verify all criteria parsed, not just "script finished"
+
+### Scripts Created
+- `server/run-parser.bat` — Double-click to run parser
+- `server/run-parser.ps1` — PowerShell version
+
+### Lesson
+- **Long-running processes need isolation** from VS Code terminal management
+- **90+ terminals = trouble** — VS Code will start killing processes
+- **Silent failures are the worst** — No error message, just stops
+- **Always verify output count** — Don't assume completion
+
+---
+
 ## 2026-02-02: @check Command Ignored — Cherry-Picking Checklist Items
 
 ### Problem

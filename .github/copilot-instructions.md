@@ -378,6 +378,33 @@ npm run dev
 - When seeing stale API responses
 - After API key configuration changes
 
+### Long-Running Processes (Parser) — VS Code Terminal Kills Idle Processes
+
+**Symptom:** Parser stops mid-execution without error, output file has partial results
+
+**Root Cause:** VS Code kills idle processes when many terminals are open (~90+)
+
+**Solution — Run in External CMD Window:**
+```powershell
+# Launch parser in independent process
+Start-Process cmd -ArgumentList "/c cd /d c:\Users\lasko\Downloads\clinical-trial-react-app\server && node parse-aic-cluster.js && pause"
+```
+
+**Or use batch file:**
+```
+server\run-parser.bat   # Double-click to run
+```
+
+**Why This Works:**
+- External CMD window is NOT managed by VS Code
+- Process stays alive regardless of VS Code terminal count
+- `pause` at end keeps window open to see results
+
+**Prevention:**
+- Close unused terminals (don't accumulate 90+ terminals)
+- Use batch files for long processes
+- Always verify output count, not just "script finished"
+
 ### Dynamic Import Fetch Error — Troubleshooting
 
 **Symptom:** `Failed to fetch dynamically imported module` in browser console
