@@ -1,5 +1,53 @@
 # Lessons Learned
 
+## 2026-02-02: Frontend/Backend API Contract Mismatch — "Missing data" Error
+
+### Problem
+Parser Testing UI showed "Missing data" error immediately after file upload.
+
+### Root Cause
+**Frontend and backend had different API contracts:**
+
+```javascript
+// Frontend sent:
+{ clusterType: '...', criteria: [...] }
+
+// Backend expected:
+{ data: {...}, filename: '...' }
+```
+
+Backend checks `if (!data)` first → returns "Missing data" error.
+
+### Why This Happened
+1. Frontend was written based on assumed API structure
+2. Backend was written with different parameter names
+3. **No integration test verified actual request/response flow**
+4. **Did not verify against actual backend code before writing frontend**
+
+### Solution
+Fixed frontend to send what backend expects:
+```javascript
+body: JSON.stringify({
+  data: jsonData,
+  filename: file.name
+})
+```
+
+### Lesson
+- **Read the ACTUAL backend handler code** before writing frontend API calls
+- **API contracts must be explicit** — Document expected request body
+- **Integration tests should verify real API calls** — Not just mock responses
+- **"Missing data" = check what frontend sends vs backend expects**
+
+### Prevention
+Before implementing frontend API call:
+1. [ ] Read backend route handler
+2. [ ] Note exact parameter names expected
+3. [ ] Match frontend request body exactly
+4. [ ] Write integration test with real fetch (not mocked)
+
+---
+
 ## 2026-02-02: Implementing Prevention System Then Immediately Violating It
 
 ### Problem
