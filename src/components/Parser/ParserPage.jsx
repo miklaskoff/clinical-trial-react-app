@@ -507,11 +507,20 @@ export default function ParserPage() {
         <section className="parser-section estimate-section">
           <h2>Estimate</h2>
           <p>
-            <strong>Cost:</strong> ${estimate.estimatedCost.min.toFixed(2)} - ${estimate.estimatedCost.max.toFixed(2)}
+            <strong>Cost:</strong> ${typeof estimate.estimatedCost === 'number' 
+              ? estimate.estimatedCost.toFixed(3)
+              : `${estimate.estimatedCost.min.toFixed(2)} - ${estimate.estimatedCost.max.toFixed(2)}`}
           </p>
           <p>
-            <strong>Time:</strong> {estimate.estimatedTime.min} - {estimate.estimatedTime.max} seconds
+            <strong>Time:</strong> {typeof estimate.estimatedTime === 'number'
+              ? `~${estimate.estimatedTime}`
+              : `${estimate.estimatedTime.min} - ${estimate.estimatedTime.max}`} seconds
           </p>
+          {estimate.cacheSavings > 0 && (
+            <p>
+              <strong>Cache savings:</strong> ~{estimate.cacheSavings}%
+            </p>
+          )}
         </section>
       )}
 

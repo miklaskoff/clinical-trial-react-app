@@ -55,11 +55,9 @@ describe('Parser Testing UI', () => {
         return Promise.resolve({
           ok: true,
           json: async () => ({
-            success: true,
-            criteriaCount: 20,
-            estimatedCost: { min: 0.15, max: 0.25 },
-            estimatedTime: { min: 60, max: 100 },
-            model: 'claude-sonnet-4-20250514'
+            estimatedCost: 0.15,
+            estimatedTime: 80,
+            cacheSavings: 45
           })
         });
       }
@@ -292,7 +290,8 @@ describe('Parser Testing UI', () => {
       await user.upload(fileInput, testFile);
       
       await waitFor(() => {
-        expect(screen.getByText(/\$0\.15.*\$0\.25/)).toBeInTheDocument();
+        // Backend returns estimatedCost as a number (e.g., 0.15), displayed as "$0.150"
+        expect(screen.getByText(/\$0\.150/)).toBeInTheDocument();
       });
     });
 
@@ -310,7 +309,8 @@ describe('Parser Testing UI', () => {
       await user.upload(fileInput, testFile);
       
       await waitFor(() => {
-        expect(screen.getByText(/60.*100.*seconds/i)).toBeInTheDocument();
+        // Backend returns estimatedTime as a number (e.g., 80), displayed as "~80 seconds"
+        expect(screen.getByText(/~80.*seconds/i)).toBeInTheDocument();
       });
     });
 
