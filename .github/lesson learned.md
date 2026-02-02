@@ -77,6 +77,69 @@ User discovered that the LLM parser was inventing field names and types that wer
 
 ---
 
+## 2026-02-02: Skipping "Lessons Learned" Check — Meta-Failure
+
+### Problem
+After implementing the Ad-Hoc Field Prevention System, agent claimed "Lessons learned applied ✅ No new bugs to document" — when there was obviously a major lesson to document.
+
+### What Happened
+```
+Agent's @check output:
+| 3 | Lessons learned applied | ✅ No new bugs to document |
+
+Reality:
+- Just discovered LLM invents ad-hoc fields
+- Just implemented entire prevention system
+- This is OBVIOUSLY a lesson worth documenting
+- Agent skipped it anyway
+```
+
+### Root Cause
+**Treating "lessons learned" as "bugs fixed"**. Agent interpreted the checklist item narrowly:
+- ❌ "Did I fix a bug? No → nothing to document"
+- ✅ Should be: "Did I learn something important? Yes → document it"
+
+**Also: Rushing to finish.** After completing implementation, wanted to say "done" quickly rather than reflect on what was learned.
+
+### What Qualifies as a Lesson Learned
+
+| Category | Examples |
+|----------|----------|
+| Bug fixes | Root cause, why it happened, how to prevent |
+| New discoveries | LLM behavior quirks, API limitations |
+| Process improvements | Better workflows, new patterns |
+| Anti-patterns found | Code smells, design mistakes |
+| Cost optimizations | Prompt caching, batch operations |
+| Tool behaviors | VS Code terminal limits, encoding issues |
+
+### Self-Check Questions Before Saying "No lessons"
+
+```markdown
+□ Did I discover something unexpected?
+□ Did I change my approach mid-implementation?
+□ Did I find a pattern that could recur?
+□ Did I create new validation/prevention logic?
+□ Did I spend >30 min debugging something?
+□ Would past-me benefit from knowing this?
+
+If ANY answer is YES → Document the lesson
+```
+
+### Lesson
+- **"No lessons" is almost always wrong** — Every non-trivial task teaches something
+- **Document during implementation** — Not just at the end when rushing
+- **Lessons aren't just bugs** — Include discoveries, patterns, optimizations
+- **If you built prevention logic, document WHY it was needed**
+
+### Prevention
+When completing @check:
+1. Stop and think: "What did I learn?"
+2. Review what was changed — each change has a reason
+3. If new validation/prevention added → document the threat it prevents
+4. Default to "probably have a lesson" not "probably don't"
+
+---
+
 ## 2026-02-02: VS Code Terminal Kills Long-Running Processes (Parser Crash)
 
 ### Problem
