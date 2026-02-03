@@ -40,8 +40,10 @@ describe('OutputValidator', () => {
       expect(schema.optional).toContain('AGE_UNIT');
     });
 
-    it('should throw error for unknown cluster', () => {
-      expect(() => getSchemaForCluster('UNKNOWN')).toThrow('Unknown cluster');
+    it('should return empty schema for unknown cluster', () => {
+      const schema = getSchemaForCluster('UNKNOWN');
+      expect(schema.required).toEqual([]);
+      expect(schema.optional).toEqual([]);
     });
   });
 

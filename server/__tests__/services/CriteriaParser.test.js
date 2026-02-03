@@ -15,6 +15,17 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { UniversalParserV2 } from '../../config/universal-parser-v2.js';
 
+// Helper to create mock response in new format { text, usage }
+const createMockResponse = (jsonData) => ({
+  text: JSON.stringify(jsonData),
+  usage: {
+    input_tokens: 100,
+    output_tokens: 200,
+    cache_read_input_tokens: 0,
+    cache_creation_input_tokens: 0
+  }
+});
+
 // Mock ClaudeClient
 const mockClaudeClient = {
   isConfigured: vi.fn(() => true),
@@ -64,7 +75,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
   describe('parseCriterion - Basic Fields', () => {
     it('should parse AGE criterion with AGE_MIN, AGE_MAX, AGE_UNIT', async () => {
       // Mock Claude response
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'AGE_001',
         nct_id: 'NCT12345678',
         raw_text: 'Age ≥ 18 years and ≤ 65 years',
@@ -77,7 +88,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'AGE_001',
         nct_id: 'NCT12345678',
         raw_text: 'Age ≥ 18 years and ≤ 65 years'
@@ -93,7 +104,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     });
 
     it('should parse MEASUREMENTS with parameter, value, comparison', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'SEV_001',
         raw_text: 'PASI score ≥ 10',
         _thought_process: '1. Identified PASI score measurement. 2. Comparison is >=, value is 10.',
@@ -108,7 +119,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'SEV_001',
         raw_text: 'PASI score ≥ 10'
       }, 'SEV');
@@ -121,7 +132,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     });
 
     it('should parse SEVERITY correctly (not including active/inactive)', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'SEV_002',
         raw_text: 'moderate-to-severe plaque psoriasis',
         _thought_process: '1. Identified severity descriptors: moderate, severe. 2. These go in SEVERITY, not CONDITION_PATTERN.',
@@ -131,7 +142,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'SEV_002',
         raw_text: 'moderate-to-severe plaque psoriasis'
       }, 'SEV');
@@ -142,7 +153,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     });
 
     it('should put active/inactive in CONDITION_PATTERN (v2.1 rule)', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'CMB_001',
         raw_text: 'active psoriatic arthritis',
         _thought_process: '1. "active" goes in CONDITION_PATTERN per v2.1 rules, not SEVERITY.',
@@ -153,7 +164,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'CMB_001',
         raw_text: 'active psoriatic arthritis'
       }, 'CMB');
@@ -165,7 +176,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
 
   describe('NESTED_CONDITION - Object Format (v2.1)', () => {
     it('should parse NESTED_CONDITION as object with main_condition and nested_items', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'SEV_1597',
         raw_text: 'PASI score is ≥10 and <12 with at least one of the following: facial or scalp involvement',
         _thought_process: '1. Main condition: PASI range [10,12). 2. Nested: at_least_one of facial OR scalp.',
@@ -195,7 +206,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'SEV_1597',
         raw_text: 'PASI score is ≥10 and <12 with at least one of the following: facial or scalp involvement'
       }, 'SEV');
@@ -210,7 +221,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     });
 
     it('should handle nested_operator "at_least_n" with nested_count', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'SEV_002',
         raw_text: 'BSA ≥ 10% with involvement of at least two of: scalp, face, hands, feet',
         _thought_process: '1. Main: BSA >= 10%. 2. Nested: at_least_n with n=2.',
@@ -233,7 +244,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'SEV_002',
         raw_text: 'BSA ≥ 10% with involvement of at least two of: scalp, face, hands, feet'
       }, 'SEV');
@@ -243,7 +254,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     });
 
     it('should handle nested_operator "all"', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'SEV_003',
         raw_text: 'PASI ≥ 12 with all of: scalp, nail, and joint involvement',
         _thought_process: '1. Main: PASI >= 12. 2. Nested: ALL of the locations required.',
@@ -260,7 +271,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'SEV_003',
         raw_text: 'PASI ≥ 12 with all of: scalp, nail, and joint involvement'
       }, 'SEV');
@@ -272,7 +283,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
 
   describe('EXCEPTION_CONDITION', () => {
     it('should parse exception clause with makes_eligible flag', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'CMB_2036',
         raw_text: 'History of cancer except basal cell carcinoma',
         _thought_process: '1. Main exclusion: cancer history. 2. Exception: basal cell carcinoma makes patient eligible.',
@@ -294,7 +305,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'CMB_2036',
         raw_text: 'History of cancer except basal cell carcinoma'
       }, 'CMB');
@@ -308,7 +319,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
 
   describe('NEGATION_DETECTED', () => {
     it('should detect "non-" prefix negation', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'NPV_2109',
         raw_text: 'Diagnosis of non-plaque psoriasis',
         _thought_process: '1. Detected "non-" prefix. 2. Parsed into PSORIASIS_VARIANT as "non-plaque".',
@@ -325,7 +336,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'NPV_2109',
         raw_text: 'Diagnosis of non-plaque psoriasis'
       }, 'NPV');
@@ -336,7 +347,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     });
 
     it('should detect "absence of" negation', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'NPV_2426',
         raw_text: 'Patients in the absence of plaque psoriasis',
         _thought_process: '1. Detected "absence of". 2. Set CONDITION_PATTERN to "absence".',
@@ -352,7 +363,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'NPV_2426',
         raw_text: 'Patients in the absence of plaque psoriasis'
       }, 'NPV');
@@ -364,7 +375,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
 
   describe('Unfamiliar Term Detection (3-Stage)', () => {
     it('should set unfamiliar_term_flag for unknown terms with low confidence', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'CMB_5678',
         raw_text: 'Diagnosis of Schnitzler syndrome',
         _thought_process: '1. "Schnitzler syndrome" not in reference list. 2. Base term "syndrome" found. 3. Confidence 0.6 < 0.7.',
@@ -374,7 +385,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'pending_admin_review'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'CMB_5678',
         raw_text: 'Diagnosis of Schnitzler syndrome'
       }, 'CMB');
@@ -385,7 +396,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     });
 
     it('should NOT flag familiar terms from reference list', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'CMB_001',
         raw_text: 'History of plaque psoriasis',
         _thought_process: '1. "plaque psoriasis" found in reference list. 2. Confidence 1.0.',
@@ -395,7 +406,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'complete'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'CMB_001',
         raw_text: 'History of plaque psoriasis'
       }, 'CMB');
@@ -407,7 +418,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
 
   describe('AMBIGUITY_FLAG', () => {
     it('should set AMBIGUITY_FLAG for incomplete sentences', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue(JSON.stringify({
+      mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
         id: 'SEV_BAD',
         raw_text: 'PASI score is ≥10 and <12 with at least one of the following: >',
         _thought_process: '1. Sentence is incomplete - ">" suggests text was cut off.',
@@ -418,7 +429,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
         parsing_status: 'pending_admin_review'
       }));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'SEV_BAD',
         raw_text: 'PASI score is ≥10 and <12 with at least one of the following: >'
       }, 'SEV');
@@ -433,7 +444,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
       let callCount = 0;
       mockClaudeClient.complete = vi.fn().mockImplementation(() => {
         callCount++;
-        return Promise.resolve(JSON.stringify({
+        return Promise.resolve(createMockResponse({
           id: `AGE_${callCount}`,
           raw_text: `Age ≥ ${18 + callCount}`,
           AGE_MIN: 18 + callCount,
@@ -459,9 +470,12 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
 
   describe('Error Handling', () => {
     it('should handle LLM returning invalid JSON gracefully', async () => {
-      mockClaudeClient.complete = vi.fn().mockResolvedValue('This is not valid JSON');
+      mockClaudeClient.complete = vi.fn().mockResolvedValue({
+        text: 'This is not valid JSON',
+        usage: { input_tokens: 100, output_tokens: 50, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }
+      });
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'BAD_001',
         raw_text: 'Some criterion text'
       }, 'AGE');
@@ -475,7 +489,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     it('should handle LLM API errors gracefully', async () => {
       mockClaudeClient.complete = vi.fn().mockRejectedValue(new Error('API rate limit exceeded'));
 
-      const result = await parser.parseCriterion({
+      const { criterion: result } = await parser.parseCriterion({
         id: 'ERR_001',
         raw_text: 'Some criterion text'
       }, 'AGE');
@@ -487,3 +501,6 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
     });
   });
 });
+
+
+

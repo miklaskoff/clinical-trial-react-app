@@ -337,7 +337,7 @@ Respond ONLY with valid JSON in this exact format:
    * @param {number} [options.maxTokens=4096] - Max tokens for response
    * @returns {Promise<string>} Raw response text from Claude
    */
-  async complete({ system, prompt, maxTokens = 4096 }) {
+  async complete({ system, prompt, maxTokens = 4096, returnUsage = false }) {
     if (!this.#client) {
       throw new Error('Claude client not configured. Set ANTHROPIC_API_KEY or configure via admin.');
     }
@@ -366,7 +366,22 @@ Respond ONLY with valid JSON in this exact format:
         console.log(`⚡ Cache HIT: ${usage.cache_read_input_tokens} tokens saved!`);
       }
 
-      return response.content[0]?.text || '';
+      const text = response.content[0]?.text || '';
+      
+      // Return usage stats if requested (for cost tracking)
+      if (returnUsage) {
+        return {
+          text,
+          usage: {
+            input_tokens: usage?.input_tokens || 0,
+            output_tokens: usage?.output_tokens || 0,
+            cache_read_input_tokens: usage?.cache_read_input_tokens || 0,
+            cache_creation_input_tokens: usage?.cache_creation_input_tokens || 0
+          }
+        };
+      }
+      
+      return text;
     } catch (error) {
       console.error('Claude API complete() error:', error.message);
       throw error;

@@ -13,7 +13,7 @@
  * - History of past jobs
  * - API balance display
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './ParserPage.css';
 
 // API base URL
@@ -45,6 +45,7 @@ export default function ParserPage() {
   const [jobStatus, setJobStatus] = useState(null); // 'running' | 'paused' | 'completed' | 'failed'
   const [progress, setProgress] = useState({ parsed: 0, total: 0, percentage: 0 });
   const [currentCost, setCurrentCost] = useState(0);
+  const [parseErrors, setParseErrors] = useState([]);  // Errors from parsing
   
   // State: Results
   const [results, setResults] = useState([]);
@@ -63,15 +64,103 @@ export default function ParserPage() {
   // State: Loading/Error
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [backendStatus, setBackendStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
   
   // Polling interval ref
   const pollIntervalRef = useRef(null);
 
-  // Fetch parser version on mount
+  // API: Fetch job status (defined early for useEffect dependency)
+  const fetchJobStatus = useCallback(async () => {
+    if (!jobId) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/job/${jobId}/status`);
+      const data = await response.json();
+      
+      console.info('[ParserPage] fetchJobStatus response:', data); // Debug log
+      
+      if (response.ok && !data.error) {
+        setJobStatus(data.status);
+        const total = data.total || 0;
+        const parsed = data.parsed || 0;
+        const percentage = total > 0 ? Math.round((parsed / total) * 100) : 0;
+        setProgress({ parsed, total, percentage });
+        
+        // Ensure actualCost is a number (backend might return string)
+        const cost = typeof data.actualCost === 'string' 
+          ? parseFloat(data.actualCost) 
+          : (data.actualCost || 0);
+        console.info('[ParserPage] Setting currentCost to:', cost); // Debug log
+        setCurrentCost(cost);
+        
+        // Capture parse errors if any
+        if (data.errors && data.errors.length > 0) {
+          setParseErrors(data.errors);
+        }
+        if (data.failedCount > 0) {
+          console.warn(`[ParserPage] ${data.failedCount} criteria failed to parse`);
+        }
+      } else if (response.status === 404 || data.error === 'Job not found') {
+        // Job doesn't exist anymore - clear state
+        console.warn('[ParserPage] Job not found, clearing state');
+        setJobId(null);
+        setJobStatus('idle');
+        setProgress({ parsed: 0, total: 0, percentage: 0 });
+        setCurrentCost(0);
+        setResults([]);
+        setParseErrors([]);
+        localStorage.removeItem('parserJobId');
+      }
+    } catch (err) {
+      console.error('Failed to fetch status:', err);
+    }
+  }, [jobId]);
+
+  // API: Fetch job results (defined early for useEffect dependency)
+  const fetchJobResults = useCallback(async () => {
+    if (!jobId) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/job/${jobId}/results`);
+      const data = await response.json();
+      
+      console.info('[ParserPage] fetchJobResults response:', data); // Debug log
+      
+      if (response.ok && !data.error) {
+        setResults(data.results || []);
+        console.info('[ParserPage] Set results count:', data.results?.length || 0); // Debug log
+      }
+    } catch (err) {
+      console.error('Failed to fetch results:', err);
+    }
+  }, [jobId]);
+
+  // Fetch parser version on mount + check backend status
   useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/version`, { 
+          method: 'GET',
+          signal: AbortSignal.timeout(3000)
+        });
+        setBackendStatus(response.ok ? 'online' : 'offline');
+      } catch {
+        setBackendStatus('offline');
+      }
+    };
+    
+    checkBackend();
     fetchVersion();
     fetchHistory();
     fetchBalance();
+    
+    // Re-check backend every 10 seconds
+    const interval = setInterval(checkBackend, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch estimate when model changes and file is uploaded
@@ -82,9 +171,13 @@ export default function ParserPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModel, uploadData]);
 
-  // Poll for status when job is running
+  // Poll for status when job is running or processing
   useEffect(() => {
-    if (jobId && jobStatus === 'running') {
+    // Store current jobId to avoid stale closure issues
+    const currentJobId = jobId;
+    
+    // Start polling for active job states
+    if (currentJobId && (jobStatus === 'running' || jobStatus === 'processing')) {
       // Fetch immediately then poll
       fetchJobStatus();
       fetchJobResults();
@@ -93,8 +186,23 @@ export default function ParserPage() {
         fetchJobStatus();
         fetchJobResults();
       }, 2000);
-    } else if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
+    }
+    
+    // Stop polling only when job is truly finished
+    if (jobStatus === 'completed' || jobStatus === 'failed') {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      // CRITICAL: Fetch BOTH status (for cost) and results AFTER clearing polling
+      // This ensures we get the final cost and results
+      if (currentJobId) {
+        // Fetch final status to get actualCost from DB
+        fetchJobStatus();
+        fetchJobResults();
+        fetchHistory();
+        fetchBalance();
+      }
     }
     
     return () => {
@@ -102,8 +210,7 @@ export default function ParserPage() {
         clearInterval(pollIntervalRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId, jobStatus]);
+  }, [jobId, jobStatus, fetchJobStatus, fetchJobResults]);
 
   // API: Fetch parser version
   const fetchVersion = async () => {
@@ -278,53 +385,6 @@ export default function ParserPage() {
     }
   };
 
-  // API: Fetch job status
-  const fetchJobStatus = async () => {
-    if (!jobId) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${API_BASE}/job/${jobId}/status`);
-      const data = await response.json();
-      
-      if (response.ok && !data.error) {
-        setJobStatus(data.status);
-        const total = data.total || 0;
-        const parsed = data.parsed || 0;
-        const percentage = total > 0 ? Math.round((parsed / total) * 100) : 0;
-        setProgress({ parsed, total, percentage });
-        setCurrentCost(data.actualCost || 0);
-        
-        if (data.status === 'completed' || data.status === 'failed') {
-          fetchHistory();
-          fetchBalance();
-          fetchJobResults();
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch status:', err);
-    }
-  };
-
-  // API: Fetch job results
-  const fetchJobResults = async () => {
-    if (!jobId) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${API_BASE}/job/${jobId}/results`);
-      const data = await response.json();
-      
-      if (response.ok && !data.error) {
-        setResults(data.results || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch results:', err);
-    }
-  };
-
   // Download results as JSON
   const handleDownloadResults = () => {
     if (results.length === 0) {
@@ -385,8 +445,8 @@ export default function ParserPage() {
     }
   };
 
-  // Helper: Detect cluster type from JSON
-  const detectClusterType = (data) => {
+  // Helper: Detect cluster type from JSON (prefixed with _ to mark as intentionally unused for now)
+  const _detectClusterType = (data) => {
     const firstCriterion = (data.criteria || data)[0];
     if (!firstCriterion) {
       return 'CLUSTER_AIC';
@@ -412,9 +472,16 @@ export default function ParserPage() {
     <div className="parser-page">
       <header className="parser-header">
         <h1>Parser Testing UI</h1>
-        {parserVersion && (
-          <span className="parser-version">Parser v{parserVersion}</span>
-        )}
+        <div className="header-status">
+          {parserVersion && (
+            <span className="parser-version">Parser v{parserVersion}</span>
+          )}
+          <span className={`backend-status status-${backendStatus}`} data-testid="backend-status">
+            {backendStatus === 'online' && '🟢 Backend Online'}
+            {backendStatus === 'offline' && '🔴 Backend Offline'}
+            {backendStatus === 'checking' && '⏳ Checking...'}
+          </span>
+        </div>
       </header>
 
       {error && (
@@ -556,7 +623,8 @@ export default function ParserPage() {
         )}
 
         {jobStatus && (
-          <div className="progress-section">
+          <div className="progress-section" data-testid="progress-section">
+            <div className="job-status" data-testid="job-status">Status: {jobStatus}</div>
             <div className="progress-bar-container">
               <div
                 className="progress-bar"
@@ -569,20 +637,65 @@ export default function ParserPage() {
             </div>
             <div className="progress-stats">
               <span>{progress.parsed} / {progress.total} parsed</span>
-              <span>${currentCost.toFixed(2)} spent</span>
+              <span data-testid="cost-display">${currentCost.toFixed(2)} spent</span>
             </div>
+            
+            {/* Show parse errors if any */}
+            {parseErrors.length > 0 && (
+              <div className="parse-errors" data-testid="parse-errors" style={{
+                marginTop: '1rem',
+                padding: '0.75rem',
+                backgroundColor: '#fff3cd',
+                border: '1px solid #ffc107',
+                borderRadius: '4px',
+                color: '#856404'
+              }}>
+                <strong>⚠️ {parseErrors.length} criteria failed to parse:</strong>
+                <ul style={{ margin: '0.5rem 0 0 1.5rem', padding: 0 }}>
+                  {parseErrors.slice(0, 3).map((err, idx) => (
+                    <li key={idx} style={{ fontSize: '0.9rem' }}>
+                      <code>{err.criterionId}</code>: {err.error.includes('credit balance') 
+                        ? 'Anthropic API: insufficient credits' 
+                        : err.error.substring(0, 100)}
+                    </li>
+                  ))}
+                  {parseErrors.length > 3 && (
+                    <li style={{ fontStyle: 'italic' }}>...and {parseErrors.length - 3} more</li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </section>
 
+      {/* Show message when job completed but no results */}
+      {jobStatus === 'completed' && results.length === 0 && (
+        <section className="parser-section" data-testid="no-results-section" style={{
+          backgroundColor: '#f8d7da',
+          border: '1px solid #f5c6cb',
+          borderRadius: '8px',
+          padding: '1rem'
+        }}>
+          <h2 style={{ color: '#721c24', margin: '0 0 0.5rem 0' }}>❌ No Results</h2>
+          <p style={{ color: '#721c24', margin: 0 }}>
+            Parsing completed but no criteria were successfully parsed. 
+            {parseErrors.length > 0 
+              ? ` Check the errors above — ${parseErrors.length} criteria failed.`
+              : ' Check your Anthropic API key and credit balance.'}
+          </p>
+        </section>
+      )}
+
       {results.length > 0 && (
-        <section className="parser-section results-section">
+        <section className="parser-section results-section" data-testid="results-section">
           <h2>Results</h2>
           <div className="results-header">
             <span>{results.length} criteria parsed</span>
             <button
               className="btn btn-secondary"
               onClick={handleDownloadResults}
+              data-testid="download-button"
             >
               📥 Download JSON
             </button>

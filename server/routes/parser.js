@@ -138,7 +138,8 @@ router.post('/criterion', async (req, res) => {
     
     // Parse criterion - pass original data if provided
     const parser = getParser();
-    const rawResult = await parser.parseCriterion(criterion, cluster);
+    const parseResult = await parser.parseCriterion(criterion, cluster);
+    const rawResult = parseResult.criterion;
     
     // Attach original data to result for validator to use
     if (criterion.original) {
@@ -156,6 +157,11 @@ router.post('/criterion', async (req, res) => {
     if (validation.errors.length > 0) {
       result.validation_errors = validation.errors;
       result.parsing_status = 'pending_admin_review';
+    }
+    
+    // Include usage stats in response
+    if (parseResult.usage) {
+      result.usage = parseResult.usage;
     }
     
     res.json(result);
@@ -366,9 +372,32 @@ router.post('/job/start', async (req, res) => {
       return res.status(400).json({ error: 'Missing jobId' });
     }
     
-    const job = activeJobs.get(jobId);
+    let job = activeJobs.get(jobId);
+    
+    // If not in memory, try to reload from database
     if (!job) {
-      return res.status(404).json({ error: 'Job not found' });
+      const db = getDatabase();
+      if (db) {
+        const dbJob = await db.getAsync('SELECT * FROM parser_jobs WHERE id = ?', [jobId]);
+        if (dbJob && dbJob.inputData) {
+          job = {
+            criteria: JSON.parse(dbJob.inputData),
+            clusterType: dbJob.clusterType || '',
+            status: 'pending',
+            parsedCount: dbJob.parsedCount || 0,
+            skippedCount: dbJob.skippedCount || 0,
+            actualCost: dbJob.actualCost || 0,
+            model: dbJob.modelId,
+            shouldPause: false
+          };
+          activeJobs.set(jobId, job);
+          console.log(`[Parser] Restored job ${jobId} from database`);
+        } else {
+          return res.status(404).json({ error: 'Job not found in database' });
+        }
+      } else {
+        return res.status(404).json({ error: 'Job not found' });
+      }
     }
     
     // Check budget limit
@@ -530,6 +559,7 @@ router.get('/job/:jobId/status', async (req, res) => {
     const job = activeJobs.get(jobId);
     if (job) {
       const effectiveTotal = job.maxCount || job.criteria.length;
+      const errors = job.errors || [];
       return res.json({
         status: job.status,
         total: effectiveTotal,
@@ -538,7 +568,9 @@ router.get('/job/:jobId/status', async (req, res) => {
         skipped: job.skippedCount,
         clusterType: job.clusterType,
         currentCriterion: job.currentCriterion,
-        actualCost: job.actualCost || 0
+        actualCost: job.actualCost || 0,
+        failedCount: errors.length,
+        errors: errors.slice(-5)  // Return last 5 errors only
       });
     }
     
@@ -733,6 +765,11 @@ async function parseJobInBackground(jobId) {
   
   console.log(`[Parser] Starting job ${jobId}, maxCount=${job.maxCount}, criteria=${job.criteria.length}`);
   
+  // Initialize errors array if not exists
+  if (!job.errors) {
+    job.errors = [];
+  }
+  
   const db = getDatabase();
   const parser = getParser();
   const claudeClient = getClaudeClient();
@@ -782,48 +819,74 @@ async function parseJobInBackground(jobId) {
     
     try {
       console.log(`[Parser] Parsing criterion ${i + 1}/${maxIndex}: ${criterion.id}`);
-      // Parse the criterion
-      const rawResult = await parser.parseCriterion(criterion, job.clusterType);
-      const validation = validateCriterion(rawResult, job.clusterType);
+      // Parse the criterion - returns { criterion, usage }
+      const parseResult = await parser.parseCriterion(criterion, job.clusterType);
+      const parsedCriterion = parseResult.criterion;
+      const usage = parseResult.usage;
+      
+      const validation = validateCriterion(parsedCriterion, job.clusterType);
       console.log(`[Parser] Parsed ${criterion.id}, valid=${validation.errors.length === 0}`);
       
-      // Calculate cost (mock for now - would come from actual API response)
-      const costUsd = 0.008;  // Approximate cost per criterion
+      // Calculate actual cost from token usage
+      const costUsd = usage ? calculateActualCost(usage, job.model) : 0;
+      const inputTokens = usage?.input_tokens || 0;
+      const outputTokens = usage?.output_tokens || 0;
+      const cacheReadTokens = usage?.cache_read_input_tokens || 0;
+      const cacheWriteTokens = usage?.cache_creation_input_tokens || 0;
+      
+      console.log(`[Parser] Cost: $${costUsd.toFixed(4)} (in:${inputTokens}, out:${outputTokens}, cache_r:${cacheReadTokens}, cache_w:${cacheWriteTokens})`);
       
       // Store result
       if (db) {
-        await db.runAsync(`
-          INSERT OR REPLACE INTO parsed_criteria 
-          (criterionId, nctId, clusterType, parsedAt, parserVersion, modelUsed, rawInput, parsedOutput, validationStatus, validationErrors, jobId, costUsd)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-          criterion.id,
-          criterion.nct_id || '',
-          job.clusterType,
-          new Date().toISOString(),
-          PARSER_VERSION,
-          job.model,
-          criterion.raw_text,
-          JSON.stringify(validation.criterion),
-          validation.errors.length > 0 ? 'errors' : (validation.warnings.length > 0 ? 'warnings' : 'valid'),
-          JSON.stringify(validation.errors),
-          jobId,
-          costUsd
-        ]);
+        try {
+          // Ensure required fields are not empty strings
+          const clusterType = job.clusterType && job.clusterType.trim() !== '' ? job.clusterType : 'UNKNOWN';
+          const rawInput = criterion.raw_text && criterion.raw_text.trim() !== '' ? criterion.raw_text : 'N/A';
+          const nctId = criterion.nct_id || 'N/A';
+          
+          await db.runAsync(`
+            INSERT OR REPLACE INTO parsed_criteria 
+            (criterionId, nctId, clusterType, parsedAt, parserVersion, modelUsed, rawInput, parsedOutput, validationStatus, validationErrors, jobId, costUsd, inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [
+            criterion.id,
+            nctId,
+            clusterType,
+            new Date().toISOString(),
+            PARSER_VERSION,
+            job.model,
+            rawInput,
+            JSON.stringify(validation.criterion),
+            validation.errors.length > 0 ? 'errors' : (validation.warnings.length > 0 ? 'warnings' : 'valid'),
+            JSON.stringify(validation.errors),
+            jobId,
+            costUsd,
+            inputTokens,
+            outputTokens,
+            cacheReadTokens,
+            cacheWriteTokens
+          ]);
+        } catch (dbError) {
+          console.error(`[Parser] DB INSERT error for ${criterion.id}:`, dbError.message);
+        }
         
         // Track usage
-        await db.runAsync(`
-          INSERT INTO api_usage 
-          (timestamp, modelId, inputTokens, outputTokens, costUsd, jobId)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `, [
-          new Date().toISOString(),
-          job.model,
-          500,  // Approximate
-          800,  // Approximate
-          costUsd,
-          jobId
-        ]);
+        try {
+          await db.runAsync(`
+            INSERT INTO api_usage 
+            (timestamp, modelId, inputTokens, outputTokens, costUsd, jobId)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `, [
+            new Date().toISOString(),
+            job.model,
+            inputTokens,
+            outputTokens,
+            costUsd,
+            jobId
+          ]);
+        } catch (dbError) {
+          console.error(`[Parser] DB api_usage INSERT error:`, dbError.message);
+        }
       }
       
       job.parsedCount++;
@@ -834,6 +897,16 @@ async function parseJobInBackground(jobId) {
       
     } catch (error) {
       console.error(`Error parsing ${criterion.id}:`, error);
+      
+      // Store error details for user visibility
+      const errorMessage = error.message || String(error);
+      job.errors = job.errors || [];
+      job.errors.push({
+        criterionId: criterion.id,
+        error: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+      
       job.parsedCount++;  // Still count it as processed
     }
   }

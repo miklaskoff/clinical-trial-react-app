@@ -183,20 +183,24 @@ RAW_TEXT: "${criterion.raw_text}"
 Return valid JSON only. Include _thought_process explaining your reasoning step by step.`;
 
     try {
-      const response = await this.#claudeClient.complete({
+      const apiResponse = await this.#claudeClient.complete({
         system: systemPrompt,
         prompt: userPrompt,
-        maxTokens: 4096  // Larger for complex nested conditions
+        maxTokens: 4096,  // Larger for complex nested conditions
+        returnUsage: true  // Get token usage for cost tracking
       });
+
+      const responseText = apiResponse.text;
+      const usage = apiResponse.usage;
 
       // Extract JSON from response
       let parsedData;
       try {
         // Try multiple extraction patterns
-        const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) ||
-                         response.match(/```\s*([\s\S]*?)```/) ||
-                         [null, response];
-        let jsonStr = jsonMatch[1] || response;
+        const jsonMatch = responseText.match(/```json\s*([\s\S]*?)```/) ||
+                         responseText.match(/```\s*([\s\S]*?)```/) ||
+                         [null, responseText];
+        let jsonStr = jsonMatch[1] || responseText;
         
         // Clean up common issues
         jsonStr = jsonStr.trim();
@@ -207,7 +211,7 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
         parsedData = JSON.parse(jsonStr);
       } catch (parseError) {
         console.error(`JSON parse error for ${criterion.id}:`, parseError.message);
-        console.error(`Raw response (first 500 chars):`, response.substring(0, 500));
+        console.error(`Raw response (first 500 chars):`, responseText.substring(0, 500));
         parsedData = {
           _thought_process: `LLM returned invalid JSON: ${parseError.message}`,
           AMBIGUITY_FLAG: true,
@@ -233,19 +237,26 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
         console.log(`Validation warnings for ${criterion.id}:`, validation.warnings);
       }
       
-      return validation.criterion;
+      // Return criterion AND usage for cost tracking
+      return {
+        criterion: validation.criterion,
+        usage
+      };
     } catch (error) {
       console.error(`LLM parsing error for ${criterion.id}:`, error.message);
       return {
-        id: criterion.id,
-        nct_id: criterion.nct_id,
-        raw_text: criterion.raw_text,
-        _thought_process: `LLM call failed: ${error.message}`,
-        AMBIGUITY_FLAG: true,
-        ambiguity_reason: `LLM error: ${error.message}`,
-        confidence: 0,
-        unfamiliar_term_flag: true,
-        parsing_status: 'error'
+        criterion: {
+          id: criterion.id,
+          nct_id: criterion.nct_id,
+          raw_text: criterion.raw_text,
+          _thought_process: `LLM call failed: ${error.message}`,
+          AMBIGUITY_FLAG: true,
+          ambiguity_reason: `LLM error: ${error.message}`,
+          confidence: 0,
+          unfamiliar_term_flag: true,
+          parsing_status: 'error'
+        },
+        usage: null  // No usage on error
       };
     }
   }
@@ -255,7 +266,7 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
    * @param {Array<Object>} criteria - Array of criterion objects
    * @param {string} clusterCode - Cluster code
    * @param {Object} options - Options { concurrency: number, onProgress: Function }
-   * @returns {Promise<Array<Object>>} Parsed criteria
+   * @returns {Promise<Array<Object>>} Parsed criteria (extracts .criterion from each result)
    */
   async parseBatch(criteria, clusterCode, options = {}) {
     const { concurrency = 1, onProgress = null } = options;
@@ -266,7 +277,10 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
     for (let i = 0; i < criteria.length; i += concurrency) {
       const batch = criteria.slice(i, i + concurrency);
       const batchResults = await Promise.all(
-        batch.map(criterion => this.parseCriterion(criterion, clusterCode))
+        batch.map(async criterion => {
+          const parseResult = await this.parseCriterion(criterion, clusterCode);
+          return parseResult.criterion;  // Extract just the criterion, not usage
+        })
       );
       
       results.push(...batchResults);

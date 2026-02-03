@@ -20,15 +20,23 @@ vi.mock('../../services/ClaudeClient.js', () => ({
     isConfigured: () => true,
     getApiKeySource: () => 'test',
     initFromDatabase: vi.fn().mockResolvedValue(true),
-    complete: vi.fn().mockResolvedValue(JSON.stringify({
-      id: 'AGE_001',
-      raw_text: 'Age ≥ 18 years',
-      _thought_process: 'Identified age minimum of 18 years.',
-      AGE_MIN: 18,
-      AGE_UNIT: 'years',
-      confidence: 1.0,
-      parsing_status: 'complete'
-    }))
+    complete: vi.fn().mockResolvedValue({
+      text: JSON.stringify({
+        id: 'AGE_001',
+        raw_text: 'Age ≥ 18 years',
+        _thought_process: 'Identified age minimum of 18 years.',
+        AGE_MIN: 18,
+        AGE_UNIT: 'years',
+        confidence: 1.0,
+        parsing_status: 'complete'
+      }),
+      usage: {
+        input_tokens: 100,
+        output_tokens: 200,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 0
+      }
+    })
   })
 }));
 

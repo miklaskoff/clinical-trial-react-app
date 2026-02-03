@@ -42,7 +42,8 @@ export function getSchemaForCluster(clusterCode) {
   const schema = loadSchemas();
   
   if (!schema.clusters[clusterCode]) {
-    throw new Error(`Unknown cluster: ${clusterCode}. Valid clusters: ${Object.keys(schema.clusters).join(', ')}`);
+    // Return empty schema for unknown clusters instead of throwing
+    return { required: [], optional: [] };
   }
   
   return schema.clusters[clusterCode];
@@ -56,7 +57,7 @@ export function getSchemaForCluster(clusterCode) {
  */
 export function addMissingFields(criterion, clusterCode) {
   const schema = loadSchemas();
-  const clusterSchema = schema.clusters[clusterCode];
+  const clusterSchema = schema.clusters[clusterCode] || { required: [], optional: [] };
   const defaults = schema.defaults;
   const inference = schema.inferenceRules;
   
@@ -524,10 +525,10 @@ export function detectAdhocFields(criterion, clusterCode) {
   
   // 1. Detect unknown top-level fields
   const allAllowedFields = new Set([
-    ...clusterSchema.required,
-    ...(clusterSchema.optional || []),
-    ...schema.commonFields.required,
-    ...(schema.commonFields.optional || [])
+    ...(clusterSchema?.required || []),
+    ...(clusterSchema?.optional || []),
+    ...(schema.commonFields?.required || []),
+    ...(schema.commonFields?.optional || [])
   ]);
   
   for (const key of Object.keys(criterion)) {
@@ -595,7 +596,8 @@ export function validateCriterion(rawCriterion, clusterCode) {
   // 4. Check cluster-specific required fields
   try {
     const clusterSchema = getSchemaForCluster(clusterCode);
-    for (const field of clusterSchema.required) {
+    const requiredFields = clusterSchema?.required || [];
+    for (const field of requiredFields) {
       if (criterion[field] === undefined || criterion[field] === null) {
         // Skip if already in basic required check
         if (!basicRequired.includes(field)) {

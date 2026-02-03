@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.2.1] - 2026-02-03
+
+### 🐛 Parser Polling Fix — Cost Display & Download Button
+
+Fixed race condition in Parser Testing UI where cost ($0.00 spent) wasn't updating and Download button didn't appear after parsing completed.
+
+### Fixed
+
+- **Polling useEffect race condition** (`src/components/Parser/ParserPage.jsx`)
+  - Added explicit `fetchJobStatus()` call when job status changes to 'completed'
+  - Ensures final cost value is fetched from backend after job completion
+  - Converted `fetchJobStatus` and `fetchJobResults` to `useCallback` to prevent stale closures
+  - Moved function definitions before useEffect to fix hoisting issues
+
+### Added
+
+- **E2E tests for parser polling** (`e2e/parser-polling.spec.js`)
+  - 4 new E2E tests covering cost updates, download button visibility, results table, and polling behavior
+  - Tests handle API credit scenarios gracefully
+
+- **data-testid attributes** for E2E testing
+  - `job-status`, `cost-display`, `download-button`, `results-section`
+
+### Technical Details
+
+- Root cause: useEffect cleared polling interval immediately when `jobStatus` changed to 'completed', 
+  before async `fetchJobResults()` could update the `results` state
+- Fix ensures final data is fetched AFTER status change is detected
+- Backend was returning correct data all along; issue was frontend race condition
+
+---
+
 ## [5.2.0] - 2026-02-02
 
 ### 🧪 Parser Testing UI — Full Implementation

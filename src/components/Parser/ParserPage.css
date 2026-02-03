@@ -23,6 +23,12 @@
   color: #1f2937;
 }
 
+.header-status {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .parser-version {
   background: #3b82f6;
   color: white;
@@ -30,6 +36,28 @@
   border-radius: 9999px;
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+.backend-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.backend-status.status-online {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.backend-status.status-offline {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.backend-status.status-checking {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .parser-error {

@@ -2,8 +2,8 @@
 
 React + Express application for matching patients with clinical trials using **hybrid AI + rule-based matching**.
 
-[![Tests](https://img.shields.io/badge/tests-382%20passing-brightgreen)](#testing)
-[![Version](https://img.shields.io/badge/version-5.0.0-blue)](#)
+[![Tests](https://img.shields.io/badge/tests-631%20passing-brightgreen)](#testing)
+[![Version](https://img.shields.io/badge/version-5.1.0-blue)](#)
 [![React](https://img.shields.io/badge/react-19-61dafb)](#tech-stack)
 
 ## ✨ Features
@@ -11,7 +11,8 @@ React + Express application for matching patients with clinical trials using **h
 - **Hybrid Matching Engine** - Three-pass strategy: Exact → Rule-based → AI semantic
 - **Full Backend** - Express.js server with SQLite database (API key secured on server)
 - **AI Follow-up Questions** - Dynamically generated based on drug class and condition type
-- **382 Tests** - Frontend (328) + Backend (54) with Vitest
+- **Parser Testing UI** - Interface for AI-based criteria parsing with cost monitoring
+- **631 Tests** - Frontend (391) + Backend (240) with Vitest
 - **E2E Tests** - Playwright integration for full flow testing
 - **Admin Panel** - Drug approval, pending reviews, statistics
 - **Modern Stack** - React 19, Node.js/Express, Vite 6, SQLite
@@ -119,10 +120,11 @@ npm run test:e2e           # Run E2E tests
 | Frontend - Integration | 33 |
 | Frontend - Services | 134 |
 | Frontend - Utils | 52 |
-| Frontend - Components | 15 |
-| Backend - Routes | 28 |
-| Backend - Services | 26 |
-| **Total** | **382** |
+| Frontend - Components | 43 |
+| Backend - Routes | 62 |
+| Backend - Services | 51 |
+| Backend - Config | 74 |
+| **Total** | **631** |
 
 ## 🔧 Scripts
 
@@ -146,6 +148,36 @@ npm run format       # Format code
    - **Pass 2**: Rule-based heuristics (confidence: 0.7-0.9)
    - **Pass 3**: Claude AI semantic analysis (if enabled)
 4. **Results categorized**: Eligible / Needs Review / Ineligible
+
+## 🔬 Parser Testing UI
+
+Интерфейс для тестирования AI-парсера критериев клинических исследований.
+
+### Доступ
+- URL: http://localhost:3000 → вкладка **Parser Testing**
+- Или напрямую: http://localhost:3000/admin/parser-testing (если реализовано)
+
+### Функционал
+- **Загрузка JSON файлов** — Cluster JSON с критериями для парсинга
+- **Выбор модели** — Claude Haiku / Sonnet / Opus
+- **Контроль парсинга** — Start / Pause / Resume / Cancel
+- **Мониторинг стоимости** — Реальная стоимость API вызовов в долларах
+- **История парсинга** — Лог предыдущих запусков
+- **Скачивание результатов** — JSON файл с распарсенными критериями
+- **Лимит критериев** — Парсить первые N критериев для тестирования
+
+### Требования
+- **Anthropic API Key** — Каждый пользователь использует свой ключ
+- Ввести в Settings → API Key (или `server/.env` файл: `ANTHROPIC_API_KEY=sk-ant-...`)
+
+### Запуск
+```bash
+# Терминал 1: Backend (ОБЯЗАТЕЛЬНО для Parser UI)
+cd server && node index.js
+
+# Терминал 2: Frontend  
+npm run dev
+```
 
 ## 🤖 AI Configuration
 
@@ -184,7 +216,15 @@ Private project - All rights reserved.
 
 ---
 
-**Version 5.0.0** | Updated 2026-01-20
+**Version 5.1.0** | Updated 2026-02-03
+
+### Изменения в v5.1.0
+- ✅ **Parser Testing UI** — Интерфейс для AI-парсинга критериев
+- ✅ Мониторинг стоимости в реальном времени
+- ✅ Start/Pause/Resume/Cancel контроль парсинга
+- ✅ История парсинга и загрузка результатов
+- ✅ 631 тест (391 frontend + 240 backend)
+- ✅ E2E тесты для Parser UI
 
 ### Изменения в v5.0.0
 - ✅ Full Express backend с SQLite

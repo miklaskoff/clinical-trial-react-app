@@ -1,5 +1,86 @@
 # Lessons Learned
 
+## 2026-02-03: Parser Polling Race Condition — useEffect Clears Interval Too Early
+
+### Problem
+Parser Testing UI showed $0.00 spent and no Download button after parsing completed, even though backend returned correct data.
+
+### Symptoms
+- Status shows "completed" ✅
+- Cost stays "$0.00 spent" ❌
+- Download button doesn't appear ❌
+- Backend API returns correct `actualCost` and `results`
+
+### Root Cause
+**useEffect clears polling interval immediately when `jobStatus` changes to 'completed'.**
+
+```javascript
+// BEFORE (buggy)
+useEffect(() => {
+  if (jobId && (jobStatus === 'running' || jobStatus === 'processing')) {
+    // Start polling
+    pollIntervalRef.current = setInterval(...);
+  }
+  
+  if (jobStatus === 'completed' || jobStatus === 'failed') {
+    clearInterval(pollIntervalRef.current);  // ← Clears immediately
+    fetchJobResults();  // ← May not complete before next render
+    fetchHistory();
+    fetchBalance();
+  }
+}, [jobId, jobStatus]);
+```
+
+**Race condition:**
+1. `fetchJobStatus()` returns `status: 'completed'`
+2. `setJobStatus('completed')` triggers re-render
+3. useEffect fires with new `jobStatus`
+4. `fetchJobResults()` starts (async)
+5. BUT component re-renders and `results` state is still empty
+6. Download button condition `results.length > 0` is false
+
+### Solution
+
+Added explicit `fetchJobStatus()` call when status changes to 'completed':
+
+```javascript
+// AFTER (fixed)
+if (jobStatus === 'completed' || jobStatus === 'failed') {
+  if (pollIntervalRef.current) {
+    clearInterval(pollIntervalRef.current);
+    pollIntervalRef.current = null;
+  }
+  if (jobId) {
+    fetchJobStatus();   // ← ADDED: Fetch final cost
+    fetchJobResults();  // ← Fetch final results
+    fetchHistory();
+    fetchBalance();
+  }
+}
+```
+
+Also converted functions to `useCallback` and moved them before useEffect.
+
+### Why This Was Hard to Debug
+1. Backend API was correct — red herring
+2. Anthropic API had no credits — another red herring
+3. Logs showed correct data being fetched
+4. Issue was timing/race condition, not data
+
+### Lesson
+- **useEffect with status dependencies can race** — async operations may not complete before next render
+- **Always fetch final state explicitly** — don't rely on polling to catch it
+- **Check both backend AND frontend** — problem could be in either
+- **API credits affect test results** — E2E tests may pass/fail based on external factors
+
+### Prevention Checklist
+- [ ] When status changes to terminal state, explicitly fetch final data
+- [ ] Use `useCallback` for functions used in useEffect dependencies
+- [ ] Add E2E tests that verify UI state after completion
+- [ ] Consider using `await` with state updates when order matters
+
+---
+
 ## 2026-02-02: VS Code Terminal Kills Frontend Server — PERMANENT FIX
 
 ### Problem
