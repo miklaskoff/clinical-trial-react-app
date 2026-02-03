@@ -60,6 +60,104 @@
 
 ---
 
+## ⛔ КРИТИЧЕСКИ ВАЖНО: БЭКАПЫ И БЕЗОПАСНОСТЬ ДАННЫХ
+
+### ⚠️ Правило #1: БЭКАП ПЕРЕД ЛЮБЫМИ ИЗМЕНЕНИЯМИ
+
+**ПЕРЕД началом каждой сессии или любых изменений:**
+
+```powershell
+# ОБЯЗАТЕЛЬНО - создать бэкап базы данных
+$timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+Copy-Item "server/data/clinical-trials.db" "server/data/clinical-trials.db.backup.$timestamp"
+```
+
+**База данных НЕ в Git!** Файл `server/data/clinical-trials.db` в `.gitignore` — git restore НЕ ВОССТАНОВИТ!
+
+### ⚠️ Правило #2: ОСТАНОВИТЬ СЕРВЕРЫ ПЕРЕД GIT ОПЕРАЦИЯМИ
+
+**ПЕРЕД git reset, git checkout, git pull:**
+
+```powershell
+# ОБЯЗАТЕЛЬНО - остановить ВСЕ Node процессы
+taskkill /F /IM node.exe 2>$null
+Start-Sleep -Seconds 2
+
+# Проверить что порты свободны
+Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue
+# Должно быть ПУСТО!
+
+# ТОЛЬКО ПОТОМ выполнять git операции
+git reset --hard <commit>
+```
+
+**Почему:** Git reset при работающем сервере = повреждение SQLite базы!
+
+### ⚠️ Правило #3: НЕ ПЕРЕЗАПИСЫВАТЬ ФАЙЛЫ БЕЗ ЧТЕНИЯ
+
+**ПЕРЕД созданием или изменением файла:**
+
+```markdown
+1. [ ] Прочитал существующий файл ПОЛНОСТЬЮ (read_file tool)
+2. [ ] Понял что он делает и его зависимости
+3. [ ] Сделал бэкап (если критичный файл)
+4. [ ] ТОЛЬКО ПОТОМ меняю
+```
+
+**Запрещено:** Создавать файл с тем же именем как существующий без чтения!
+
+### ⚠️ Правило #4: НИКОГДА НЕ УДАЛЯТЬ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
+
+**ЗАПРЕЩЕНО удалять без явного разрешения пользователя:**
+- ❌ Базы данных (*.db, *.sqlite)
+- ❌ Конфигурационные файлы (.env, config.*)
+- ❌ Файлы с данными пользователя
+- ❌ Кэш с важными данными
+
+**Если файл повреждён:**
+```markdown
+1. СПРОСИТЬ пользователя что делать
+2. ПРЕДЛОЖИТЬ варианты восстановления
+3. ДОЖДАТЬСЯ разрешения
+4. ТОЛЬКО ПОТОМ действовать
+```
+
+### ⚠️ Правило #5: ФАЙЛЫ В .GITIGNORE = РУЧНЫЕ БЭКАПЫ
+
+Эти файлы НЕ восстанавливаются через git:
+
+| Файл | Восстановление |
+|------|----------------|
+| `server/data/clinical-trials.db` | РУЧНОЙ БЭКАП |
+| `server/.env` | РУЧНОЙ БЭКАП |
+| `node_modules/` | `npm install` |
+
+### Команды Для Ежедневного Бэкапа
+
+```powershell
+# В начале КАЖДОЙ сессии работы:
+function Backup-ClinicalTrialDB {
+    $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $src = "c:\Users\lasko\Downloads\clinical-trial-react-app\server\data\clinical-trials.db"
+    $dst = "c:\Users\lasko\Downloads\clinical-trial-backups\clinical-trials.db.$timestamp"
+    
+    if (!(Test-Path "c:\Users\lasko\Downloads\clinical-trial-backups")) {
+        New-Item -ItemType Directory -Path "c:\Users\lasko\Downloads\clinical-trial-backups" -Force
+    }
+    
+    if (Test-Path $src) {
+        Copy-Item $src $dst
+        Write-Host "✅ Backup created: $dst"
+    } else {
+        Write-Host "⚠️ Database not found: $src"
+    }
+}
+
+Backup-ClinicalTrialDB
+```
+
+---
+
 ## ⚠️ IMPLEMENTATION CONTRACT SYSTEM — КРИТИЧЕСКИ ВАЖНО
 
 ### Почему это нужно

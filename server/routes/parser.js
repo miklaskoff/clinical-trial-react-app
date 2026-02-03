@@ -257,6 +257,45 @@ router.get('/version', (req, res) => {
 });
 
 /**
+ * Detect cluster type from criterion ID prefix
+ * @param {Array<Object>} criteria - Array of criteria with id field
+ * @returns {string|null} Cluster code (AGE, BMI, PTH, etc.) or null if cannot detect
+ */
+function detectClusterFromIds(criteria) {
+  if (!criteria || criteria.length === 0) return null;
+  
+  // Valid cluster prefixes (from UniversalParserV2.getClusterCodes())
+  const validClusters = ['AGE', 'BMI', 'SEV', 'AAO', 'NPV', 'BIO', 'CPD', 'CMB', 'AIC', 'FLR', 'PTH'];
+  
+  // Count occurrences of each cluster prefix
+  const clusterCounts = {};
+  
+  for (const criterion of criteria) {
+    const id = criterion.id || criterion.criterion_id || '';
+    // Extract prefix (everything before underscore or first 3 chars)
+    const match = id.match(/^([A-Z]{2,3})[-_]/i);
+    if (match) {
+      const prefix = match[1].toUpperCase();
+      if (validClusters.includes(prefix)) {
+        clusterCounts[prefix] = (clusterCounts[prefix] || 0) + 1;
+      }
+    }
+  }
+  
+  // Find most common cluster
+  let maxCount = 0;
+  let detectedCluster = null;
+  for (const [cluster, count] of Object.entries(clusterCounts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      detectedCluster = cluster;
+    }
+  }
+  
+  return detectedCluster;
+}
+
+/**
  * POST /api/parser/upload
  * Upload JSON cluster file for parsing
  */
@@ -283,8 +322,23 @@ router.post('/upload', async (req, res) => {
       nct_id: c.nct_id || c.nctId
     }));
     
-    // Extract cluster type
-    const clusterType = (data.cluster || '').replace('CLUSTER_', '');
+    // Extract cluster type - prefer explicit, fallback to auto-detection
+    let clusterType = (data.cluster || '').replace('CLUSTER_', '');
+    
+    // Auto-detect if not explicitly provided
+    if (!clusterType) {
+      clusterType = detectClusterFromIds(criteria);
+      if (clusterType) {
+        console.log(`[Parser] Auto-detected cluster type: ${clusterType} from ${criteria.length} criteria IDs`);
+      }
+    }
+    
+    // Error if cluster still cannot be determined
+    if (!clusterType) {
+      return res.status(400).json({ 
+        error: 'Cannot determine cluster type. Either provide "cluster" field in JSON or use standard ID prefixes (e.g., PTH_001, CMB_001, AIC_001)'
+      });
+    }
     
     // Check which criteria are already parsed
     const db = getDatabase();

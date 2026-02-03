@@ -351,6 +351,88 @@ describe('Parser API Routes', () => {
       expect(res.body.error).toBeDefined();
     });
 
+    it('T15d: auto-detects cluster from criterion ID prefix (PTH_*)', async () => {
+      // JSON without 'cluster' field - should auto-detect from IDs
+      const testCluster = {
+        members: [
+          { id: 'PTH_001', nct_id: 'NCT123', raw_text: 'Prior TNF inhibitor' },
+          { id: 'PTH_002', nct_id: 'NCT456', raw_text: 'Methotrexate history' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'pth-cluster.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('PTH');
+      expect(res.body.criteriaCount).toBe(2);
+    });
+
+    it('T15e: auto-detects cluster from criterion ID prefix (CMB_*)', async () => {
+      const testCluster = {
+        members: [
+          { id: 'CMB_001', nct_id: 'NCT123', raw_text: 'Diabetes mellitus' },
+          { id: 'CMB_002', nct_id: 'NCT456', raw_text: 'Cardiovascular disease' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'cmb-cluster.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('CMB');
+    });
+
+    it('T15f: auto-detects cluster from criterion_id field', async () => {
+      const testCluster = {
+        criteria: [
+          { criterion_id: 'AIC_001', nctId: 'NCT123', text: 'Active infection' },
+          { criterion_id: 'AIC_002', nctId: 'NCT456', text: 'Immunodeficiency' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'aic-cluster.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('AIC');
+    });
+
+    it('T15g: prefers explicit cluster field over auto-detection', async () => {
+      // Even if IDs suggest PTH, explicit cluster should win
+      const testCluster = {
+        cluster: 'CLUSTER_CMB',
+        members: [
+          { id: 'PTH_001', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'test.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('CMB');
+    });
+
+    it('T15h: returns error when cluster cannot be determined', async () => {
+      const testCluster = {
+        members: [
+          { id: 'UNKNOWN_001', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'unknown.json' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('cluster');
+    });
+
     it('T16: identifies already-parsed criteria', async () => {
       // First, add a cached criterion to mock database
       const { getDatabase } = await import('../../db.js');

@@ -1,5 +1,138 @@
 # Lessons Learned
 
+## 2026-02-03: КАТАСТРОФИЧЕСКИЙ ПРОВАЛ — Сломал Рабочий Код, Не Сделал Бэкап, Удалил Базу
+
+### Problem
+Пользователь попросил добавить маппинг кластеров. Я:
+1. Создал новые файлы ClustersLoader без понимания существующего кода
+2. Перезаписал рабочий `server/routes/parser.js` placeholder'ом
+3. Сломал весь парсер
+4. При откате через `git reset --hard` база данных была повреждена (сервер держал файл открытым)
+5. Удалил повреждённую базу вместо восстановления
+6. База никогда не была в git (была в .gitignore)
+7. Потерял API ключ и все данные пользователя
+
+### Цепочка Ошибок
+
+```
+1. Не проверил существующий код → создал дублирующий функционал
+2. Перезаписал рабочий файл → парсер сломан
+3. git reset --hard при работающем сервере → база повреждена
+4. Удалил базу без спроса → потеря данных
+5. Не делал бэкапы → невозможность восстановления
+```
+
+### Что Я Должен Был Сделать
+
+**ПЕРЕД любыми изменениями:**
+```powershell
+# 1. ОСТАНОВИТЬ ВСЕ СЕРВЕРЫ
+taskkill /F /IM node.exe
+
+# 2. СДЕЛАТЬ БЭКАП БАЗЫ
+Copy-Item server/data/clinical-trials.db server/data/clinical-trials.db.backup
+
+# 3. СДЕЛАТЬ БЭКАП ВЕТКУ
+git checkout -b backup/before-clusters-change
+git add -A
+git commit -m "backup before changes"
+git checkout -
+
+# 4. ТОЛЬКО ПОТОМ работать
+```
+
+**ПЕРЕД git reset --hard:**
+```powershell
+# ОБЯЗАТЕЛЬНО остановить сервер
+taskkill /F /IM node.exe
+
+# Подождать
+Start-Sleep -Seconds 2
+
+# Проверить что порты свободны
+netstat -ano | findstr ":3001"
+# Должно быть пусто!
+
+# ТОЛЬКО ПОТОМ reset
+git reset --hard <commit>
+```
+
+### НОВЫЕ ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА
+
+#### Правило #1: БЭКАП ПЕРЕД ЛЮБЫМИ ИЗМЕНЕНИЯМИ
+```powershell
+# В начале КАЖДОЙ сессии:
+Copy-Item server/data/clinical-trials.db server/data/clinical-trials.db.backup.$(Get-Date -Format 'yyyyMMdd-HHmmss')
+```
+
+#### Правило #2: ОСТАНОВИТЬ СЕРВЕРЫ ПЕРЕД GIT ОПЕРАЦИЯМИ
+```powershell
+# ПЕРЕД git reset, git checkout, git pull:
+taskkill /F /IM node.exe 2>$null
+Start-Sleep -Seconds 2
+```
+
+#### Правило #3: НЕ ПЕРЕЗАПИСЫВАТЬ ФАЙЛЫ БЕЗ ЧТЕНИЯ
+```markdown
+ПЕРЕД созданием/изменением файла:
+1. [ ] Прочитал существующий файл ПОЛНОСТЬЮ
+2. [ ] Понял что он делает
+3. [ ] Понял зависимости
+4. [ ] Сделал бэкап
+5. [ ] ТОЛЬКО ПОТОМ меняю
+```
+
+#### Правило #4: БАЗА ДАННЫХ В .GITIGNORE = РУЧНЫЕ БЭКАПЫ
+```markdown
+Файлы в .gitignore НЕ восстанавливаются через git!
+- clinical-trials.db — РУЧНОЙ БЭКАП
+- .env — РУЧНОЙ БЭКАП
+- node_modules — npm install
+```
+
+#### Правило #5: СПРАШИВАТЬ ПЕРЕД УДАЛЕНИЕМ
+```markdown
+НИКОГДА не удалять:
+- Базы данных
+- Конфигурационные файлы
+- Файлы с данными пользователя
+
+БЕЗ ЯВНОГО РАЗРЕШЕНИЯ пользователя!
+```
+
+### Команды Для Бэкапа (ИСПОЛЬЗОВАТЬ ВСЕГДА)
+
+```powershell
+# Полный бэкап перед работой
+function Backup-Project {
+    $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $backupDir = "c:\Users\lasko\Downloads\clinical-trial-backups\$timestamp"
+    New-Item -ItemType Directory -Path $backupDir -Force
+    Copy-Item -Path "c:\Users\lasko\Downloads\clinical-trial-react-app\server\data\*" -Destination $backupDir -Recurse
+    Copy-Item -Path "c:\Users\lasko\Downloads\clinical-trial-react-app\server\.env" -Destination $backupDir -ErrorAction SilentlyContinue
+    Write-Host "Backup created: $backupDir"
+}
+
+# Использование:
+Backup-Project
+```
+
+### Lesson
+- **НИКОГДА не делай git reset при работающем сервере** — файлы будут повреждены
+- **ВСЕГДА делай бэкап базы данных** — она не в git
+- **ВСЕГДА читай существующий код** — прежде чем создавать новый
+- **НИКОГДА не удаляй данные пользователя** — без явного разрешения
+- **СПРАШИВАЙ если не уверен** — лучше спросить, чем сломать
+
+### Prevention Checklist (ОБЯЗАТЕЛЬНО перед каждым изменением)
+- [ ] Серверы остановлены
+- [ ] Бэкап базы сделан
+- [ ] Существующий код прочитан и понят
+- [ ] Понимаю что именно меняю
+- [ ] Знаю как откатить если что-то пойдёт не так
+
+---
+
 ## 2026-02-03: Parser Polling Race Condition — useEffect Clears Interval Too Early
 
 ### Problem
