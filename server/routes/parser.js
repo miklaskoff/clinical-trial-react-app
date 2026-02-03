@@ -1029,7 +1029,7 @@ async function parseJobInBackground(jobId) {
     }
     
     try {
-      console.log(`[Parser] Parsing criterion ${i + 1}/${maxIndex}: ${criterion.id}`);
+      console.log(`[Parser] Parsing criterion ${i + 1}/${job.criteria.length}: ${criterion.id} (new: ${parsedInThisSession + 1}/${parseLimit})`);
       // Parse the criterion - returns { criterion, usage }
       const parseResult = await parser.parseCriterion(criterion, job.clusterType);
       const parsedCriterion = parseResult.criterion;
