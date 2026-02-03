@@ -968,7 +968,7 @@ async function parseJobInBackground(jobId) {
     return;
   }
   
-  console.log(`[Parser] Starting job ${jobId}, maxCount=${job.maxCount}, criteria=${job.criteria.length}`);
+  console.log(`[Parser] Starting job ${jobId}, parseLimit=${job.maxCount || 'ALL'}, criteria=${job.criteria.length}`);
   
   // Initialize errors array if not exists
   if (!job.errors) {
@@ -987,12 +987,18 @@ async function parseJobInBackground(jobId) {
     return;
   }
   
-  const startIndex = job.parsedCount || 0;
-  const maxIndex = Math.min(startIndex + (job.maxCount || job.criteria.length), job.criteria.length);
+  // parseLimit means "parse N NEW criteria", not "process first N criteria"
+  const parseLimit = job.maxCount || job.criteria.length;
+  let parsedInThisSession = 0;
   
-  console.log(`[Parser] Will parse from index ${startIndex} to ${maxIndex}`);
+  console.log(`[Parser] Will parse up to ${parseLimit} NEW criteria (total in file: ${job.criteria.length})`);
   
-  for (let i = startIndex; i < maxIndex; i++) {
+  for (let i = 0; i < job.criteria.length; i++) {
+    // Stop if we've parsed enough NEW criteria
+    if (parsedInThisSession >= parseLimit) {
+      console.log(`[Parser] Reached parseLimit of ${parseLimit} new criteria`);
+      break;
+    }
     // Check if should pause
     if (job.shouldPause) {
       job.status = 'paused';
@@ -1095,6 +1101,7 @@ async function parseJobInBackground(jobId) {
       }
       
       job.parsedCount++;
+      parsedInThisSession++;
       job.actualCost = (job.actualCost || 0) + costUsd;
       
       // Rate limiting - wait between requests
@@ -1113,6 +1120,7 @@ async function parseJobInBackground(jobId) {
       });
       
       job.parsedCount++;  // Still count it as processed
+      parsedInThisSession++;  // Count towards parseLimit
     }
   }
   

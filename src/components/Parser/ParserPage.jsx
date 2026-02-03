@@ -43,7 +43,7 @@ export default function ParserPage() {
   // State: Job control
   const [jobId, setJobId] = useState(null);
   const [jobStatus, setJobStatus] = useState(null); // 'running' | 'paused' | 'completed' | 'failed'
-  const [progress, setProgress] = useState({ parsed: 0, total: 0, percentage: 0 });
+  const [progress, setProgress] = useState({ parsed: 0, total: 0, percentage: 0, skipped: 0 });
   const [currentCost, setCurrentCost] = useState(0);
   const [parseErrors, setParseErrors] = useState([]);  // Errors from parsing
   
@@ -85,8 +85,9 @@ export default function ParserPage() {
         setJobStatus(data.status);
         const total = data.total || 0;
         const parsed = data.parsed || 0;
+        const skipped = data.skipped || 0;
         const percentage = total > 0 ? Math.round((parsed / total) * 100) : 0;
-        setProgress({ parsed, total, percentage });
+        setProgress({ parsed, total, percentage, skipped });
         
         // Ensure actualCost is a number (backend might return string)
         const cost = typeof data.actualCost === 'string' 
@@ -107,7 +108,7 @@ export default function ParserPage() {
         console.warn('[ParserPage] Job not found, clearing state');
         setJobId(null);
         setJobStatus('idle');
-        setProgress({ parsed: 0, total: 0, percentage: 0 });
+        setProgress({ parsed: 0, total: 0, percentage: 0, skipped: 0 });
         setCurrentCost(0);
         setResults([]);
         setParseErrors([]);
@@ -332,7 +333,7 @@ export default function ParserPage() {
         const effectiveTotal = parseLimit ? Math.min(parseInt(parseLimit, 10), uploadData.needsParsing) : uploadData.needsParsing;
         setJobId(data.jobId || uploadData.jobId);
         setJobStatus('running');
-        setProgress({ parsed: 0, total: effectiveTotal, percentage: 0 });
+        setProgress({ parsed: 0, total: effectiveTotal, percentage: 0, skipped: 0 });
       }
     } catch (err) {
       setError(`Failed to start parsing: ${err.message}`);
@@ -672,18 +673,29 @@ export default function ParserPage() {
       {/* Show message when job completed but no results */}
       {jobStatus === 'completed' && results.length === 0 && (
         <section className="parser-section" data-testid="no-results-section" style={{
-          backgroundColor: '#f8d7da',
-          border: '1px solid #f5c6cb',
+          backgroundColor: progress.skipped > 0 && parseErrors.length === 0 ? '#fff3cd' : '#f8d7da',
+          border: `1px solid ${progress.skipped > 0 && parseErrors.length === 0 ? '#ffc107' : '#f5c6cb'}`,
           borderRadius: '8px',
           padding: '1rem'
         }}>
-          <h2 style={{ color: '#721c24', margin: '0 0 0.5rem 0' }}>❌ No Results</h2>
-          <p style={{ color: '#721c24', margin: 0 }}>
-            Parsing completed but no criteria were successfully parsed. 
-            {parseErrors.length > 0 
-              ? ` Check the errors above — ${parseErrors.length} criteria failed.`
-              : ' Check your Anthropic API key and credit balance.'}
-          </p>
+          {progress.skipped > 0 && parseErrors.length === 0 ? (
+            <>
+              <h2 style={{ color: '#856404', margin: '0 0 0.5rem 0' }}>⚠️ All Criteria Already Parsed</h2>
+              <p style={{ color: '#856404', margin: 0 }}>
+                {progress.skipped} criteria were skipped because they are already in the database.
+                {' '}To re-parse them, enable <strong>"Force Re-parse"</strong> checkbox.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 style={{ color: '#721c24', margin: '0 0 0.5rem 0' }}>❌ No Results</h2>
+              <p style={{ color: '#721c24', margin: 0 }}>
+                {parseErrors.length > 0 
+                  ? `Parsing failed for ${parseErrors.length} criteria. Check errors above.`
+                  : 'Parsing completed but no criteria were parsed. Check your Anthropic API key and credit balance.'}
+              </p>
+            </>
+          )}
         </section>
       )}
 
