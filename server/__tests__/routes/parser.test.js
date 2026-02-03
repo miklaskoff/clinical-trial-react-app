@@ -433,6 +433,112 @@ describe('Parser API Routes', () => {
       expect(res.body.error).toContain('cluster');
     });
 
+    it('T15i: auto-detects cluster from filename "Psoriasis_Treatment_History_and_Restrictions"', async () => {
+      const testCluster = {
+        members: [
+          { id: '12345', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'Psoriasis_Treatment_History_and_Restrictions_members_20260203.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('PTH');
+    });
+
+    it('T15j: auto-detects cluster from filename "Comorbid_Conditions"', async () => {
+      const testCluster = {
+        members: [
+          { id: '12345', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'Comorbid_Conditions_and_Risk_Factors_members.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('CMB');
+    });
+
+    it('T15k: auto-detects cluster from filename "Active_Infection_Criteria"', async () => {
+      const testCluster = {
+        members: [
+          { id: '12345', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'Active_Infection_Criteria_members.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('AIC');
+    });
+
+    it('T15l: auto-detects cluster from data.cluster_name field', async () => {
+      const testCluster = {
+        cluster_name: 'Prior Treatment History',
+        members: [
+          { id: '12345', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'random.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('PTH');
+    });
+
+    it('T15m: auto-detects cluster from filename "Severity_Measurements"', async () => {
+      const testCluster = {
+        members: [
+          { id: '12345', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'Severity_Measurements_members.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('SEV');
+    });
+
+    it('T15n: auto-detects cluster from filename "Flare_Requirements"', async () => {
+      const testCluster = {
+        members: [
+          { id: '12345', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'Flare_Requirements_members.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('FLR');
+    });
+
+    it('T15o: auto-detects cluster from filename "Age_Requirements"', async () => {
+      const testCluster = {
+        members: [
+          { id: '12345', nct_id: 'NCT123', raw_text: 'Test' }
+        ]
+      };
+
+      const res = await request(app)
+        .post('/api/parser/upload')
+        .send({ data: testCluster, filename: 'Age_Requirements_members.json' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.clusterType).toBe('AGE');
+    });
+
     it('T16: identifies already-parsed criteria', async () => {
       // First, add a cached criterion to mock database
       const { getDatabase } = await import('../../db.js');

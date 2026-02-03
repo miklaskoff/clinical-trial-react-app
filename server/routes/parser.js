@@ -257,6 +257,137 @@ router.get('/version', (req, res) => {
 });
 
 /**
+ * Mapping from filename patterns to cluster codes
+ */
+const FILENAME_TO_CLUSTER = {
+  'Treatment_History': 'PTH',
+  'Prior_Treatment': 'PTH',
+  'Prior_Therapy': 'PTH',
+  'Prior_Medication': 'PTH',
+  'Medication_History': 'PTH',
+  'Comorbid_Conditions': 'CMB',
+  'Comorbidities': 'CMB',
+  'Risk_Factors': 'CMB',
+  'Active_Infection': 'AIC',
+  'Autoimmune_Conditions': 'AIC',
+  'Autoimmune_Criteria': 'AIC',
+  'Severity_Measurements': 'SEV',
+  'Severity_Criteria': 'SEV',
+  'Severity_Scores': 'SEV',
+  'Age_Requirements': 'AGE',
+  'Age_Criteria': 'AGE',
+  'BMI_Requirements': 'BMI',
+  'BMI_Criteria': 'BMI',
+  'Laboratory_Values': 'LAB',
+  'Lab_Values': 'LAB',
+  'Lab_Criteria': 'LAB',
+  'Anatomical_Locations': 'ANA',
+  'Anatomical_Criteria': 'ANA',
+  'Flare_Requirements': 'FLR',
+  'Flare_Criteria': 'FLR',
+  'Flare_History': 'FLR',
+  'Psoriasis_Variants': 'NPV',
+  'Non_Plaque_Psoriasis': 'NPV',
+  'Biomarker_Criteria': 'BIO',
+  'Biomarker': 'BIO',
+  'Comorbid_Psoriatic': 'CPD',
+  'Psoriatic_Disease': 'CPD'
+};
+
+/**
+ * Mapping from cluster_name (human-readable) to cluster codes
+ */
+const CLUSTER_NAME_TO_CODE = {
+  'Prior Treatment History': 'PTH',
+  'Psoriasis Treatment History and Restrictions': 'PTH',
+  'Treatment History': 'PTH',
+  'Comorbid Conditions and Risk Factors': 'CMB',
+  'Comorbid Conditions': 'CMB',
+  'Risk Factors': 'CMB',
+  'Comorbidities': 'CMB',
+  'Active Infection Criteria': 'AIC',
+  'Autoimmune Conditions': 'AIC',
+  'Autoimmune Criteria': 'AIC',
+  'Severity Measurements': 'SEV',
+  'Severity Criteria': 'SEV',
+  'Age Requirements': 'AGE',
+  'Age Criteria': 'AGE',
+  'BMI Requirements': 'BMI',
+  'BMI Criteria': 'BMI',
+  'Laboratory Values': 'LAB',
+  'Lab Values': 'LAB',
+  'Anatomical Locations': 'ANA',
+  'Flare Requirements': 'FLR',
+  'Flare Criteria': 'FLR',
+  'Psoriasis Variants': 'NPV',
+  'Non-Plaque Psoriasis Variants': 'NPV',
+  'Biomarker Criteria': 'BIO',
+  'Comorbid Psoriatic Disease': 'CPD'
+};
+
+/**
+ * Detect cluster type from filename
+ * @param {string} filename - Name of the uploaded file
+ * @returns {string|null} Cluster code or null if cannot detect
+ */
+function detectClusterFromFilename(filename) {
+  if (!filename) return null;
+  
+  // Normalize: replace spaces with underscores, case-insensitive
+  const normalized = filename.replace(/\s+/g, '_');
+  
+  // Check each pattern
+  for (const [pattern, cluster] of Object.entries(FILENAME_TO_CLUSTER)) {
+    if (normalized.toLowerCase().includes(pattern.toLowerCase())) {
+      return cluster;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Detect cluster type from cluster_name field (human-readable name)
+ * @param {string} clusterName - Human-readable cluster name
+ * @returns {string|null} Cluster code or null if cannot detect
+ */
+function detectClusterFromClusterName(clusterName) {
+  if (!clusterName || typeof clusterName !== 'string') return null;
+  
+  // Normalize
+  const normalized = clusterName.trim();
+  
+  // Direct match
+  if (CLUSTER_NAME_TO_CODE[normalized]) {
+    return CLUSTER_NAME_TO_CODE[normalized];
+  }
+  
+  // Case-insensitive match
+  for (const [name, code] of Object.entries(CLUSTER_NAME_TO_CODE)) {
+    if (name.toLowerCase() === normalized.toLowerCase()) {
+      return code;
+    }
+  }
+  
+  // Partial match (contains keywords)
+  const lowered = normalized.toLowerCase();
+  if (lowered.includes('treatment') && lowered.includes('history')) return 'PTH';
+  if (lowered.includes('comorbid') || lowered.includes('risk factor')) return 'CMB';
+  if (lowered.includes('infection') || lowered.includes('autoimmune')) return 'AIC';
+  if (lowered.includes('severity')) return 'SEV';
+  if (lowered.includes('age')) return 'AGE';
+  if (lowered.includes('bmi')) return 'BMI';
+  if (lowered.includes('lab')) return 'LAB';
+  if (lowered.includes('anatomical')) return 'ANA';
+  if (lowered.includes('flare')) return 'FLR';
+  if (lowered.includes('variant') || lowered.includes('non-plaque')) return 'NPV';
+  if (lowered.includes('biomarker')) return 'BIO';
+  if (lowered.includes('psoriatic disease')) return 'CPD';
+  
+  return null;
+}
+
+/**
  * Detect cluster type from criterion ID prefix
  * @param {Array<Object>} criteria - Array of criteria with id field
  * @returns {string|null} Cluster code (AGE, BMI, PTH, etc.) or null if cannot detect
@@ -324,11 +455,31 @@ router.post('/upload', async (req, res) => {
     
     // Extract cluster type - prefer explicit, fallback to auto-detection
     let clusterType = (data.cluster || '').replace('CLUSTER_', '');
+    let detectionMethod = 'explicit';
     
-    // Auto-detect if not explicitly provided
+    // Method 1: Try cluster_name field (human-readable name)
+    if (!clusterType && data.cluster_name) {
+      clusterType = detectClusterFromClusterName(data.cluster_name);
+      if (clusterType) {
+        detectionMethod = 'cluster_name';
+        console.log(`[Parser] Auto-detected cluster type: ${clusterType} from cluster_name: "${data.cluster_name}"`);
+      }
+    }
+    
+    // Method 2: Try filename patterns
+    if (!clusterType && filename) {
+      clusterType = detectClusterFromFilename(filename);
+      if (clusterType) {
+        detectionMethod = 'filename';
+        console.log(`[Parser] Auto-detected cluster type: ${clusterType} from filename: "${filename}"`);
+      }
+    }
+    
+    // Method 3: Try ID prefix detection
     if (!clusterType) {
       clusterType = detectClusterFromIds(criteria);
       if (clusterType) {
+        detectionMethod = 'id_prefix';
         console.log(`[Parser] Auto-detected cluster type: ${clusterType} from ${criteria.length} criteria IDs`);
       }
     }
@@ -336,7 +487,7 @@ router.post('/upload', async (req, res) => {
     // Error if cluster still cannot be determined
     if (!clusterType) {
       return res.status(400).json({ 
-        error: 'Cannot determine cluster type. Either provide "cluster" field in JSON or use standard ID prefixes (e.g., PTH_001, CMB_001, AIC_001)'
+        error: 'Cannot determine cluster type. Provide one of: "cluster" field, "cluster_name" field, standard filename (e.g., "Treatment_History"), or standard ID prefixes (e.g., PTH_001, CMB_001, AIC_001)'
       });
     }
     
