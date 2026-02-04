@@ -386,15 +386,22 @@ function detectClusterFromClusterName(clusterName) {
   if (lowered.includes('treatment') && lowered.includes('history')) return 'PTH';
   if (lowered.includes('comorbid') || lowered.includes('risk factor')) return 'CMB';
   if (lowered.includes('infection') || lowered.includes('autoimmune')) return 'AIC';
-  if (lowered.includes('severity')) return 'SEV';
+  if (
+    lowered.includes('severity') ||
+    lowered.includes('measurement') ||
+    lowered.includes('score') ||
+    lowered.includes('extent')
+  )
+    return 'SEV';
   if (lowered.includes('age')) return 'AGE';
   if (lowered.includes('bmi')) return 'BMI';
   if (lowered.includes('lab')) return 'LAB';
+  // AAO: Affected Areas and Organs
+  if (lowered.includes('affected') && (lowered.includes('area') || lowered.includes('organ')))
+    return 'AAO';
   if (
     lowered.includes('anatomical') ||
-    lowered.includes('affected') ||
-    lowered.includes('area') ||
-    lowered.includes('organ')
+    (lowered.includes('affected') && !lowered.includes('score') && !lowered.includes('measurement'))
   )
     return 'ANA';
   if (lowered.includes('flare')) return 'FLR';
