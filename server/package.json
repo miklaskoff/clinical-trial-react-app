@@ -18,6 +18,7 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
+    "nodemon": "^3.1.11",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

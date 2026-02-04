@@ -23,7 +23,7 @@ const API_BASE = 'http://localhost:3001/api/parser';
 const MODELS = [
   { id: 'claude-opus-4-20250514', name: 'Claude Opus 4', description: 'Most capable, highest cost' },
   { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', description: 'Balanced performance (default)' },
-  { id: 'claude-3-5-haiku-20241022', name: 'Claude Haiku 3.5', description: 'Fastest, lowest cost' }
+  { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', description: 'Fastest, lowest cost' }
 ];
 
 export default function ParserPage() {
