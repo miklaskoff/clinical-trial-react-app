@@ -679,7 +679,7 @@ function App() {
                       onChange={(e) => setModel(e.target.value)}
                     >
                       <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5</option>
-                      <option value="claude-haiku-3-5-20241022">Claude Haiku 3.5</option>
+                      <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
                       <option value="claude-opus-4-5-20251101">Claude Opus 4.5</option>
                     </select>
                   </div>

@@ -12,32 +12,33 @@ import { getDatabase } from '../db.js';
 export class ClaudeClient {
   /** @type {Anthropic | null} */
   #client = null;
-  
+
   /** @type {string} */
   #model = 'claude-sonnet-4-5-20250929';
-  
+
   /** @type {Map<string, { result: any, expiresAt: number }>} */
   #memoryCache = new Map();
-  
+
   /** @type {number} Cache TTL in milliseconds (1 hour) */
   #cacheTTL = 60 * 60 * 1000;
-  
+
   /** @type {boolean} */
   #initialized = false;
-  
+
   /** @type {string | null} */
   #apiKeySource = null;
 
   constructor() {
     // Try environment variable first
     const envApiKey = process.env.ANTHROPIC_API_KEY;
-    
+
     // Check for valid API key (not a placeholder)
-    const isValidKey = envApiKey && 
-      envApiKey.startsWith('sk-ant-') && 
-      !envApiKey.includes('your') && 
+    const isValidKey =
+      envApiKey &&
+      envApiKey.startsWith('sk-ant-') &&
+      !envApiKey.includes('your') &&
       !envApiKey.includes('placeholder');
-    
+
     if (isValidKey) {
       this.#client = new Anthropic({ apiKey: envApiKey });
       this.#initialized = true;
@@ -61,10 +62,9 @@ export class ClaudeClient {
     }
 
     try {
-      const config = await db.getAsync(
-        'SELECT value FROM config WHERE key = ?',
-        ['anthropic_api_key']
-      );
+      const config = await db.getAsync('SELECT value FROM config WHERE key = ?', [
+        'anthropic_api_key',
+      ]);
 
       if (config?.value && config.value.startsWith('sk-ant-')) {
         this.#client = new Anthropic({ apiKey: config.value });
@@ -91,7 +91,7 @@ export class ClaudeClient {
     this.#client = null;
     this.#apiKeySource = null;
     this.#memoryCache.clear();
-    
+
     const db = getDatabase();
     if (!db) {
       console.warn('Database not available for API key reload');
@@ -99,10 +99,9 @@ export class ClaudeClient {
     }
 
     try {
-      const config = await db.getAsync(
-        'SELECT value FROM config WHERE key = ?',
-        ['anthropic_api_key']
-      );
+      const config = await db.getAsync('SELECT value FROM config WHERE key = ?', [
+        'anthropic_api_key',
+      ]);
 
       if (config?.value && config.value.startsWith('sk-ant-')) {
         this.#client = new Anthropic({ apiKey: config.value });
@@ -125,7 +124,7 @@ export class ClaudeClient {
   isConfigured() {
     return this.#client !== null;
   }
-  
+
   /**
    * Get API key source for debugging
    * @returns {string | null}
@@ -136,9 +135,9 @@ export class ClaudeClient {
 
   /**
    * Generate cache key for a query
-   * @param {string} patientTerm 
-   * @param {string} criterionTerm 
-   * @param {string} context 
+   * @param {string} patientTerm
+   * @param {string} criterionTerm
+   * @param {string} context
    * @returns {string}
    */
   #getCacheKey(patientTerm, criterionTerm, context = '') {
@@ -147,7 +146,7 @@ export class ClaudeClient {
 
   /**
    * Get cached result
-   * @param {string} key 
+   * @param {string} key
    * @returns {any | null}
    */
   #getFromCache(key) {
@@ -164,26 +163,26 @@ export class ClaudeClient {
 
   /**
    * Store result in cache
-   * @param {string} key 
-   * @param {any} result 
+   * @param {string} key
+   * @param {any} result
    */
   #setCache(key, result) {
     this.#memoryCache.set(key, {
       result,
-      expiresAt: Date.now() + this.#cacheTTL
+      expiresAt: Date.now() + this.#cacheTTL,
     });
   }
 
   /**
    * Semantic match between patient term and criterion
-   * @param {string} patientTerm 
-   * @param {string} criterionTerm 
+   * @param {string} patientTerm
+   * @param {string} criterionTerm
    * @param {string} [context='medical term']
    * @returns {Promise<{ match: boolean, confidence: number, reasoning: string, cached?: boolean }>}
    */
   async semanticMatch(patientTerm, criterionTerm, context = 'medical term') {
     const cacheKey = this.#getCacheKey(patientTerm, criterionTerm, context);
-    
+
     // Check cache first
     const cached = this.#getFromCache(cacheKey);
     if (cached) {
@@ -196,7 +195,7 @@ export class ClaudeClient {
         match: false,
         confidence: 0,
         reasoning: 'AI client not configured',
-        cached: false
+        cached: false,
       };
     }
 
@@ -223,7 +222,7 @@ Respond ONLY with valid JSON in this exact format:
       const response = await this.#client.messages.create({
         model: this.#model,
         max_tokens: 256,
-        messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content: prompt }],
       });
 
       const text = response.content[0]?.text || '{}';
@@ -233,7 +232,6 @@ Respond ONLY with valid JSON in this exact format:
       this.#setCache(cacheKey, result);
 
       return { ...result, cached: false };
-
     } catch (error) {
       console.error('Claude API error:', error.message);
       throw new Error(`AI matching failed: ${error.message}`);
@@ -254,7 +252,7 @@ Respond ONLY with valid JSON in this exact format:
     // Include first 50 chars + last 50 chars + length for better uniqueness
     const promptHash = `${prompt.substring(0, 50)}_${prompt.length}_${prompt.substring(prompt.length - 50)}`;
     const cacheKey = `questions_${promptHash}`;
-    
+
     // Check cache
     const cached = this.#getFromCache(cacheKey);
     if (cached) {
@@ -264,15 +262,15 @@ Respond ONLY with valid JSON in this exact format:
     try {
       const response = await this.#client.messages.create({
         model: this.#model,
-        max_tokens: 2048,  // Increased to avoid truncation
-        messages: [{ role: 'user', content: prompt }]
+        max_tokens: 2048, // Increased to avoid truncation
+        messages: [{ role: 'user', content: prompt }],
       });
 
       const text = response.content[0]?.text || '{}';
-      
+
       // Parse JSON from response - handle potential markdown code blocks
       let jsonText = text.trim();
-      
+
       // Try to extract from markdown code blocks (with or without closing ```)
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
@@ -286,15 +284,18 @@ Respond ONLY with valid JSON in this exact format:
           jsonText = jsonText.slice(0, -3).trim();
         }
       }
-      
+
       const result = JSON.parse(jsonText);
-      
+
       // Log raw AI response for debugging criterion IDs
-      console.log('📋 Raw AI response questions:', JSON.stringify(result.questions?.slice(0, 2), null, 2));
-      
+      console.log(
+        '📋 Raw AI response questions:',
+        JSON.stringify(result.questions?.slice(0, 2), null, 2)
+      );
+
       // Normalize criterionId/criterionIds format for backward compatibility
       if (result.questions && Array.isArray(result.questions)) {
-        result.questions.forEach(q => {
+        result.questions.forEach((q) => {
           // If old format (single criterionId), convert to array
           if (q.criterionId && !q.criterionIds) {
             q.criterionIds = [q.criterionId];
@@ -306,15 +307,17 @@ Respond ONLY with valid JSON in this exact format:
           }
         });
       }
-      
+
       // Log normalized questions
-      console.log('✅ Normalized questions:', JSON.stringify(result.questions?.slice(0, 2), null, 2));
+      console.log(
+        '✅ Normalized questions:',
+        JSON.stringify(result.questions?.slice(0, 2), null, 2)
+      );
 
       // Cache the result
       this.#setCache(cacheKey, result);
 
       return result;
-
     } catch (error) {
       console.error('Claude API question generation error:', error.message);
       // Return aiGenerated: false so frontend knows AI failed
@@ -325,40 +328,46 @@ Respond ONLY with valid JSON in this exact format:
   /**
    * Generic completion for 100% LLM parsing
    * Used by UniversalParserV2 for criteria parsing
-   * 
+   *
    * Uses Anthropic prompt caching to reduce costs:
    * - System prompt (FIELD_CATALOG ~75KB) is cached with cache_control
    * - First call creates cache (25% extra cost)
    * - Subsequent calls get 90% discount on cached tokens
-   * 
+   *
    * @param {Object} options - Completion options
    * @param {string} options.system - System prompt (contains FIELD_CATALOG)
    * @param {string} options.prompt - User prompt (criterion to parse)
    * @param {number} [options.maxTokens=4096] - Max tokens for response
+   * @param {string} [options.model] - Override default model (e.g., 'claude-haiku-4-5-20250514')
    * @returns {Promise<string>} Raw response text from Claude
    */
-  async complete({ system, prompt, maxTokens = 4096, returnUsage = false }) {
+  async complete({ system, prompt, maxTokens = 4096, returnUsage = false, model = null }) {
     if (!this.#client) {
-      throw new Error('Claude client not configured. Set ANTHROPIC_API_KEY or configure via admin.');
+      throw new Error(
+        'Claude client not configured. Set ANTHROPIC_API_KEY or configure via admin.'
+      );
     }
+
+    const modelToUse = model || this.#model;
 
     try {
       const response = await this.#client.messages.create({
-        model: this.#model,
+        model: modelToUse,
         max_tokens: maxTokens,
         // Use cache_control for prompt caching - saves ~70% on batch parsing
         system: [
           {
             type: 'text',
             text: system,
-            cache_control: { type: 'ephemeral' }
-          }
+            cache_control: { type: 'ephemeral' },
+          },
         ],
-        messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content: prompt }],
       });
 
       // Log cache statistics for monitoring
       const usage = response.usage;
+      console.log(`[Claude] Model: ${response.model}`);
       if (usage?.cache_creation_input_tokens) {
         console.log(`📝 Cache created: ${usage.cache_creation_input_tokens} tokens cached`);
       }
@@ -367,7 +376,7 @@ Respond ONLY with valid JSON in this exact format:
       }
 
       const text = response.content[0]?.text || '';
-      
+
       // Return usage stats if requested (for cost tracking)
       if (returnUsage) {
         return {
@@ -376,11 +385,11 @@ Respond ONLY with valid JSON in this exact format:
             input_tokens: usage?.input_tokens || 0,
             output_tokens: usage?.output_tokens || 0,
             cache_read_input_tokens: usage?.cache_read_input_tokens || 0,
-            cache_creation_input_tokens: usage?.cache_creation_input_tokens || 0
-          }
+            cache_creation_input_tokens: usage?.cache_creation_input_tokens || 0,
+          },
         };
       }
-      
+
       return text;
     } catch (error) {
       console.error('Claude API complete() error:', error.message);
@@ -390,13 +399,13 @@ Respond ONLY with valid JSON in this exact format:
 
   /**
    * Batch semantic matching
-   * @param {Array<{ patientTerm: string, criterionTerm: string, context?: string }>} queries 
+   * @param {Array<{ patientTerm: string, criterionTerm: string, context?: string }>} queries
    * @returns {Promise<Array<{ match: boolean, confidence: number, reasoning: string }>>}
    */
   async batchSemanticMatch(queries) {
     // Process in parallel
     const results = await Promise.all(
-      queries.map(q => 
+      queries.map((q) =>
         this.semanticMatch(q.patientTerm, q.criterionTerm, q.context || 'medical term')
       )
     );
@@ -417,7 +426,7 @@ Respond ONLY with valid JSON in this exact format:
   getCacheStats() {
     return {
       size: this.#memoryCache.size,
-      keys: Array.from(this.#memoryCache.keys())
+      keys: Array.from(this.#memoryCache.keys()),
     };
   }
 }

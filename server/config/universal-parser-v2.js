@@ -2,13 +2,13 @@
  * Universal Parser v2 - 100% LLM Approach
  * ----------------------------------------
  * Based on FIELD_CATALOG_v2.1.md master specification
- * 
+ *
  * Architecture:
  * - Send ENTIRE FIELD_CATALOG to Claude as system context
  * - NO local regex/pattern matching - Claude does 100% of parsing
  * - Claude follows "LLM Thought Process" sections from catalog
  * - Output includes: raw_text, _thought_process, all parsed fields
- * 
+ *
  * 3-Stage Unfamiliar Term Detection (done by LLM):
  * 1. Exact match in reference lists → confidence 1.0
  * 2. Base term match (psoriasis, cancer, etc.) → confidence 0.85
@@ -36,7 +36,14 @@ const ALL_FIELDS = {
   anatomical: ['ANATOMICAL_LOCATION'],
   temporal: ['TIMEFRAME'],
   logical: ['LOGICAL_OPERATOR'],
-  metadata: ['NESTED_CONDITION', 'NEGATION_DETECTED', 'AMBIGUITY_FLAG', 'REQUIRES_CLINICAL_JUDGMENT', 'unfamiliar_term_flag', 'confidence']
+  metadata: [
+    'NESTED_CONDITION',
+    'NEGATION_DETECTED',
+    'AMBIGUITY_FLAG',
+    'REQUIRES_CLINICAL_JUDGMENT',
+    'unfamiliar_term_flag',
+    'confidence',
+  ],
 };
 
 /**
@@ -50,10 +57,24 @@ const CLUSTER_PRIMARY_FIELDS = {
   NPV: ['PSORIASIS_VARIANT', 'CONDITION_TYPE', 'NEGATION_DETECTED'],
   BIO: ['MEASUREMENTS', 'CONDITION_TYPE', 'CONDITION_PATTERN', 'LOGICAL_OPERATOR'],
   CPD: ['CONDITION_TYPE', 'TIMEFRAME', 'LOGICAL_OPERATOR'],
-  CMB: ['CONDITION_TYPE', 'CONDITION_PATTERN', 'SEVERITY', 'EXCEPTION_CONDITION', 'NEGATION_DETECTED', 'NESTED_CONDITION', 'LOGICAL_OPERATOR'],
+  CMB: [
+    'CONDITION_TYPE',
+    'CONDITION_PATTERN',
+    'SEVERITY',
+    'EXCEPTION_CONDITION',
+    'NEGATION_DETECTED',
+    'NESTED_CONDITION',
+    'LOGICAL_OPERATOR',
+  ],
   AIC: ['CONDITION_TYPE', 'TIMEFRAME', 'NEGATION_DETECTED', 'LOGICAL_OPERATOR'],
   FLR: ['CONDITION_TYPE', 'TIMEFRAME', 'LOGICAL_OPERATOR'],
-  PTH: ['CONDITION_TYPE', 'CONDITION_PATTERN', 'TIMEFRAME', 'EXCEPTION_CONDITION', 'LOGICAL_OPERATOR']
+  PTH: [
+    'CONDITION_TYPE',
+    'CONDITION_PATTERN',
+    'TIMEFRAME',
+    'EXCEPTION_CONDITION',
+    'LOGICAL_OPERATOR',
+  ],
 };
 
 export class UniversalParserV2 {
@@ -78,15 +99,15 @@ export class UniversalParserV2 {
    */
   #loadFieldCatalog() {
     if (this.#catalogLoaded) return;
-    
+
     if (!fs.existsSync(CATALOG_PATH)) {
       throw new Error(`FIELD_CATALOG not found at ${CATALOG_PATH}. Required for 100% LLM parsing.`);
     }
-    
+
     // Load ENTIRE catalog - Claude will interpret it
     this.#fieldCatalog = fs.readFileSync(CATALOG_PATH, 'utf8');
     console.log(`✅ Loaded FIELD_CATALOG_v2.1.md (${this.#fieldCatalog.length} chars)`);
-    
+
     // Load reference lists
     if (fs.existsSync(REFERENCE_LISTS_PATH)) {
       this.#referenceLists = JSON.parse(fs.readFileSync(REFERENCE_LISTS_PATH, 'utf8'));
@@ -95,20 +116,20 @@ export class UniversalParserV2 {
       console.warn(`⚠️ Reference lists not found at ${REFERENCE_LISTS_PATH}`);
       this.#referenceLists = {};
     }
-    
+
     this.#catalogLoaded = true;
   }
 
   /**
    * Construct system prompt with ENTIRE FIELD_CATALOG as context
    * Claude interprets the catalog directly - NO local parsing
-   * 
+   *
    * @param {string} clusterCode - Cluster code (AGE, BMI, SEV, etc.)
    * @returns {string} System prompt with full catalog
    */
   constructSystemPrompt(clusterCode) {
     this.#loadFieldCatalog();
-    
+
     const primaryFields = CLUSTER_PRIMARY_FIELDS[clusterCode] || [];
     const refStr = JSON.stringify(this.#referenceLists, null, 2);
 
@@ -165,12 +186,12 @@ Return ONLY valid JSON (no markdown, no explanation outside JSON) with this stru
   /**
    * Parse a single criterion using 100% LLM approach
    * Claude does ALL parsing following FIELD_CATALOG specification
-   * 
+   *
    * @param {Object} criterion - Criterion object with id, nct_id, raw_text
    * @param {string} clusterCode - Cluster code (AGE, BMI, etc.)
    * @returns {Promise<Object>} Parsed criterion with all fields
    */
-  async parseCriterion(criterion, clusterCode) {
+  async parseCriterion(criterion, clusterCode, model = null) {
     const systemPrompt = this.constructSystemPrompt(clusterCode);
 
     const userPrompt = `Parse this criterion following the FIELD_CATALOG specification exactly:
@@ -186,8 +207,9 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
       const apiResponse = await this.#claudeClient.complete({
         system: systemPrompt,
         prompt: userPrompt,
-        maxTokens: 4096,  // Larger for complex nested conditions
-        returnUsage: true  // Get token usage for cost tracking
+        maxTokens: 4096, // Larger for complex nested conditions
+        returnUsage: true, // Get token usage for cost tracking
+        model: model, // Override model if specified
       });
 
       const responseText = apiResponse.text;
@@ -198,16 +220,15 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
       try {
         // Try multiple extraction patterns
         const jsonMatch = responseText.match(/```json\s*([\s\S]*?)```/) ||
-                         responseText.match(/```\s*([\s\S]*?)```/) ||
-                         [null, responseText];
+          responseText.match(/```\s*([\s\S]*?)```/) || [null, responseText];
         let jsonStr = jsonMatch[1] || responseText;
-        
+
         // Clean up common issues
         jsonStr = jsonStr.trim();
         if (jsonStr.startsWith('```')) {
           jsonStr = jsonStr.replace(/^```(?:json)?\s*/, '').replace(/```$/, '');
         }
-        
+
         parsedData = JSON.parse(jsonStr);
       } catch (parseError) {
         console.error(`JSON parse error for ${criterion.id}:`, parseError.message);
@@ -216,7 +237,7 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
           _thought_process: `LLM returned invalid JSON: ${parseError.message}`,
           AMBIGUITY_FLAG: true,
           ambiguity_reason: 'LLM response was not valid JSON',
-          parsing_status: 'error'
+          parsing_status: 'error',
         };
       }
 
@@ -224,23 +245,23 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
       const rawResult = {
         id: criterion.id,
         nct_id: criterion.nct_id,
-        raw_text: criterion.raw_text,  // ALWAYS include raw_text
+        raw_text: criterion.raw_text, // ALWAYS include raw_text
         ...parsedData,
         // Include original data if provided (for validator to infer CRITERION_TYPE)
-        ...(criterion.original && { original: criterion.original })
+        ...(criterion.original && { original: criterion.original }),
       };
-      
+
       // Post-process through schema validator to ensure consistency
       const validation = validateCriterion(rawResult, clusterCode);
-      
+
       if (validation.warnings.length > 0) {
         console.log(`Validation warnings for ${criterion.id}:`, validation.warnings);
       }
-      
+
       // Return criterion AND usage for cost tracking
       return {
         criterion: validation.criterion,
-        usage
+        usage,
       };
     } catch (error) {
       console.error(`LLM parsing error for ${criterion.id}:`, error.message);
@@ -254,9 +275,9 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
           ambiguity_reason: `LLM error: ${error.message}`,
           confidence: 0,
           unfamiliar_term_flag: true,
-          parsing_status: 'error'
+          parsing_status: 'error',
         },
-        usage: null  // No usage on error
+        usage: null, // No usage on error
       };
     }
   }
@@ -265,37 +286,41 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
    * Parse multiple criteria in batch
    * @param {Array<Object>} criteria - Array of criterion objects
    * @param {string} clusterCode - Cluster code
-   * @param {Object} options - Options { concurrency: number, onProgress: Function }
+   * @param {Object} options - Options { concurrency: number, onProgress: Function, model: string }
    * @returns {Promise<Array<Object>>} Parsed criteria (extracts .criterion from each result)
    */
   async parseBatch(criteria, clusterCode, options = {}) {
-    const { concurrency = 1, onProgress = null } = options;
+    const { concurrency = 1, onProgress = null, model = null } = options;
     const results = [];
     let completed = 0;
-    
+
     // Process in batches for concurrency
     for (let i = 0; i < criteria.length; i += concurrency) {
       const batch = criteria.slice(i, i + concurrency);
       const batchResults = await Promise.all(
-        batch.map(async criterion => {
-          const parseResult = await this.parseCriterion(criterion, clusterCode);
-          return parseResult.criterion;  // Extract just the criterion, not usage
+        batch.map(async (criterion) => {
+          const parseResult = await this.parseCriterion(criterion, clusterCode, model);
+          return parseResult.criterion; // Extract just the criterion, not usage
         })
       );
-      
+
       results.push(...batchResults);
       completed += batch.length;
-      
+
       if (onProgress) {
-        onProgress({ completed, total: criteria.length, percent: (completed / criteria.length) * 100 });
+        onProgress({
+          completed,
+          total: criteria.length,
+          percent: (completed / criteria.length) * 100,
+        });
       }
-      
+
       // Small delay between batches to avoid rate limiting
       if (i + concurrency < criteria.length) {
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     }
-    
+
     return results;
   }
 
@@ -309,37 +334,40 @@ Return valid JSON only. Include _thought_process explaining your reasoning step 
   async parseCluster(database, clusterCode, options = {}) {
     const clusterKey = `CLUSTER_${clusterCode}`;
     const cluster = database[clusterKey];
-    
+
     if (!cluster) {
       throw new Error(`Cluster ${clusterKey} not found in database`);
     }
-    
+
     console.log(`📋 Parsing ${cluster.criteria.length} criteria from ${clusterKey}...`);
-    
+
     const parsedCriteria = await this.parseBatch(cluster.criteria, clusterCode, {
       ...options,
       onProgress: (progress) => {
-        console.log(`   Progress: ${progress.completed}/${progress.total} (${progress.percent.toFixed(1)}%)`);
+        console.log(
+          `   Progress: ${progress.completed}/${progress.total} (${progress.percent.toFixed(1)}%)`
+        );
         if (options.onProgress) options.onProgress(progress);
-      }
+      },
     });
-    
+
     // Calculate statistics
     const stats = {
       total: parsedCriteria.length,
-      complete: parsedCriteria.filter(c => c.parsing_status === 'complete').length,
-      pending_review: parsedCriteria.filter(c => c.parsing_status === 'pending_admin_review').length,
-      errors: parsedCriteria.filter(c => c.parsing_status === 'error').length,
-      unfamiliar_terms: parsedCriteria.filter(c => c.unfamiliar_term_flag).length
+      complete: parsedCriteria.filter((c) => c.parsing_status === 'complete').length,
+      pending_review: parsedCriteria.filter((c) => c.parsing_status === 'pending_admin_review')
+        .length,
+      errors: parsedCriteria.filter((c) => c.parsing_status === 'error').length,
+      unfamiliar_terms: parsedCriteria.filter((c) => c.unfamiliar_term_flag).length,
     };
-    
+
     console.log(`✅ Cluster ${clusterKey} parsed:`, stats);
-    
+
     return {
       ...cluster,
       criteria: parsedCriteria,
       parsing_stats: stats,
-      parsed_at: new Date().toISOString()
+      parsed_at: new Date().toISOString(),
     };
   }
 
