@@ -1,5 +1,36 @@
 # Lessons Learned
 
+## 2026-02-16: Git Push Систематически Забывался — 19 Файлов Не В GitHub
+
+### Problem
+Изменения коммитились локально, но не пушились в GitHub. Пользователь обнаружил что 19 файлов (включая CHANGELOG.md, lesson learned.md, BACKUP_CATALOG.md) не синхронизированы с GitHub.
+
+### Root Cause
+**Отсутствие принудительной последовательности.**
+- Команды существовали (@commit) но можно было пропустить шаги
+- После commit не выполнялся push
+- Говорил "готово" без проверки GitHub
+
+### Solution Applied
+1. Введён 4-GATE workflow: @plan → @implement → @verify → @ship
+2. @ship ОБЯЗАН включать git push И показывать GitHub URL
+3. Задача НЕ ЗАВЕРШЕНА пока нет SHIP REPORT с commit hash
+4. Обновлён copilot-commands.md с explicit blocking между gates
+
+### Lesson
+- **Чеклисты без enforcement = бесполезны** — можно пропустить любой пункт
+- **Каждый gate должен блокировать следующий** — explicit approval required
+- **"Готово" = только после @ship** с подтверждением push
+- **Всегда показывать GitHub URL** для верификации
+
+### Prevention Checklist
+- [ ] Следуй 4-GATE workflow
+- [ ] @ship выполнен (не только commit, но и push)
+- [ ] GitHub URL показан и проверен
+- [ ] НИКОГДА не говори "готово" без SHIP REPORT
+
+---
+
 ## 2026-02-03: Удалил Переменную Без Проверки References — Сломал Парсер
 
 ### Problem
