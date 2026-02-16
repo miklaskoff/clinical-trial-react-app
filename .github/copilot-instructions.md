@@ -132,6 +132,34 @@ git reset --hard <commit>
 | `server/.env` | РУЧНОЙ БЭКАП |
 | `node_modules/` | `npm install` |
 
+### ⚠️ Правило #6: BACKUP_CATALOG.md — ОБЯЗАТЕЛЬНО ОБНОВЛЯТЬ
+
+**При создании бэкапа ОБЯЗАТЕЛЬНО добавить в `docs/BACKUP_CATALOG.md`:**
+
+1. [ ] Запись в таблицу **Backup Inventory** (ID, Date, Name, Description, Type)
+2. [ ] Раздел **Backup Details** с полным описанием:
+   - Created (дата/время)
+   - Location (полный путь)
+   - Type (DB / Full)
+   - Contents (список файлов)
+   - Version (версия из CHANGELOG)
+   - Why (причина бэкапа)
+   - Restore (команды восстановления)
+3. [ ] Запись в таблицу **Version Correlation**
+
+**Шаблон для Backup Details:**
+```markdown
+### Backup #N: NAME_TIMESTAMP
+
+- **Created**: YYYY-MM-DD HH:MM:SS
+- **Location**: `c:\Users\lasko\Downloads\clinical-trial-backups\NAME_TIMESTAMP\`
+- **Type**: DB / Full
+- **Contents**: [list files]
+- **Version**: [CHANGELOG version]
+- **Why**: [reason for backup]
+- **Restore**: [specific commands]
+```
+
 ### Команды Для Ежедневного Бэкапа
 
 ```powershell
@@ -274,6 +302,42 @@ npm run verify
 - [ ] Architecture docs update (if design change)
 
 **Why?** Documentation that lags behind code becomes useless.
+
+### ⚠️ CHANGELOG.md — ДЕТАЛЬНЫЕ ТРЕБОВАНИЯ
+
+**Каждая запись CHANGELOG ДОЛЖНА содержать:**
+
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+
+### Changed/Added/Removed/Fixed
+- Описание изменения
+
+### Files Modified
+
+**Backend:**
+- `server/file.js` — что изменилось
+
+**Frontend:**  
+- `src/Component.jsx` — что изменилось
+
+**Data:**
+- `src/data/file.json` — что изменилось
+
+**Tests:**
+- `src/__tests__/file.test.js` — что изменилось
+
+### Migration Notes (если нужна ручная работа)
+- Шаги для миграции
+
+### Technical Details
+- Количество тестов, backup location и т.д.
+```
+
+**ЗАПРЕЩЕНО:**
+- ❌ "9 files modified" — перечисли КАЖДЫЙ файл
+- ❌ "Updated tests" — укажи КАКИЕ тесты
+- ❌ Пропускать Migration Notes если нужна ручная работа
 
 ### Contract Report — ГЕНЕРИРУЙ ПОСЛЕ КАЖДОЙ ФИЧИ
 

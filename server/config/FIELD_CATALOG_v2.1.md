@@ -885,7 +885,7 @@ LLM Thought Process:
 2. CRITICAL: "non-plaque" is a NEGATION of "plaque"
 3. Do NOT extract "plaque psoriasis"
 4. Extract "non-plaque psoriasis" as-is
-5. Parse into BOTH CONDITION_TYPE and PSORIASIS_VARIANT
+5. Parse into BOTH CONDITION_TYPE and DISEASE_VARIANT
 
 Output:
 {
@@ -893,14 +893,14 @@ Output:
     "non-plaque psoriasis",
     "drug-induced psoriasis"
   ],
-  "PSORIASIS_VARIANT": [
+  "DISEASE_VARIANT": [
     "non-plaque",
     "drug-induced"
   ],
   "NEGATION_DETECTED": {
     "negated_term": "plaque",
     "interpretation": "Excludes patients with plaque psoriasis",
-    "affected_fields": ["CONDITION_TYPE", "PSORIASIS_VARIANT"],
+    "affected_fields": ["CONDITION_TYPE", "DISEASE_VARIANT"],
     "parsing_note": "'non-plaque' treated as distinct variant, NOT absence of 'plaque'"
   },
   "confidence": 1.0
@@ -1010,29 +1010,30 @@ Output:
 
 ---
 
-## PSORIASIS_VARIANT
+## DISEASE_VARIANT
 
-**Purpose:** Specific psoriasis variant types (for NPV cluster)
+**Purpose:** Specific disease variant/subtype (for DIT cluster - Disease Type)
 
 **Data Type:** `array` of `string`
 
 **LLM Thought Process:**
 ```
-1. Identify psoriasis variant types mentioned
-2. Common variants:
-   - guttate, erythrodermic, pustular, inverse
-   - drug-induced, palmoplantar, nail, scalp
-   - plaque (only if explicitly mentioned as a variant to INCLUDE)
+1. Identify disease variant types mentioned
+2. Examples by disease:
+   - Psoriasis: guttate, erythrodermic, pustular, inverse, plaque, palmoplantar
+   - Arthritis: rheumatoid, psoriatic, osteoarthritis, gouty
+   - Cancer: adenocarcinoma, squamous cell, small cell, etc.
+   - Diabetes: type 1, type 2, gestational
 3. CRITICAL: Handle negation
    - "non-plaque psoriasis" → ["non-plaque"] (NOT "plaque")
-   - "absence of plaque psoriasis" → do NOT include "plaque"
+   - "absence of [variant]" → do NOT include that variant
 4. If unfamiliar variant, FLAG for admin review
 ```
 
 **Format:**
 ```json
 {
-  "PSORIASIS_VARIANT": [
+  "DISEASE_VARIANT": [
     "guttate",
     "drug-induced"
   ]
@@ -1041,7 +1042,7 @@ Output:
 
 **Reference List:**
 
-**From existing data (8 variants):**
+**Psoriasis variants (8 types):**
 - "drug-induced" (17 occurrences)
 - "guttate" (15 occurrences)
 - "erythrodermic" (14 occurrences)
@@ -1051,17 +1052,22 @@ Output:
 - "nail psoriasis" (1 occurrence)
 - "unspecified" (2 occurrences)
 
-**Additional known variants:**
+**Additional psoriasis variants:**
 - "palmoplantar"
 - "scalp psoriasis"
 - "generalized pustular"
 - "arthropathic"
 - "non-plaque" ← **For negation cases**
 
+**Generic variant categories:**
+- Cancer subtypes (adenocarcinoma, squamous cell, small cell, etc.)
+- Arthritis types (rheumatoid, psoriatic, osteoarthritis, gouty)
+- Diabetes types (type 1, type 2, gestational, LADA)
+
 **Validation Rules:**
 - Must be array of strings
 - Each string should be lowercase
-- NEVER include "plaque" if text says "non-plaque"
+- NEVER include negated terms positively
 - If unfamiliar variant, FLAG for admin review
 
 **Examples:**
@@ -1072,7 +1078,7 @@ Raw Text: "Diagnosis of guttate or pustular psoriasis"
 
 Output:
 {
-  "PSORIASIS_VARIANT": [
+  "DISEASE_VARIANT": [
     "guttate",
     "pustular"
   ]
@@ -1088,11 +1094,11 @@ LLM Thought Process:
 2. CRITICAL: "non-plaque" means ANY variant EXCEPT plaque
 3. Do NOT include "plaque" in the list
 4. Include "non-plaque" as a category
-5. Parse into BOTH PSORIASIS_VARIANT and CONDITION_TYPE
+5. Parse into BOTH DISEASE_VARIANT and CONDITION_TYPE
 
 Output:
 {
-  "PSORIASIS_VARIANT": [
+  "DISEASE_VARIANT": [
     "non-plaque",
     "drug-induced"
   ],
@@ -1102,8 +1108,8 @@ Output:
   ],
   "NEGATION_DETECTED": {
     "negated_term": "plaque",
-    "interpretation": "Excludes patients with plaque psoriasis; includes all other variants",
-    "affected_fields": ["PSORIASIS_VARIANT", "CONDITION_TYPE"],
+    "interpretation": "Excludes patients with plaque type; includes all other variants",
+    "affected_fields": ["DISEASE_VARIANT", "CONDITION_TYPE"],
     "parsing_note": "'non-plaque' treated as distinct variant category"
   }
 }
@@ -2510,7 +2516,7 @@ def matches_criterion(patient, criterion):
 **Data Type:** `object`
 
 **✅ IMPORTANT IN v2.1:**
-- Negation is ALWAYS parsed into normal fields (CONDITION_TYPE, PSORIASIS_VARIANT, CONDITION_PATTERN, EXCEPTION_CONDITION)
+- Negation is ALWAYS parsed into normal fields (CONDITION_TYPE, DISEASE_VARIANT, CONDITION_PATTERN, EXCEPTION_CONDITION)
 - NEGATION_DETECTED is SUPPLEMENTARY documentation for transparency
 - Includes `affected_fields` to show which fields were impacted by negation
 
@@ -2522,7 +2528,7 @@ def matches_criterion(patient, criterion):
    - "other than": "other than plaque"
    - "except": "except basal cell carcinoma"
 2. Parse negation into appropriate normal fields:
-   - "non-plaque" → PSORIASIS_VARIANT: ["non-plaque"]
+   - "non-plaque" → DISEASE_VARIANT: ["non-plaque"]
    - "absence of" → CONDITION_PATTERN: ["absence"]
    - "except X" → EXCEPTION_CONDITION: {excluded_types: ["X"]}
 3. Document negation in NEGATION_DETECTED:
@@ -2539,7 +2545,7 @@ def matches_criterion(patient, criterion):
     "negated_term": "plaque",
     "negation_type": "prefix",  // "prefix", "absence_of", "exception", "other_than", "scope_limiting"
     "interpretation": "Excludes patients with plaque psoriasis; includes all other psoriasis variants",
-    "affected_fields": ["CONDITION_TYPE", "PSORIASIS_VARIANT"],
+    "affected_fields": ["CONDITION_TYPE", "DISEASE_VARIANT"],
     "parsing_note": "'non-plaque' treated as distinct variant category, NOT absence of 'plaque'"
   }
 }
@@ -2579,12 +2585,12 @@ LLM Processing:
 2. Detect negation: "non-" prefix on "plaque"
 3. Parse into NORMAL fields:
    - CONDITION_TYPE: ["non-plaque psoriasis", "drug-induced psoriasis"]
-   - PSORIASIS_VARIANT: ["non-plaque", "drug-induced"]
+   - DISEASE_VARIANT: ["non-plaque", "drug-induced"]
 4. Document negation in NEGATION_DETECTED (for transparency)
 
 Output:
 {
-  "id": "NPV_2109",
+  "id": "DIT_2109",
   "nct_id": "NCT06672393",
   "raw_text": "Diagnosis of non-plaque psoriasis or drug-induced psoriasis",
   
@@ -2594,7 +2600,7 @@ Output:
     "drug-induced psoriasis"
   ],
   
-  "PSORIASIS_VARIANT": [
+  "DISEASE_VARIANT": [
     "non-plaque",      // ← Parsed as a variant category
     "drug-induced"
   ],
@@ -2610,7 +2616,7 @@ Output:
     "negated_term": "plaque",
     "negation_type": "prefix",
     "interpretation": "Excludes patients with plaque psoriasis; includes all other psoriasis variants",
-    "affected_fields": ["CONDITION_TYPE", "PSORIASIS_VARIANT"],
+    "affected_fields": ["CONDITION_TYPE", "DISEASE_VARIANT"],
     "parsing_note": "'non-plaque' treated as a distinct variant category, NOT as absence of 'plaque'"
   }
 }
@@ -2618,7 +2624,7 @@ Output:
 
 **Patient Matching Logic:**
 ```python
-def matches_criterion_npv_2109(patient):
+def matches_criterion_dit_2109(patient):
     """
     Criterion: "Diagnosis of non-plaque psoriasis or drug-induced psoriasis"
     
@@ -2629,11 +2635,11 @@ def matches_criterion_npv_2109(patient):
     """
     
     # Check if patient has non-plaque psoriasis
-    if patient.psoriasis_variant != "plaque" and patient.has_psoriasis:
+    if patient.disease_variant != "plaque" and patient.has_psoriasis:
         return "EXCLUDED"  # Has non-plaque psoriasis
     
     # Check if patient has drug-induced psoriasis
-    if patient.psoriasis_variant == "drug-induced":
+    if patient.disease_variant == "drug-induced":
         return "EXCLUDED"  # Has drug-induced psoriasis
     
     # Patient has plaque psoriasis or no psoriasis
@@ -2656,7 +2662,7 @@ LLM Processing:
 
 Output:
 {
-  "id": "NPV_2426",
+  "id": "DIT_2426",
   "nct_id": "NCT06643260",
   "raw_text": "Patients in the absence of plaque psoriasis",
   
@@ -2665,7 +2671,7 @@ Output:
   
   "CONDITION_PATTERN": ["absence"],  // ← Indicates negation
   
-  "PSORIASIS_VARIANT": [],  // Empty - no specific variant mentioned
+  "DISEASE_VARIANT": [],  // Empty - no specific variant mentioned
   
   "EXCLUSION_STRENGTH": "mandatory_exclude",
   
@@ -2682,7 +2688,7 @@ Output:
 
 **Patient Matching Logic:**
 ```python
-def matches_criterion_npv_2426(patient):
+def matches_criterion_dit_2426(patient):
     """
     Criterion: "Patients in the absence of plaque psoriasis"
     
@@ -2693,7 +2699,7 @@ def matches_criterion_npv_2426(patient):
     # Check CONDITION_PATTERN
     if "absence" in criterion['CONDITION_PATTERN']:
         # Patient must NOT have the condition
-        if patient.psoriasis_variant == "plaque":
+        if patient.disease_variant == "plaque":
             return "ELIGIBLE"  # Has plaque → eligible (absence criterion reversed)
         else:
             return "EXCLUDED"  # Doesn't have plaque → excluded

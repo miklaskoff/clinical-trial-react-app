@@ -123,7 +123,7 @@ export function addMissingFields(criterion, clusterCode) {
     'MEASUREMENTS': [],           // Array type - use []
     'REQUIRES_CLINICAL_JUDGMENT': false,
     'AMBIGUITY_FLAG': false,
-    'PSORIASIS_VARIANT': [],      // Array type - use []
+    'DISEASE_VARIANT': [],        // Array type - use []
     'AGE_MIN': null,
     'AGE_MAX': null,
     'AGE_UNIT': 'years',          // Default unit for age
@@ -165,7 +165,7 @@ export function validateFieldTypes(criterion, clusterCode) {
   const result = { ...criterion };
   
   // Array fields that should be arrays
-  const arrayFields = ['CONDITION_TYPE', 'CONDITION_PATTERN', 'SEVERITY', 'ANATOMICAL_LOCATION', 'PSORIASIS_VARIANT'];
+  const arrayFields = ['CONDITION_TYPE', 'CONDITION_PATTERN', 'SEVERITY', 'ANATOMICAL_LOCATION', 'DISEASE_VARIANT'];
   
   for (const field of arrayFields) {
     if (result[field] !== undefined && !Array.isArray(result[field])) {

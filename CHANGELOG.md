@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.3.0] - 2026-02-16
+
+### 🔄 Cluster Refactoring — Disease-Agnostic Architecture
+
+Refactored cluster and field names to support multiple diseases (not just psoriasis). This prepares the system for adding new disease types.
+
+### Changed
+
+- **CPD → DD (Disease Duration)**
+  - Cluster renamed from "Current Psoriasis Duration" to "Disease Duration"
+  - 49 criteria updated with new cluster_code
+  - State variables: `cpd_duration` → `dd_duration`, `cpd_unit` → `dd_unit`
+
+- **NPV → DIT (Disease Type)**
+  - Cluster renamed from "Non-Plaque Variant" to "Disease Type"
+  - 61 criteria updated with new cluster_code
+  - State variables: `npv_variant` → `dit_variant`
+
+- **PSORIASIS_VARIANT → DISEASE_VARIANT**
+  - Field renamed in universal-parser-v2.js and FIELD_CATALOG_v2.1.md
+  - Generic examples added for multiple diseases
+
+### Removed
+
+- **FLR (Flare) cluster**
+  - 52 criteria removed from database
+  - Cluster considered too disease-specific for multi-disease support
+
+### Files Modified
+
+**Backend:**
+- `server/parse-utils.js` — CLUSTER_NAMES mapping (removed FLR, NPV→DIT, CPD→DD)
+- `server/routes/parser.js` — FILENAME_TO_CLUSTER, CLUSTER_NAME_TO_CODE, validClusters array
+- `server/config/universal-parser-v2.js` — CLUSTER_PRIMARY_FIELDS, ALL_FIELDS (DISEASE_VARIANT)
+- `server/config/output-schemas.json` — Removed NPV/CPD/FLR schemas, added DD/DIT schemas
+- `server/config/output-validator.js` — Updated validation rules
+- `server/config/FIELD_CATALOG_v2.1.md` — PSORIASIS_VARIANT → DISEASE_VARIANT section
+
+**Frontend:**
+- `src/ClinicalTrialEligibilityQuestionnaire.jsx` — State variables, render functions (renderDITCluster, renderDDCluster), buildSlotFilledResponse
+- `src/services/matcher/ClinicalTrialMatcher.js` — Switch cases: DD→evaluateDuration, DIT→evaluateVariant, removed FLR
+
+**Data:**
+- `src/data/improved_slot_filled_database.json` — CLUSTER_DIT (61), CLUSTER_DD (49), CLUSTER_FLR removed
+
+**Tests:**
+- `src/__tests__/services/ClinicalTrialMatcher.test.js` — Mock database cluster_code, response objects
+
+### Migration Notes
+
+If restoring from backup PRE_CLUSTER_RENAME_20260216-001905:
+- Code expects NEW names (DD, DIT) but backup has OLD names (CPD, NPV, FLR)
+- Must restore BOTH code AND data, or fix mismatch manually
+
+### Technical Details
+
+- Total clusters: 11 → 10
+- All 391 tests passing
+- Backup: `c:\Users\lasko\Downloads\clinical-trial-backups\PRE_CLUSTER_RENAME_20260216-001905\`
+
+---
+
 ## [5.2.1] - 2026-02-03
 
 ### 🐛 Parser Polling Fix — Cost Display & Download Button

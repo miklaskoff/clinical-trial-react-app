@@ -206,9 +206,9 @@ describe('FollowUpGenerator - Treatment Criterion IDs', () => {
 
   // ========== CLUSTER-SCOPED SEARCH TESTS ==========
   
-  it('should only search CLUSTER_PTH for treatment follow-ups (not FLR or CMB)', async () => {
+  it('should only search CLUSTER_PTH for treatment follow-ups (not CMB)', async () => {
     // CRITICAL: Treatment follow-up questions should ONLY cite PTH criteria
-    // NOT criteria from FLR or CMB clusters
+    // NOT criteria from CMB cluster
     
     const result = await generateFollowUpQuestions('IL-17A inhibitor');
     
@@ -224,11 +224,6 @@ describe('FollowUpGenerator - Treatment Criterion IDs', () => {
     expect(pthCriteria.length).toBeGreaterThan(0);
     console.log(`✅ Found ${pthCriteria.length} PTH criteria: ${pthCriteria.join(', ')}`);
     
-    // Should NOT find FLR criteria (FLR_2303, FLR_2146)
-    const flrCriteria = ids.filter(id => id.startsWith('FLR_'));
-    expect(flrCriteria.length).toBe(0);
-    console.log(`✅ Correctly excluded FLR criteria (found ${flrCriteria.length})`);
-    
     // Should NOT find CMB criteria (CMB_1678)
     const cmbCriteria = ids.filter(id => id.startsWith('CMB_'));
     expect(cmbCriteria.length).toBe(0);
@@ -237,7 +232,7 @@ describe('FollowUpGenerator - Treatment Criterion IDs', () => {
 });
 
 describe('FollowUpGenerator - Condition Criterion IDs (Cluster-Scoped)', () => {
-  it('should only search CLUSTER_CMB for condition follow-ups (not PTH or FLR)', async () => {
+  it('should only search CLUSTER_CMB for condition follow-ups (not PTH)', async () => {
     // Import the condition generator
     const { generateConditionFollowUpQuestions } = await import('../../services/FollowUpGenerator.js');
     
@@ -259,10 +254,5 @@ describe('FollowUpGenerator - Condition Criterion IDs (Cluster-Scoped)', () => {
     const pthCriteria = ids.filter(id => id.startsWith('PTH_'));
     expect(pthCriteria.length).toBe(0);
     console.log(`✅ Correctly excluded PTH criteria (found ${pthCriteria.length})`);
-    
-    // Should NOT find FLR criteria
-    const flrCriteria = ids.filter(id => id.startsWith('FLR_'));
-    expect(flrCriteria.length).toBe(0);
-    console.log(`✅ Correctly excluded FLR criteria (found ${flrCriteria.length})`);
   });
 });

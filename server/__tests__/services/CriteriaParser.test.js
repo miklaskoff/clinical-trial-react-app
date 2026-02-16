@@ -320,16 +320,16 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
   describe('NEGATION_DETECTED', () => {
     it('should detect "non-" prefix negation', async () => {
       mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
-        id: 'NPV_2109',
+        id: 'DIT_2109',
         raw_text: 'Diagnosis of non-plaque psoriasis',
-        _thought_process: '1. Detected "non-" prefix. 2. Parsed into PSORIASIS_VARIANT as "non-plaque".',
+        _thought_process: '1. Detected "non-" prefix. 2. Parsed into DISEASE_VARIANT as "non-plaque".',
         CONDITION_TYPE: ['non-plaque psoriasis'],
-        PSORIASIS_VARIANT: ['non-plaque'],
+        DISEASE_VARIANT: ['non-plaque'],
         NEGATION_DETECTED: {
           negated_term: 'plaque',
           negation_type: 'prefix',
           interpretation: 'Excludes plaque psoriasis; includes all other variants',
-          affected_fields: ['CONDITION_TYPE', 'PSORIASIS_VARIANT'],
+          affected_fields: ['CONDITION_TYPE', 'DISEASE_VARIANT'],
           parsing_note: '"non-plaque" treated as distinct variant category'
         },
         confidence: 1.0,
@@ -337,18 +337,18 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
       }));
 
       const { criterion: result } = await parser.parseCriterion({
-        id: 'NPV_2109',
+        id: 'DIT_2109',
         raw_text: 'Diagnosis of non-plaque psoriasis'
       }, 'NPV');
 
-      expect(result.PSORIASIS_VARIANT).toContain('non-plaque');
-      expect(result.PSORIASIS_VARIANT).not.toContain('plaque'); // Should NOT extract "plaque"
+      expect(result.DISEASE_VARIANT).toContain('non-plaque');
+      expect(result.DISEASE_VARIANT).not.toContain('plaque'); // Should NOT extract "plaque"
       expect(result.NEGATION_DETECTED.negation_type).toBe('prefix');
     });
 
     it('should detect "absence of" negation', async () => {
       mockClaudeClient.complete = vi.fn().mockResolvedValue(createMockResponse({
-        id: 'NPV_2426',
+        id: 'DIT_2426',
         raw_text: 'Patients in the absence of plaque psoriasis',
         _thought_process: '1. Detected "absence of". 2. Set CONDITION_PATTERN to "absence".',
         CONDITION_TYPE: ['plaque psoriasis'],
@@ -364,7 +364,7 @@ describe('UniversalParserV2 - 100% LLM Approach', () => {
       }));
 
       const { criterion: result } = await parser.parseCriterion({
-        id: 'NPV_2426',
+        id: 'DIT_2426',
         raw_text: 'Patients in the absence of plaque psoriasis'
       }, 'NPV');
 

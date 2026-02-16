@@ -97,11 +97,11 @@ const mockDatabase = {
       },
     ],
   },
-  CLUSTER_CPD: {
-    cluster_code: 'CPD',
+  CLUSTER_DD: {
+    cluster_code: 'DD',
     criteria: [
       {
-        id: 'CPD_001',
+        id: 'DD_001',
         nct_id: 'NCT001',
         raw_text: 'Duration of psoriasis of at least 12 months',
         TIMEFRAME: {
@@ -113,7 +113,7 @@ const mockDatabase = {
         EXCLUSION_STRENGTH: 'inclusion',
       },
       {
-        id: 'CPD_002',
+        id: 'DD_002',
         nct_id: 'NCT003',
         raw_text: 'Psoriasis for at least 6 months',
         TIMEFRAME: {
@@ -125,7 +125,7 @@ const mockDatabase = {
         EXCLUSION_STRENGTH: 'inclusion',
       },
       {
-        id: 'CPD_003',
+        id: 'DD_003',
         nct_id: 'NCT005',
         raw_text: 'Psoriasis for at least 2 years',
         DURATION_MIN: 2,
@@ -177,7 +177,7 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -251,7 +251,7 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -267,7 +267,7 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -465,7 +465,7 @@ describe('ClinicalTrialMatcher', () => {
     });
   });
 
-  describe('evaluateDuration - CPD cluster', () => {
+  describe('evaluateDuration - DD cluster', () => {
     it('should match when patient duration exceeds criterion TIMEFRAME requirement (years vs months)', async () => {
       // Patient has 3 years = 36 months, criterion requires 12 months
       const patientResponse = {
@@ -474,13 +474,13 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
       const result = await matcher.evaluateTrial('NCT001', patientResponse);
 
-      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'CPD_001');
+      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'DD_001');
       expect(cpdCriterion).toBeDefined();
       expect(cpdCriterion.matches).toBe(true);
       expect(cpdCriterion.confidence).toBe(1.0);
@@ -494,13 +494,13 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 18, unit: 'months' },
+          DD: { duration: 18, unit: 'months' },
         },
       };
 
       const result = await matcher.evaluateTrial('NCT003', patientResponse);
 
-      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'CPD_002');
+      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'DD_002');
       expect(cpdCriterion).toBeDefined();
       expect(cpdCriterion.matches).toBe(true);
     });
@@ -513,13 +513,13 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 6, unit: 'months' },
+          DD: { duration: 6, unit: 'months' },
         },
       };
 
       const result = await matcher.evaluateTrial('NCT001', patientResponse);
 
-      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'CPD_001');
+      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'DD_001');
       expect(cpdCriterion).toBeDefined();
       expect(cpdCriterion.matches).toBe(false);
     });
@@ -532,13 +532,13 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
       const result = await matcher.evaluateTrial('NCT005', patientResponse);
 
-      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'CPD_003');
+      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'DD_003');
       expect(cpdCriterion).toBeDefined();
       expect(cpdCriterion.matches).toBe(true);
     });
@@ -557,7 +557,7 @@ describe('ClinicalTrialMatcher', () => {
               TREATMENT_PATTERN: ['used previously'],
             },
           ],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -580,7 +580,7 @@ describe('ClinicalTrialMatcher', () => {
               TREATMENT_TYPE: ['CF101'],
             },
           ],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -602,7 +602,7 @@ describe('ClinicalTrialMatcher', () => {
               TREATMENT_TYPE: ['piclidenoson'],
             },
           ],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 

@@ -518,10 +518,10 @@ describe('Parser API Routes', () => {
 
       const res = await request(app)
         .post('/api/parser/upload')
-        .send({ data: testCluster, filename: 'Flare_Requirements_members.json' });
+        .send({ data: testCluster, filename: 'Disease_Duration_members.json' });
 
       expect(res.status).toBe(200);
-      expect(res.body.clusterType).toBe('FLR');
+      expect(res.body.clusterType).toBe('DD');
     });
 
     it('T15o: auto-detects cluster from filename "Age_Requirements"', async () => {

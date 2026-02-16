@@ -283,15 +283,13 @@ const FILENAME_TO_CLUSTER = {
   'Lab_Criteria': 'LAB',
   'Anatomical_Locations': 'ANA',
   'Anatomical_Criteria': 'ANA',
-  'Flare_Requirements': 'FLR',
-  'Flare_Criteria': 'FLR',
-  'Flare_History': 'FLR',
-  'Psoriasis_Variants': 'NPV',
-  'Non_Plaque_Psoriasis': 'NPV',
+  'Disease_Type': 'DIT',
+  'Disease_Variants': 'DIT',
+  'Disease_Subtype': 'DIT',
   'Biomarker_Criteria': 'BIO',
   'Biomarker': 'BIO',
-  'Comorbid_Psoriatic': 'CPD',
-  'Psoriatic_Disease': 'CPD'
+  'Disease_Duration': 'DD',
+  'Duration_Criteria': 'DD'
 };
 
 /**
@@ -317,12 +315,12 @@ const CLUSTER_NAME_TO_CODE = {
   'Laboratory Values': 'LAB',
   'Lab Values': 'LAB',
   'Anatomical Locations': 'ANA',
-  'Flare Requirements': 'FLR',
-  'Flare Criteria': 'FLR',
-  'Psoriasis Variants': 'NPV',
-  'Non-Plaque Psoriasis Variants': 'NPV',
+  'Disease Type': 'DIT',
+  'Disease Variants': 'DIT',
+  'Disease Subtype': 'DIT',
   'Biomarker Criteria': 'BIO',
-  'Comorbid Psoriatic Disease': 'CPD'
+  'Disease Duration': 'DD',
+  'Duration Criteria': 'DD'
 };
 
 /**
@@ -379,10 +377,9 @@ function detectClusterFromClusterName(clusterName) {
   if (lowered.includes('bmi')) return 'BMI';
   if (lowered.includes('lab')) return 'LAB';
   if (lowered.includes('anatomical')) return 'ANA';
-  if (lowered.includes('flare')) return 'FLR';
-  if (lowered.includes('variant') || lowered.includes('non-plaque')) return 'NPV';
+  if (lowered.includes('disease type') || lowered.includes('variant') || lowered.includes('subtype')) return 'DIT';
   if (lowered.includes('biomarker')) return 'BIO';
-  if (lowered.includes('psoriatic disease')) return 'CPD';
+  if (lowered.includes('duration')) return 'DD';
   
   return null;
 }
@@ -396,7 +393,7 @@ function detectClusterFromIds(criteria) {
   if (!criteria || criteria.length === 0) return null;
   
   // Valid cluster prefixes (from UniversalParserV2.getClusterCodes())
-  const validClusters = ['AGE', 'BMI', 'SEV', 'AAO', 'NPV', 'BIO', 'CPD', 'CMB', 'AIC', 'FLR', 'PTH'];
+  const validClusters = ['AGE', 'BMI', 'SEV', 'AAO', 'DIT', 'BIO', 'DD', 'CMB', 'AIC', 'PTH'];
   
   // Count occurrences of each cluster prefix
   const clusterCounts = {};

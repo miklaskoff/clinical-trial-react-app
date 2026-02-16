@@ -147,11 +147,11 @@ const CLUSTER_NAMES = {
   BMI: 'BMI Requirements',
   LAB: 'Laboratory Values',
   ANA: 'Anatomical Locations',
-  FLR: 'Flare Requirements',
-  NPV: 'Psoriasis Variants',
+  DIT: 'Disease Type',
   BIO: 'Biomarker Criteria',
-  CPD: 'Comorbid Psoriatic Disease',
-  AIC: 'Autoimmune Conditions'
+  DD: 'Disease Duration',
+  AIC: 'Autoimmune Conditions',
+  AAO: 'Affected Anatomical Organs'
 };
 
 /**

@@ -119,7 +119,7 @@ If there is a conflict, those 3 above mentioned documents takes precedence.
 
 
 2. **ClinicalTrialEligibilityQuestionnaire.jsx** - Patient data collection
-   - 10-cluster questionnaire (CMB, PTH, AIC, AAO, AGE, NPV, CPD, SEV, BMI, BIO, FLR)
+   - 10-cluster questionnaire (CMB, PTH, AIC, AAO, AGE, DIT, DD, SEV, BMI, BIO)
    - Builds slot-filled patient responses
    - Accepts `onSubmit` prop to trigger matching
 
@@ -179,10 +179,9 @@ If there is a conflict, those 3 above mentioned documents takes precedence.
 - AIC: Active Infections/Conditions
 - AAO: Age at Onset / Measurements
 - SEV: Severity indicators
-- CPD: Condition patterns
-- NPV: Negative predictors
-- BIO: Biomarkers (NEW in v1.1)
-- FLR: Flare history (NEW in v1.1)
+- DD: Disease Duration (formerly CPD)
+- DIT: Disease Type (formerly NPV)
+- BIO: Biomarkers
 
 
 ---
@@ -317,7 +316,7 @@ Have at least 1 of the following cardiovascular risk factors:
      - Small molecules: "small molecule", "targeted synthetic", "tsDMARD"
      - Immunosuppressants: "immunosuppressive", "immunosuppressant"
   - **IL Subtype Expansion:** Automatically expands IL terms (e.g., "IL-17A" → includes "IL-17", "IL17", "interleukin-17")
-  - **Cluster-Scoped Search (v5.0.5):** Treatment follow-ups search ONLY in CLUSTER_PTH (not FLR or CMB)
+  - **Cluster-Scoped Search (v5.0.5):** Treatment follow-ups search ONLY in CLUSTER_PTH (not CMB)
   - **Example:** Searching "adalimumab" generates 23 search terms → matches 10 PTH criteria
   - **Implementation:** `findMatchingCriteria()`, `getGenericSearchTerms()`, `getClassSearchTerms()`, `expandILTerms()` in `FollowUpGenerator.js` and `DrugCategoryResolver.js`
 

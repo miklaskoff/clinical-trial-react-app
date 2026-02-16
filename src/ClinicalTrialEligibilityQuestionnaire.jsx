@@ -7,12 +7,12 @@ import React, { useState, useEffect } from 'react';
  * 
  * This questionnaire systematically evaluates patient eligibility across 9 clusters:
  * 1. Comorbid Conditions (CMB)
- * 2. Psoriasis Treatment History (PTH)
+ * 2. Treatment History (PTH)
  * 3. Active Infection History (AIC)
  * 4. Affected Area and Organs (AAO)
  * 5. Age-Based Eligibility (AGE)
- * 6. Non-Plaque Psoriasis Variants (NPV)
- * 7. Chronic Plaque Psoriasis Duration (CPD)
+ * 6. Disease Type (DIT)
+ * 7. Disease Duration (DD)
  * 8. Severity Scores (SEV)
  * 9. Weight and BMI (BMI)
  */
@@ -125,12 +125,12 @@ class SlotFilledResponseBuilder {
     this.responses.AGE = { age: age };
   }
 
-  setPsoriasisVariant(variant) {
-    this.responses.NPV = { variant: variant };
+  setDiseaseVariant(variant) {
+    this.responses.DIT = { variant: variant };
   }
 
   setDiseaseDuration(duration, unit) {
-    this.responses.CPD = { 
+    this.responses.DD = { 
       duration: duration,
       unit: unit
     };
@@ -442,15 +442,15 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
   const [age_value, setAge_value] = useState('');
   
   // ===========================================================================
-  // CLUSTER 6: NON-PLAQUE PSORIASIS VARIANTS (NPV)
+  // CLUSTER 6: DISEASE TYPE (DIT)
   // ===========================================================================
-  const [npv_variant, setNpv_variant] = useState('');
+  const [dit_variant, setDit_variant] = useState('');
   
   // ===========================================================================
-  // CLUSTER 7: CHRONIC PLAQUE PSORIASIS DURATION (CPD)
+  // CLUSTER 7: DISEASE DURATION (DD)
   // ===========================================================================
-  const [cpd_duration, setCpd_duration] = useState('');
-  const [cpd_unit, setCpd_unit] = useState('months');
+  const [dd_duration, setDd_duration] = useState('');
+  const [dd_unit, setDd_unit] = useState('months');
   
   // ===========================================================================
   // CLUSTER 8: SEVERITY SCORES (SEV)
@@ -516,16 +516,16 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
       component: renderAGECluster
     },
     {
-      code: 'NPV',
-      name: 'Non-Plaque Psoriasis Variants',
-      primary_question: 'What form of psoriasis do you have?',
-      component: renderNPVCluster
+      code: 'DIT',
+      name: 'Disease Type',
+      primary_question: 'What type/variant of your disease do you have?',
+      component: renderDITCluster
     },
     {
-      code: 'CPD',
-      name: 'Chronic Plaque Psoriasis Duration Criteria',
-      primary_question: 'How long have you had psoriasis or psoriatic arthritis?',
-      component: renderCPDCluster
+      code: 'DD',
+      name: 'Disease Duration',
+      primary_question: 'How long have you had your diagnosed condition?',
+      component: renderDDCluster
     },
     {
       code: 'SEV',
@@ -1291,10 +1291,10 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     );
   }
   
-  function renderNPVCluster() {
+  function renderDITCluster() {
     return (
       <div style={{ padding: '20px' }}>
-        <h2>Non-Plaque Psoriasis Variants</h2>
+        <h2>Disease Type</h2>
         <p style={{ fontSize: '18px', marginBottom: '20px', fontWeight: '500' }}>
           {clusters[5].primary_question}
         </p>
@@ -1304,8 +1304,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="chronic_plaque"
-              checked={npv_variant === 'chronic_plaque'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'chronic_plaque'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Chronic Plaque Psoriasis
           </label>
@@ -1316,8 +1316,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="guttate"
-              checked={npv_variant === 'guttate'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'guttate'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Guttate Psoriasis
           </label>
@@ -1328,8 +1328,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="pustular"
-              checked={npv_variant === 'pustular'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'pustular'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Pustular Psoriasis
           </label>
@@ -1340,8 +1340,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="erythrodermic"
-              checked={npv_variant === 'erythrodermic'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'erythrodermic'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Erythrodermic Psoriasis
           </label>
@@ -1352,8 +1352,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="inverse"
-              checked={npv_variant === 'inverse'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'inverse'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Inverse Psoriasis
           </label>
@@ -1364,8 +1364,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="nail"
-              checked={npv_variant === 'nail'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'nail'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Nail Psoriasis
           </label>
@@ -1376,8 +1376,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="scalp"
-              checked={npv_variant === 'scalp'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'scalp'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Scalp Psoriasis
           </label>
@@ -1386,10 +1386,10 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     );
   }
   
-  function renderCPDCluster() {
+  function renderDDCluster() {
     return (
       <div style={{ padding: '20px' }}>
-        <h2>Chronic Plaque Psoriasis Duration</h2>
+        <h2>Disease Duration</h2>
         <p style={{ fontSize: '18px', marginBottom: '20px', fontWeight: '500' }}>
           {clusters[6].primary_question}
         </p>
@@ -1402,14 +1402,14 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="number"
               min="0"
-              value={cpd_duration}
-              onChange={(e) => setCpd_duration(e.target.value)}
+              value={dd_duration}
+              onChange={(e) => setDd_duration(e.target.value)}
               placeholder="Enter duration"
               style={{ width: '120px', padding: '6px' }}
             />
             <select
-              value={cpd_unit}
-              onChange={(e) => setCpd_unit(e.target.value)}
+              value={dd_unit}
+              onChange={(e) => setDd_unit(e.target.value)}
               style={{ padding: '6px' }}
             >
               <option value="months">months</option>
@@ -1748,14 +1748,14 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
       builder.setAge(parseInt(age_value));
     }
     
-    // NPV
-    if (npv_variant) {
-      builder.setPsoriasisVariant(npv_variant);
+    // DIT (Disease Type)
+    if (dit_variant) {
+      builder.setDiseaseVariant(dit_variant);
     }
     
-    // CPD
-    if (cpd_duration) {
-      builder.setDiseaseDuration(parseInt(cpd_duration), cpd_unit);
+    // DD (Disease Duration)
+    if (dd_duration) {
+      builder.setDiseaseDuration(parseInt(dd_duration), dd_unit);
     }
     
     // SEV

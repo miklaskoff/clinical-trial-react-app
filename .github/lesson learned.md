@@ -1968,3 +1968,139 @@ body: JSON.stringify({ drugName: treatmentName, type: 'treatment' })
 - Manual API verification:
   - Condition "diabetes" → Type: metabolic, AI questions about diabetes type
   - Treatment "adalimumab" → Class: TNF_inhibitors, AI questions about current/past usage
+
+---
+
+## 2026-02-16: Major Cluster Refactoring — Multi-Component Rename Requires Systematic Approach
+
+### Problem
+Renaming clusters (CPD→DD, NPV→DIT) and removing FLR cluster required changes across 9+ files. Initial changes passed most tests but failed on:
+- Mock database in tests still had old cluster_code values
+- State variable references (`npv_variant`, `cpd_duration`) weren't updated in `buildSlotFilledResponse`
+- Test response objects still used `CPD: {}` instead of `DD: {}`
+
+### Root Cause
+**Multi-component refactoring has many reference types that are easy to miss:**
+1. Cluster code strings in database (`"cluster_code": "CPD"`)
+2. Object keys in mocks/tests (`CPD: {`, `NPV: {`)
+3. State variable names (`npv_variant`, `cpd_duration`)
+4. Function/render method names (`renderCPDCluster`)
+5. Case statements in switch blocks
+6. JSON schema definitions
+7. Documentation strings
+
+### What I Should Have Done
+
+```bash
+# Create systematic checklist BEFORE starting:
+# 1. Search for ALL variations of the name
+grep -r "CPD" --include="*.js" --include="*.json" --include="*.md"
+grep -r "cpd_" --include="*.js"  # snake_case variables
+grep -r "NPV" --include="*.js" --include="*.json" --include="*.md"
+grep -r "npv_" --include="*.js"
+
+# 2. Categorize by type:
+# - Cluster codes (strings): "CPD", "NPV"
+# - Object keys: CPD: {, NPV: {  
+# - Variables: cpd_duration, npv_variant
+# - Functions: renderCPDCluster, evaluateCPD
+
+# 3. Update each category systematically
+# 4. Run tests after EACH category, not at the end
+```
+
+### Lesson
+- **Create BACKUP before major refactoring** — did this correctly (PRE_CLUSTER_RENAME_20260216-001905)
+- **Multi-component renames** — search for ALL variations: PascalCase, camelCase, snake_case, UPPER_CASE
+- **Test objects in tests** — mock databases and response fixtures are often overlooked
+- **Run tests incrementally** — after each file change, not at the very end
+- **State variables** — follow the data flow from state definition → usage → response building
+
+### Prevention Checklist
+- [ ] Backup created before starting
+- [ ] All variations searched (UPPER, lower, snake_case, camelCase)
+- [ ] Test fixtures/mocks updated
+- [ ] State variables traced through data flow
+- [ ] Tests run after each major file change
+- [ ] Documentation updated (CHANGELOG, ARCHITECTURE)
+
+### Final Verification (2026-02-16)
+- All 391 tests passing ✅
+- Clusters renamed: CPD→DD (49 criteria), NPV→DIT (61 criteria)
+- FLR removed: 52 criteria deleted
+- Field renamed: PSORIASIS_VARIANT→DISEASE_VARIANT
+- Backup documented in docs/BACKUP_CATALOG.md
+
+---
+
+## 2026-02-16: Неполное Обновление BACKUP_CATALOG.md — Пропустил Backup Details
+
+### Problem
+При создании бэкапа PRE_CLUSTER_RENAME_20260216-001905 добавил только запись в таблицу Backup Inventory, но забыл добавить раздел Backup Details с полным описанием.
+
+### Root Cause
+**Не следовал шаблону документа полностью:**
+1. BACKUP_CATALOG.md имеет ДВЕ секции для каждого бэкапа: таблица + детали
+2. Добавил только в таблицу, пропустил детали
+3. Не проверил что документ полный после редактирования
+
+### What I Should Have Done
+
+```markdown
+# При добавлении бэкапа — ЧЕКЛИСТ:
+1. [ ] Запись в таблицу Backup Inventory
+2. [ ] Раздел Backup Details (Created, Location, Contents, Version, Why, Restore)
+3. [ ] Запись в таблицу Version Correlation
+```
+
+### Lesson
+- **Документы с шаблонами** — читай ВЕСЬ шаблон, не только первую часть
+- **Чеклист для повторяющихся операций** — добавить в copilot-instructions.md
+- **Проверка после редактирования** — убедись что все секции заполнены
+
+### Fix Applied
+1. Добавлен раздел Backup #4 в Backup Details
+2. Добавлено **Правило #6** в copilot-instructions.md с чеклистом из 3 пунктов
+3. Теперь каждый бэкап требует: таблица + детали + version correlation
+
+---
+
+## 2026-02-16: Поверхностный CHANGELOG — "9 files modified" Вместо Списка Файлов
+
+### Problem
+Запись CHANGELOG v5.3.0 содержала "Files modified: 9 core files + test files" — бесполезная информация. Через месяц невозможно понять какие именно файлы были изменены.
+
+### Root Cause
+**Лень + спешка:** написал общее описание вместо детального списка.
+
+### What CHANGELOG Entry Should Contain
+
+```markdown
+### Files Modified
+
+**Backend:**
+- `server/parse-utils.js` — что именно изменилось
+- `server/routes/parser.js` — что именно изменилось
+
+**Frontend:**
+- `src/Component.jsx` — что именно изменилось
+
+**Data:**
+- `src/data/file.json` — что именно изменилось
+
+**Tests:**
+- `src/__tests__/file.test.js` — что именно изменилось
+```
+
+### Lesson
+- **CHANGELOG = исторический документ** — через год ты не вспомнишь что делал
+- **"9 files" = 0 информации** — перечисли КАЖДЫЙ файл
+- **Группируй по типу** — Backend, Frontend, Data, Tests
+- **Краткое описание изменений** — не просто имя файла, а ЧТО изменилось
+
+### Prevention
+При написании CHANGELOG спросить себя:
+- [ ] Если я прочитаю это через год — пойму ли что изменилось?
+- [ ] Перечислены ВСЕ изменённые файлы?
+- [ ] Для каждого файла написано ЧТО изменилось?
+- [ ] Есть Migration Notes если нужна ручная работа?

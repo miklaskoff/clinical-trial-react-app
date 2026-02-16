@@ -539,14 +539,12 @@ export class ClinicalTrialMatcher {
         return this.#evaluateMeasurements(criterion, responses.AAO);
       case 'SEV':
         return this.#evaluateSeverity(criterion, responses.SEV);
-      case 'CPD':
-        return this.#evaluateDuration(criterion, responses.CPD);
-      case 'NPV':
-        return this.#evaluateVariant(criterion, responses.NPV);
+      case 'DD':
+        return this.#evaluateDuration(criterion, responses.DD);
+      case 'DIT':
+        return this.#evaluateVariant(criterion, responses.DIT);
       case 'BIO':
         return this.#evaluateBiomarker(criterion, responses.BIO);
-      case 'FLR':
-        return this.#evaluateFlare(criterion, responses.FLR);
       default:
         return { matches: false, confidence: getConfidenceByMatchType('unknownCluster') };
     }

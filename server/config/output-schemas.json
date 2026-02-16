@@ -77,7 +77,7 @@
     "CONDITION_PATTERN": "array",
     "SEVERITY": "array",
     "ANATOMICAL_LOCATION": "array",
-    "PSORIASIS_VARIANT": "array",
+    "DISEASE_VARIANT": "array",
     "AGE_MIN": ["integer", "null"],
     "AGE_MAX": ["integer", "null"],
     "AGE_UNIT": "string",
@@ -182,9 +182,9 @@
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
       "optional": ["_thought_process", "ANATOMICAL_LOCATION", "MEASUREMENTS", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "original"]
     },
-    "NPV": {
+    "DIT": {
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
-      "optional": ["_thought_process", "PSORIASIS_VARIANT", "CONDITION_TYPE", "NEGATION_DETECTED", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "original"]
+      "optional": ["_thought_process", "DISEASE_VARIANT", "CONDITION_TYPE", "NEGATION_DETECTED", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "original"]
     },
     "BIO": {
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
@@ -194,17 +194,13 @@
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "CONDITION_TYPE", "confidence", "parsing_status"],
       "optional": ["_thought_process", "CONDITION_PATTERN", "SEVERITY", "MEASUREMENTS", "ANATOMICAL_LOCATION", "TIMEFRAME", "EXCEPTION_CONDITION", "NEGATION_DETECTED", "NESTED_CONDITION", "LOGICAL_OPERATOR", "REQUIRES_CLINICAL_JUDGMENT", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "original"]
     },
-    "CPD": {
+    "DD": {
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
       "optional": ["_thought_process", "CONDITION_TYPE", "CONDITION_PATTERN", "TIMEFRAME", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "original"]
     },
-    "FLR": {
-      "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
-      "optional": ["_thought_process", "CONDITION_TYPE", "TIMEFRAME", "TREATMENT_HISTORY", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "original"]
-    },
     "AIC": {
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
-      "optional": ["_thought_process", "CONDITION_TYPE", "CONDITION_PATTERN", "SEVERITY", "ANATOMICAL_LOCATION", "TIMEFRAME", "NEGATION_DETECTED", "TREATMENT_HISTORY", "MEASUREMENTS", "PSORIASIS_VARIANT", "EXCEPTION_CONDITION", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "REQUIRES_CLINICAL_JUDGMENT", "original"]
+      "optional": ["_thought_process", "CONDITION_TYPE", "CONDITION_PATTERN", "SEVERITY", "ANATOMICAL_LOCATION", "TIMEFRAME", "NEGATION_DETECTED", "TREATMENT_HISTORY", "MEASUREMENTS", "DISEASE_VARIANT", "EXCEPTION_CONDITION", "LOGICAL_OPERATOR", "NESTED_CONDITION", "SUBJECTIVE_ESTIMATE", "unfamiliar_term_flag", "AMBIGUITY_FLAG", "REQUIRES_CLINICAL_JUDGMENT", "original"]
     },
     "PTH": {
       "required": ["id", "nct_id", "raw_text", "CRITERION_TYPE", "EXCLUSION_STRENGTH", "confidence", "parsing_status"],
