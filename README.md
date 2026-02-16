@@ -196,9 +196,41 @@ const aiConfig = {
 
 ## 📚 Documentation
 
-- [Architecture Guide](docs/ARCHITECTURE_AND_MATCHING_GUIDE.md) - System design
-- [Changelog](CHANGELOG.md) - Version history
-- [Copilot Instructions](.github/copilot-instructions.md) - Development rules
+### Core Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture Guide](docs/ARCHITECTURE_AND_MATCHING_GUIDE.md) | System design, matching algorithm, data structures |
+| [Output Schemas](docs/output_schemas.md) | Slot-filled output format for each cluster |
+| [FIELD_CATALOG_v2.1.md](server/config/FIELD_CATALOG_v2.1.md) | Parser rules and field definitions |
+
+### Guides
+
+| Guide | Description |
+|-------|-------------|
+| [Deployment Guide](docs/deployment_guide.md) | Installation, environment setup, production deployment |
+| [Admin Guide](docs/admin_guide.md) | Admin panel, API keys, drug approval, cache management |
+| [Testing Guide](docs/testing_guide.md) | Running tests, writing tests, coverage |
+
+### Development
+
+| Document | Description |
+|----------|-------------|
+| [Copilot Instructions](.github/copilot-instructions.md) | AI coding rules, TDD workflow, code standards |
+| [Copilot Commands](.vscode/copilot-commands.md) | 4-GATE workflow: @plan → @implement → @verify → @ship |
+| [Lessons Learned](.github/lesson%20learned.md) | Past bugs and how to avoid them |
+| [Changelog](CHANGELOG.md) | Version history and release notes |
+
+### Data
+
+| File | Description |
+|------|-------------|
+| [improved_slot_filled_database.json](src/data/improved_slot_filled_database.json) | 719 parsed criteria across 10 clusters |
+| [output-schemas.json](server/config/output-schemas.json) | JSON schema for parser output |
+
+### Archive
+
+Old documentation moved to `docs/archive/` for reference.
 
 ## 🛠 Tech Stack
 

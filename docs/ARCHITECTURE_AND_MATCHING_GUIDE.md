@@ -1006,54 +1006,132 @@ See [CHANGELOG.md](../CHANGELOG.md) for detailed version history.
 
 ---
 
+## Documentation Schema
+
+### Documentation Tree
+
+```mermaid
+graph TD
+    subgraph Root["📁 Root"]
+        README["📄 README.md<br/>Quick Start"]
+        CHANGELOG["📄 CHANGELOG.md<br/>Version History"]
+    end
+    
+    subgraph Docs["📁 docs/"]
+        ARCH["📄 ARCHITECTURE_AND_MATCHING_GUIDE.md<br/>🔴 CANONICAL - System Design"]
+        BACKUP["📄 BACKUP_CATALOG.md<br/>Backup Tracking"]
+        DEPLOY["📄 deployment_guide.md<br/>Installation & Deployment"]
+        ADMIN["📄 admin_guide.md<br/>Admin Panel Usage"]
+        TEST["📄 testing_guide.md<br/>Testing Procedures"]
+        SCHEMAS["📄 output_schemas.md<br/>🔄 AUTO-GENERATED"]
+        
+        subgraph Archive["📁 archive/"]
+            FC["📁 field_catalogs/<br/>Old FIELD_CATALOG versions"]
+            CONTRACTS["📁 contracts/<br/>Implementation contracts"]
+            FIRST["📁 1st_iteration/<br/>Historical docs"]
+        end
+    end
+    
+    subgraph GitHub["📁 .github/"]
+        COPILOT["📄 copilot-instructions.md<br/>🔴 PRIMARY - Dev Rules"]
+        LESSONS["📄 lesson learned.md<br/>Past Bugs & Fixes"]
+    end
+    
+    subgraph VSCode["📁 .vscode/"]
+        COMMANDS["📄 copilot-commands.md<br/>4-GATE Workflow"]
+    end
+    
+    subgraph ServerConfig["📁 server/config/"]
+        FIELD["📄 FIELD_CATALOG_v2.1.md<br/>🔴 ACTIVE - Parser Rules"]
+        OUTPUT_JSON["📄 output-schemas.json<br/>🔴 SOURCE - Schema JSON"]
+    end
+    
+    subgraph Data["📁 src/data/"]
+        DATABASE["📄 improved_slot_filled_database.json<br/>719 Parsed Criteria"]
+    end
+    
+    README --> ARCH
+    ARCH --> SCHEMAS
+    OUTPUT_JSON -.->|generates| SCHEMAS
+    FIELD --> ARCH
+```
+
+### Document Hierarchy
+
+| Priority | Document | Purpose |
+|----------|----------|---------|
+| 🔴 Primary | `.github/copilot-instructions.md` | AI development rules |
+| 🔴 Primary | `docs/ARCHITECTURE_AND_MATCHING_GUIDE.md` | System architecture |
+| 🔴 Primary | `.github/lesson learned.md` | Avoid past mistakes |
+| 🟡 Active | `server/config/FIELD_CATALOG_v2.1.md` | Parser field definitions |
+| 🟡 Active | `server/config/output-schemas.json` | JSON schema (source of truth) |
+| 🟢 Generated | `docs/output_schemas.md` | Human-readable schemas |
+| 🟢 Guide | `docs/deployment_guide.md` | How to deploy |
+| 🟢 Guide | `docs/admin_guide.md` | How to use admin panel |
+| 🟢 Guide | `docs/testing_guide.md` | How to run/write tests |
+| 📦 Archive | `docs/archive/*` | Old versions, historical |
+
+### Auto-Generated Documents
+
+| Document | Source | Command |
+|----------|--------|---------|
+| `docs/output_schemas.md` | `server/config/output-schemas.json` | `npm run docs:schemas` |
+
+**⚠️ Rule:** After modifying `output-schemas.json`, ALWAYS run `npm run docs:schemas` to regenerate documentation.
+
+### Documentation Update Rules
+
+When changing code, update docs:
+
+| Code Change | Required Doc Update |
+|-------------|---------------------|
+| New cluster/field | `FIELD_CATALOG_v2.1.md`, regenerate `output_schemas.md` |
+| New API endpoint | `ARCHITECTURE_AND_MATCHING_GUIDE.md` |
+| Bug fix | `.github/lesson learned.md` |
+| New feature | `CHANGELOG.md`, relevant guide |
+| Architecture change | `ARCHITECTURE_AND_MATCHING_GUIDE.md` |
+
+---
+
 
 ## Getting Help
 
 
-**Documentation**:
+**Core Documentation**:
+- [README.md](../README.md) - Quick start and overview
 - [CHANGELOG.md](../CHANGELOG.md) - Version history
-- [QUICK_START.md](../QUICK_START.md) - User guide
-- [INTEGRATION_GUIDE.md](../INTEGRATION_GUIDE.md) - Technical deep dive
-- [DATABASE_ANALYSIS_REPORT.md](../DATABASE_ANALYSIS_REPORT.md) - Database structure
-- [INCLUSION_CRITERIA_UPDATE.md](../INCLUSION_CRITERIA_UPDATE.md) - v3.1 changes
+- [output_schemas.md](output_schemas.md) - Cluster output formats
+- [deployment_guide.md](deployment_guide.md) - Installation & deployment
+- [admin_guide.md](admin_guide.md) - Admin panel usage
+- [testing_guide.md](testing_guide.md) - Testing procedures
 
 
-**Key Files**:
-- [ClinicalTrialMatcher.js](../src/ClinicalTrialMatcher.js) - Main matching logic
-- [EnhancedAIMatchingEngine.js](../src/EnhancedAIMatchingEngine.js) - AI integration
-- [improved_slot_filled_database.json](../src/improved_slot_filled_database.json) - Data
+**Key Code Files**:
+- [ClinicalTrialMatcher.js](../src/services/matcher/ClinicalTrialMatcher.js) - Main matching logic
+- [ClaudeClient.js](../server/services/ClaudeClient.js) - AI integration
+- [improved_slot_filled_database.json](../src/data/improved_slot_filled_database.json) - Trial database
 
 
 **Testing**:
 ```bash
-# Validate database
-node test_inclusion_criteria.js
+# Run all tests
+npm test
 
+# Run dev servers
+npm run dev:all
 
-# Run dev server
-npm start
-
-
-# Build production
-npm run build
+# Generate docs
+npm run docs:schemas
+npm run docs:toc
 ```
 
 
 ---
 
 
-## Contact & Support
-
-
-For questions about:
-- **Architecture**: See INTEGRATION_GUIDE.md
-- **Database**: See DATABASE_ANALYSIS_REPORT.md
-- **Inclusion criteria**: See INCLUSION_CRITERIA_UPDATE.md
-- **API usage**: See aiSemanticMatcher.js comments
-
-
-**Version**: 3.1 (2026-01-12)
-**Status**: Production Ready ✅
+**Version**: 5.1.0 (2026-02-16)  
+**Status**: Production Ready ✅  
+**Last Updated**: 2026-02-16
 
 
 

@@ -300,8 +300,99 @@ npm run verify
 - [ ] lesson learned.md entry (if bug fix or learned something)
 - [ ] copilot-instructions.md update (if new pattern/rule)
 - [ ] Architecture docs update (if design change)
+- [ ] Regenerate auto-generated docs (if schema changed)
 
 **Why?** Documentation that lags behind code becomes useless.
+
+### ⚠️ DOCUMENTATION ENFORCEMENT — АВТОМАТИЗАЦИЯ
+
+**При изменении кода/структур данных ОБЯЗАТЕЛЬНО:**
+
+1. **Обновить релевантную документацию**
+2. **Добавить ссылки на документацию в коде** (JSDoc `@see`)
+3. **Регенерировать auto-docs при изменении схем**
+
+#### Ссылки на Документацию в Коде — ОБЯЗАТЕЛЬНО
+
+```javascript
+/**
+ * Evaluates patient against trial criteria
+ * 
+ * @see docs/ARCHITECTURE_AND_MATCHING_GUIDE.md#matching-algorithm
+ * @see server/config/FIELD_CATALOG_v2.1.md
+ * @see docs/output_schemas.md#cluster_age
+ */
+async function evaluateTrial(patient, trial) {
+  // ...
+}
+```
+
+#### Auto-Generated Documentation
+
+| Source File | Generated Doc | Regenerate Command |
+|-------------|---------------|-------------------|
+| `server/config/output-schemas.json` | `docs/output_schemas.md` | `npm run docs:schemas` |
+
+**После изменения source file → ОБЯЗАТЕЛЬНО регенерировать doc:**
+
+```bash
+# После изменения output-schemas.json
+npm run docs:schemas
+
+# Автоматический TOC для всех .md файлов
+npm run docs:toc
+
+# Проверка битых ссылок
+npm run docs:check-links
+```
+
+#### Pre-Commit Hook — ENFORCEMENT
+
+Файл `.husky/pre-commit` выполняет проверки автоматически:
+
+```bash
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# 1. Lint
+npm run lint --quiet
+
+# 2. Tests
+npm run test:ci
+
+# 3. Check if output-schemas.json changed but output_schemas.md not regenerated
+if git diff --cached --name-only | grep -q "output-schemas.json"; then
+  if ! git diff --cached --name-only | grep -q "output_schemas.md"; then
+    echo "❌ ERROR: output-schemas.json changed but output_schemas.md not regenerated"
+    echo "   Run: npm run docs:schemas"
+    exit 1
+  fi
+fi
+
+# 4. Verify docs links
+npm run docs:check-links --quiet 2>/dev/null || true
+```
+
+#### Добавление Ссылок в Код — Чеклист
+
+При добавлении/изменении функции:
+
+- [ ] Добавлен JSDoc с `@see` ссылкой на документацию
+- [ ] Ссылка ведёт на правильный раздел (с `#anchor`)
+- [ ] Документация существует (проверить что ссылка не битая)
+
+```javascript
+// ✅ ПРАВИЛЬНО — есть @see ссылки
+/**
+ * Parses age criterion into structured format
+ * @see server/config/FIELD_CATALOG_v2.1.md#cluster_age
+ * @see docs/output_schemas.md#age-schema
+ */
+function parseAgeCriterion(raw) { ... }
+
+// ❌ НЕПРАВИЛЬНО — нет ссылок на документацию
+function parseAgeCriterion(raw) { ... }
+```
 
 ### ⚠️ CHANGELOG.md — ДЕТАЛЬНЫЕ ТРЕБОВАНИЯ
 

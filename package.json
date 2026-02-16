@@ -24,7 +24,10 @@
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,json,css}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs:schemas": "node scripts/generate-schema-docs.js",
+    "docs:toc": "doctoc docs/*.md --github",
+    "docs:check-links": "markdown-link-check docs/*.md"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
