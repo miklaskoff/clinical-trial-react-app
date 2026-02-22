@@ -279,7 +279,7 @@ export function getConditionSynonyms() {
  * @returns {string[]} Array of synonyms including original
  */
 export function findConditionSynonyms(condition) {
-  if (!condition) return [];
+  if (!condition) {return [];}
   const normalized = condition.toLowerCase().trim();
   const synonyms = getConditionSynonyms();
   
@@ -336,7 +336,7 @@ function loadSeverityLevels() {
  * @returns {number|null} Numeric level or null if unknown
  */
 export function getSeverityLevel(severity) {
-  if (!severity) return null;
+  if (!severity) {return null;}
   const normalized = severity.toLowerCase().trim();
   const data = loadSeverityLevels();
   

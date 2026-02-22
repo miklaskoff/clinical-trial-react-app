@@ -97,11 +97,11 @@ const mockDatabase = {
       },
     ],
   },
-  CLUSTER_CPD: {
-    cluster_code: 'CPD',
+  CLUSTER_DD: {
+    cluster_code: 'DD',
     criteria: [
       {
-        id: 'CPD_001',
+        id: 'DD_001',
         nct_id: 'NCT001',
         raw_text: 'Duration of psoriasis of at least 12 months',
         TIMEFRAME: {
@@ -113,7 +113,7 @@ const mockDatabase = {
         EXCLUSION_STRENGTH: 'inclusion',
       },
       {
-        id: 'CPD_002',
+        id: 'DD_002',
         nct_id: 'NCT003',
         raw_text: 'Psoriasis for at least 6 months',
         TIMEFRAME: {
@@ -125,7 +125,7 @@ const mockDatabase = {
         EXCLUSION_STRENGTH: 'inclusion',
       },
       {
-        id: 'CPD_003',
+        id: 'DD_003',
         nct_id: 'NCT005',
         raw_text: 'Psoriasis for at least 2 years',
         DURATION_MIN: 2,
@@ -177,7 +177,7 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -251,7 +251,7 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -267,7 +267,7 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -465,7 +465,7 @@ describe('ClinicalTrialMatcher', () => {
     });
   });
 
-  describe('evaluateDuration - CPD cluster', () => {
+  describe('evaluateDuration - DD cluster', () => {
     it('should match when patient duration exceeds criterion TIMEFRAME requirement (years vs months)', async () => {
       // Patient has 3 years = 36 months, criterion requires 12 months
       const patientResponse = {
@@ -474,13 +474,13 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
       const result = await matcher.evaluateTrial('NCT001', patientResponse);
 
-      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'CPD_001');
+      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'DD_001');
       expect(cpdCriterion).toBeDefined();
       expect(cpdCriterion.matches).toBe(true);
       expect(cpdCriterion.confidence).toBe(1.0);
@@ -494,13 +494,13 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 18, unit: 'months' },
+          DD: { duration: 18, unit: 'months' },
         },
       };
 
       const result = await matcher.evaluateTrial('NCT003', patientResponse);
 
-      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'CPD_002');
+      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'DD_002');
       expect(cpdCriterion).toBeDefined();
       expect(cpdCriterion.matches).toBe(true);
     });
@@ -513,13 +513,13 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 6, unit: 'months' },
+          DD: { duration: 6, unit: 'months' },
         },
       };
 
       const result = await matcher.evaluateTrial('NCT001', patientResponse);
 
-      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'CPD_001');
+      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'DD_001');
       expect(cpdCriterion).toBeDefined();
       expect(cpdCriterion.matches).toBe(false);
     });
@@ -532,13 +532,13 @@ describe('ClinicalTrialMatcher', () => {
           BMI: { bmi: 24.5 },
           CMB: [],
           PTH: [],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
       const result = await matcher.evaluateTrial('NCT005', patientResponse);
 
-      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'CPD_003');
+      const cpdCriterion = result.matchedCriteria.find(r => r.criterionId === 'DD_003');
       expect(cpdCriterion).toBeDefined();
       expect(cpdCriterion.matches).toBe(true);
     });
@@ -557,7 +557,7 @@ describe('ClinicalTrialMatcher', () => {
               TREATMENT_PATTERN: ['used previously'],
             },
           ],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -580,7 +580,7 @@ describe('ClinicalTrialMatcher', () => {
               TREATMENT_TYPE: ['CF101'],
             },
           ],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -602,7 +602,7 @@ describe('ClinicalTrialMatcher', () => {
               TREATMENT_TYPE: ['piclidenoson'],
             },
           ],
-          CPD: { duration: 3, unit: 'years' },
+          DD: { duration: 3, unit: 'years' },
         },
       };
 
@@ -611,6 +611,142 @@ describe('ClinicalTrialMatcher', () => {
       // Status should be ineligible because piclidenoson matches exclusion
       expect(result.status).toBe('ineligible');
       expect(result.failureReasons.some(r => r.includes('piclidenoson'))).toBe(true);
+    });
+  });
+
+  describe('Double-Negative Weight Parsing (Issue 2a)', () => {
+    // Create matcher with criteria that have no slot-filled fields
+    const matcherWithRawText = new ClinicalTrialMatcher({
+      metadata: { version: '2.0', totalCriteria: 3 },
+      CLUSTER_BMI: {
+        cluster_code: 'BMI',
+        criteria: [
+          {
+            id: 'BMI_1916',
+            nct_id: 'NCT06979453',
+            raw_text: 'Participants must not weigh < 30.0 kg at Screening and Day 1.',
+            EXCLUSION_STRENGTH: 'mandatory_exclude',
+            // NO WEIGHT_MIN or WEIGHT_MAX fields - must parse from raw_text
+          },
+          {
+            id: 'BMI_TEST_18',
+            nct_id: 'NCT04772079',
+            raw_text: 'Participants weighing ≤ 18.0 kg at screening for Cohort 2.',
+            EXCLUSION_STRENGTH: 'mandatory_exclude',
+            // NO WEIGHT_MAX field - must parse from raw_text
+          },
+          {
+            id: 'BMI_TEST_30',
+            nct_id: 'NCT04772079',
+            raw_text: 'Participants weighing ≤ 30.0 kg at screening for Cohort 1.',
+            EXCLUSION_STRENGTH: 'mandatory_exclude',
+            // NO WEIGHT_MAX field - must parse from raw_text
+          },
+        ],
+      },
+    });
+
+    it('should parse double-negative "must not weigh < X" and invert logic for exclusion', async () => {
+      // BMI_1916: "must not weigh < 30kg" in exclusion
+      // Semantically: minimum weight 30kg (inclusion-like)
+      // Patient 71kg SHOULD NOT be excluded
+      const patientResponse = {
+        responses: {
+          BMI: { weight: 71, bmi: 24.57 },
+        },
+      };
+
+      const result = await matcherWithRawText.evaluateTrial('NCT06979453', patientResponse);
+
+      // Patient should NOT be excluded (status should be eligible or needs_review, not ineligible)
+      expect(result.status).not.toBe('ineligible');
+      
+      // Check the specific criterion evaluation
+      const bmiCriterion = result.matchedCriteria?.find(c => c.criterionId === 'BMI_1916');
+      if (bmiCriterion) {
+        // With inverted logic: patient meets requirement (71 >= 30) → matches = false for exclusion
+        expect(bmiCriterion.matches).toBe(false);
+        expect(bmiCriterion.confidenceReason).toContain('Double-negative');
+      }
+    });
+
+    it('should parse simple "weighing ≤ X kg" pattern correctly', async () => {
+      // BMI_TEST_18: "weighing ≤ 18kg" in exclusion
+      // Patient 71kg SHOULD NOT match this (71 > 18)
+      const patientResponse = {
+        responses: {
+          BMI: { weight: 71, bmi: 24.57 },
+        },
+      };
+
+      const result = await matcherWithRawText.evaluateTrial('NCT04772079', patientResponse);
+
+      // Patient should NOT be excluded by the 18kg criterion
+      expect(result.status).not.toBe('ineligible');
+    });
+
+    it('should handle patient below threshold for simple comparison', async () => {
+      // BMI_TEST_18: "weighing ≤ 18kg"
+      // Patient 15kg SHOULD match exclusion (15 <= 18)
+      const patientResponse = {
+        responses: {
+          BMI: { weight: 15, bmi: 14 },
+        },
+      };
+
+      const result = await matcherWithRawText.evaluateTrial('NCT04772079', patientResponse);
+
+      // Patient should be excluded (too light for the trial)
+      expect(result.status).toBe('ineligible');
+    });
+
+    it('should handle patient at exact threshold for double-negative', async () => {
+      // BMI_1916: "must not weigh < 30kg" → minimum 30kg
+      // Patient exactly 30kg should NOT be excluded
+      const patientResponse = {
+        responses: {
+          BMI: { weight: 30, bmi: 18.5 },
+        },
+      };
+
+      const result = await matcherWithRawText.evaluateTrial('NCT06979453', patientResponse);
+
+      // Patient at minimum threshold should NOT be excluded
+      expect(result.status).not.toBe('ineligible');
+    });
+
+    it('should handle patient below threshold for double-negative', async () => {
+      // BMI_1916: "must not weigh < 30kg" → minimum 30kg
+      // Patient 25kg SHOULD be excluded (fails minimum requirement)
+      const patientResponse = {
+        responses: {
+          BMI: { weight: 25, bmi: 16 },
+        },
+      };
+
+      const result = await matcherWithRawText.evaluateTrial('NCT06979453', patientResponse);
+
+      // Patient below minimum should be excluded
+      expect(result.status).toBe('ineligible');
+    });
+
+    it('should provide clear reasoning for parsed criteria', async () => {
+      const patientResponse = {
+        responses: {
+          BMI: { weight: 71, bmi: 24.57 },
+        },
+      };
+
+      const result = await matcherWithRawText.evaluateTrial('NCT06979453', patientResponse);
+
+      // Find the BMI criterion in matched criteria
+      const bmiCriterion = result.matchedCriteria?.find(c => c.criterionId === 'BMI_1916') ||
+                           result.failedCriteria?.find(c => c.criterionId === 'BMI_1916');
+      
+      if (bmiCriterion) {
+        // Should mention double-negative and the threshold
+        expect(bmiCriterion.confidenceReason).toMatch(/double-negative|inverted|30/i);
+      }
     });
   });
 });

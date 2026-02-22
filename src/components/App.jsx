@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import ClinicalTrialEligibilityQuestionnaire from '../ClinicalTrialEligibilityQuestionnaire';
 import DrugReviewDashboard from './Admin/DrugReviewDashboard.jsx';
+import ParserPage from './Parser/ParserPage.jsx';
 import './App.css';
 
 /**
@@ -39,8 +40,8 @@ function generatePatientNarrative(patientResponse) {
     const weight = responses.BMI.weight;
     const height = responses.BMI.height;
     let bmiLine = `• BMI: ${bmi}`;
-    if (weight) bmiLine += `, Weight: ${weight.value || weight} ${weight.unit || 'kg'}`;
-    if (height) bmiLine += `, Height: ${height.value || height} ${height.unit || 'cm'}`;
+    if (weight) {bmiLine += `, Weight: ${weight.value || weight} ${weight.unit || 'kg'}`;}
+    if (height) {bmiLine += `, Height: ${height.value || height} ${height.unit || 'cm'}`;}
     lines.push(bmiLine);
   }
   
@@ -51,6 +52,18 @@ function generatePatientNarrative(patientResponse) {
       const condition = c.CONDITION_TYPE || c.condition || c;
       const severity = c.SEVERITY || c.severity || '';
       lines.push(`  - ${condition}${severity ? ` (${severity})` : ''}`);
+      
+      // Show AI-generated follow-up questions if present
+      if (c.dynamicQuestions && Array.isArray(c.dynamicQuestions)) {
+        lines.push(`    🤖 AI Follow-up Questions:`);
+        c.dynamicQuestions.forEach((q) => {
+          const answer = c[q.id] || 'not answered';
+          // Handle both old (criterionId) and new (criterionIds) formats
+          const ids = q.criterionIds || (q.criterionId ? [q.criterionId] : []);
+          const criterionLabel = ids.length > 0 ? ` (Criteria: ${ids.join(', ')})` : '';
+          lines.push(`      - ${q.text} → ${answer}${criterionLabel}`);
+        });
+      }
     });
   } else {
     lines.push('• No comorbid conditions reported');
@@ -63,6 +76,18 @@ function generatePatientNarrative(patientResponse) {
       const treatment = t.TREATMENT_TYPE || t.treatment || t;
       const pattern = t.TREATMENT_PATTERN || t.pattern || '';
       lines.push(`  - ${treatment}${pattern ? ` (${pattern})` : ''}`);
+      
+      // Show AI-generated follow-up questions if present
+      if (t.dynamicQuestions && Array.isArray(t.dynamicQuestions)) {
+        lines.push(`    🤖 AI Follow-up Questions:`);
+        t.dynamicQuestions.forEach((q) => {
+          const answer = t[q.id] || 'not answered';
+          // Handle both old (criterionId) and new (criterionIds) formats
+          const ids = q.criterionIds || (q.criterionId ? [q.criterionId] : []);
+          const criterionLabel = ids.length > 0 ? ` (Criteria: ${ids.join(', ')})` : '';
+          lines.push(`      - ${q.text} → ${answer}${criterionLabel}`);
+        });
+      }
     });
   } else {
     lines.push('• No previous psoriasis treatments reported');
@@ -95,10 +120,10 @@ function generatePatientNarrative(patientResponse) {
   // Severity
   if (responses.SEV) {
     lines.push('• Severity scores:');
-    if (responses.SEV.PASI) lines.push(`  - PASI: ${responses.SEV.PASI}`);
-    if (responses.SEV.BSA) lines.push(`  - BSA: ${responses.SEV.BSA}%`);
-    if (responses.SEV.PGA) lines.push(`  - PGA: ${responses.SEV.PGA}`);
-    if (responses.SEV.DLQI) lines.push(`  - DLQI: ${responses.SEV.DLQI}`);
+    if (responses.SEV.PASI) {lines.push(`  - PASI: ${responses.SEV.PASI}`);}
+    if (responses.SEV.BSA) {lines.push(`  - BSA: ${responses.SEV.BSA}%`);}
+    if (responses.SEV.PGA) {lines.push(`  - PGA: ${responses.SEV.PGA}`);}
+    if (responses.SEV.DLQI) {lines.push(`  - DLQI: ${responses.SEV.DLQI}`);}
   }
   
   // Affected Areas
@@ -171,10 +196,10 @@ function generateTextReport(results) {
         
         lines.push(`   Criteria breakdown:`);
         lines.push(`   • Total criteria evaluated: ${trial.matchedCriteria.length}`);
-        if (exactMatches > 0) lines.push(`   • Exact matches (100%): ${exactMatches}`);
-        if (ruleBased > 0) lines.push(`   • Rule-based matches (70-99%): ${ruleBased}`);
-        if (aiMatches > 0) lines.push(`   • AI semantic matches: ${aiMatches}`);
-        if (lowConf > 0) lines.push(`   • Low confidence (<70%): ${lowConf}`);
+        if (exactMatches > 0) {lines.push(`   • Exact matches (100%): ${exactMatches}`);}
+        if (ruleBased > 0) {lines.push(`   • Rule-based matches (70-99%): ${ruleBased}`);}
+        if (aiMatches > 0) {lines.push(`   • AI semantic matches: ${aiMatches}`);}
+        if (lowConf > 0) {lines.push(`   • Low confidence (<70%): ${lowConf}`);}
         
         // Show non-exact criteria with details
         const nonExact = trial.matchedCriteria.filter(c => c.confidence < 1.0);
@@ -185,10 +210,14 @@ function generateTextReport(results) {
             const text = c.rawText || c.criterionId;
             const conf = `${(c.confidence * 100).toFixed(0)}%`;
             const ai = c.requiresAI ? ' [AI]' : '';
-            lines.push(`   ┌─ Criterion: ${text}`);
+            const criterionType = c.exclusionStrength === 'inclusion' ? 'Inclusion' : 'Exclusion';
+            
+            lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+            lines.push(`   │  Type: ${criterionType}`);
+            lines.push(`   │  Text: ${text}`);
             lines.push(`   │  Confidence: ${conf}${ai}`);
-            if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
-            if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+            if (c.patientValue) {lines.push(`   │  Patient: ${c.patientValue}`);}
+            if (c.confidenceReason) {lines.push(`   │  Reason: ${c.confidenceReason}`);}
             lines.push(`   └────────────────────────────────────`);
           });
         }
@@ -206,11 +235,16 @@ function generateTextReport(results) {
       if (trial.flaggedCriteria && trial.flaggedCriteria.length > 0) {
         lines.push('   Flagged criteria:');
         trial.flaggedCriteria.forEach((c) => {
-          lines.push(`   ┌─ Criterion: ${c.rawText || c.criterionId}`);
+          const text = c.rawText || c.criterionId;
+          const criterionType = c.exclusionStrength === 'inclusion' ? 'Inclusion' : 'Exclusion';
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: ${criterionType}`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${(c.confidence * 100).toFixed(0)}%${c.requiresAI ? ' [AI]' : ''}`);
-          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
-          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
-          if (c.aiReasoning) lines.push(`   │  AI Analysis: ${c.aiReasoning}`);
+          if (c.patientValue) {lines.push(`   │  Patient: ${c.patientValue}`);}
+          if (c.confidenceReason) {lines.push(`   │  Reason: ${c.confidenceReason}`);}
+          if (c.aiReasoning) {lines.push(`   │  AI Analysis: ${c.aiReasoning}`);}
           lines.push(`   └────────────────────────────────────`);
         });
       }
@@ -236,10 +270,13 @@ function generateTextReport(results) {
           const text = c.rawText || c.criterionId;
           const conf = `${(c.confidence * 100).toFixed(0)}%`;
           const ai = c.requiresAI ? ' [AI]' : '';
-          lines.push(`   ┌─ Criterion: ${text}`);
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: Inclusion`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${conf}${ai}`);
-          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
-          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+          if (c.patientValue) {lines.push(`   │  Patient: ${c.patientValue}`);}
+          if (c.confidenceReason) {lines.push(`   │  Reason: ${c.confidenceReason}`);}
           lines.push(`   └────────────────────────────────────`);
         });
       }
@@ -250,10 +287,14 @@ function generateTextReport(results) {
           const text = c.rawText || c.criterionId;
           const conf = `${(c.confidence * 100).toFixed(0)}%`;
           const ai = c.requiresAI ? ' [AI]' : '';
-          lines.push(`   ┌─ Criterion: ${text}`);
+          const criterionType = c.exclusionStrength === 'mandatory_exclude' ? 'Mandatory Exclusion' : 'Exclusion';
+          
+          lines.push(`   ┌─ Criterion ID: ${c.criterionId}`);
+          lines.push(`   │  Type: ${criterionType}`);
+          lines.push(`   │  Text: ${text}`);
           lines.push(`   │  Confidence: ${conf}${ai}`);
-          if (c.patientValue) lines.push(`   │  Patient: ${c.patientValue}`);
-          if (c.confidenceReason) lines.push(`   │  Reason: ${c.confidenceReason}`);
+          if (c.patientValue) {lines.push(`   │  Patient: ${c.patientValue}`);}
+          if (c.confidenceReason) {lines.push(`   │  Reason: ${c.confidenceReason}`);}
           lines.push(`   └────────────────────────────────────`);
         });
       }
@@ -289,6 +330,10 @@ function App() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdminRoute, setIsAdminRoute] = useState(false);
+  const [isParserRoute, setIsParserRoute] = useState(false);
+  
+  // API key status for header indicator
+  const [apiKeyStatus, setApiKeyStatus] = useState('unknown'); // 'unknown' | 'configured' | 'not-configured' | 'backend-offline'
   
   // Confidence thresholds
   const [confidenceThresholds, setConfidenceThresholds] = useState({
@@ -297,11 +342,12 @@ function App() {
     ignore: 0.3,   // Low confidence = ignore match
   });
 
-  // Check if we're on admin route
+  // Check if we're on admin or parser route
   useEffect(() => {
     const checkRoute = () => {
       const path = window.location.pathname;
       setIsAdminRoute(path === '/admin' || path === '/admin/');
+      setIsParserRoute(path === '/parser' || path === '/parser/');
     };
     checkRoute();
     window.addEventListener('popstate', checkRoute);
@@ -318,11 +364,17 @@ function App() {
           if (data.configured) {
             // API key is configured on server - set a placeholder to indicate configured
             setApiKey('configured-on-server');
+            setApiKeyStatus('configured');
+          } else {
+            setApiKeyStatus('not-configured');
           }
+        } else {
+          setApiKeyStatus('not-configured');
         }
       } catch (error) {
         // Backend might not be running, that's ok
         console.log('Backend not available, using local mode');
+        setApiKeyStatus('backend-offline');
       }
     };
     checkApiKeyStatus();
@@ -393,8 +445,10 @@ function App() {
       await fetch(`${BACKEND_URL}/api/config/apikey`, {
         method: 'DELETE'
       });
+      setApiKeyStatus('not-configured');
     } catch (error) {
       console.error('Failed to clear API key:', error);
+      setApiKeyStatus('backend-offline');
     }
     setApiKey('');
   }, []);
@@ -427,8 +481,10 @@ function App() {
         // Clear the key from state after saving to backend
         // Keep a flag that it's configured
         setApiKey('configured-on-server');
+        setApiKeyStatus('configured');
       } catch (err) {
         setError('Failed to save API key to server: ' + err.message);
+        setApiKeyStatus('not-configured');
         setIsLoading(false);
         return;
       } finally {
@@ -504,11 +560,55 @@ function App() {
     );
   }
 
+  // Render parser testing UI if on /parser route
+  if (isParserRoute) {
+    return (
+      <div className="app">
+        <header className="app-header">
+          <h1>Clinical Trial Matching System</h1>
+          <nav className="app-nav">
+            <a href="/" className="nav-link">← Back to Main App</a>
+            <a href="/admin" className="nav-link">Admin Dashboard</a>
+          </nav>
+        </header>
+        <main className="app-main">
+          <ParserPage />
+        </main>
+        <footer className="app-footer">
+          <p>Clinical Trial Matching System v4.0 - Parser Testing UI</p>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>Clinical Trial Matching System</h1>
         <p className="app-subtitle">AI-powered patient-trial matching</p>
+        {/* API Key Status Indicator */}
+        <div className="api-status-indicator" data-testid="api-status-indicator">
+          {apiKeyStatus === 'configured' && (
+            <span className="status-badge status-configured" title="AI features enabled">
+              🟢 AI Ready
+            </span>
+          )}
+          {apiKeyStatus === 'not-configured' && (
+            <span className="status-badge status-not-configured" title="Configure API key in settings">
+              🟡 AI Not Configured
+            </span>
+          )}
+          {apiKeyStatus === 'backend-offline' && (
+            <span className="status-badge status-offline" title="Backend server not running">
+              🔴 Backend Offline
+            </span>
+          )}
+          {apiKeyStatus === 'unknown' && (
+            <span className="status-badge status-checking" title="Checking status...">
+              ⏳ Checking...
+            </span>
+          )}
+        </div>
         {/* Admin link removed from patient-facing UI for security */}
         {/* Access admin via direct URL: /admin */}
       </header>
@@ -866,3 +966,4 @@ function App() {
 }
 
 export default App;
+export { generatePatientNarrative };

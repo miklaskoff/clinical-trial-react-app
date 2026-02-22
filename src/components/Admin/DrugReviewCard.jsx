@@ -28,9 +28,9 @@ function DrugReviewCard({ review, drugClasses, onApprove, onReject }) {
   };
 
   const getConfidenceColor = (confidence) => {
-    if (!confidence) return 'gray';
-    if (confidence >= 0.85) return 'green';
-    if (confidence >= 0.7) return 'orange';
+    if (!confidence) {return 'gray';}
+    if (confidence >= 0.85) {return 'green';}
+    if (confidence >= 0.7) {return 'orange';}
     return 'red';
   };
 

@@ -76,12 +76,14 @@ import followupRoutes from './routes/followups.js';
 import adminRoutes from './routes/admin.js';
 import configRoutes from './routes/config.js';
 import termsRoutes from './routes/terms.js';
+import parserRoutes from './routes/parser.js';
 
 app.use('/api/match', matchRoutes);
 app.use('/api/followups', followupRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/terms', termsRoutes);
+app.use('/api/parser', parserRoutes);
 
 // ============================================
 // ERROR HANDLING
@@ -123,6 +125,14 @@ async function startServer() {
     // Initialize database
     await initDatabase();
     console.log('✓ Database initialized');
+
+    // Try to initialize Claude client from stored API key
+    const { getClaudeClient } = await import('./services/ClaudeClient.js');
+    const client = getClaudeClient();
+    const apiKeyLoaded = await client.initFromDatabase();
+    if (!apiKeyLoaded) {
+      console.log('ℹ API key not configured - configure via Admin panel');
+    }
 
     // Start listening
     server = app.listen(PORT, () => {

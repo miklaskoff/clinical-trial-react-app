@@ -22,7 +22,7 @@ If there is a conflict, those 3 above mentioned documents takes precedence.
 **Type**: Full-Stack Web Application (React + Express Backend)
 **Purpose**: Match patients with suitable clinical trials using hybrid AI + rule-based matching
 **Tech Stack**: React 19, Node.js/Express, SQLite, Anthropic Claude API
-**Version**: 5.0 (with Full Backend Integration)
+**Version**: 5.1 (Parser Infrastructure Iteration 2.2)
 
 
 ---
@@ -94,12 +94,18 @@ If there is a conflict, those 3 above mentioned documents takes precedence.
 
 
 4. **Services**
-   - `ClaudeClient.js` - Anthropic SDK wrapper with caching
+   - `ClaudeClient.js` - Anthropic SDK wrapper with caching + prompt caching (v5.1)
    - `DrugCategoryResolver.js` - Drug → therapeutic class
    - `FollowUpGenerator.js` - AI question generation
+   - `parse-utils.js` - Disease-based file organization (v5.1)
 
 
-5. **Middleware**
+5. **Config** (v5.1)
+   - `output-validator.js` - Post-processing validation with consistency checks
+   - `FIELD_CATALOG.md` - Slot-filled field definitions for LLM parser
+
+
+6. **Middleware**
    - `rateLimiter.js` - SQLite-backed rate limiting
 
 
@@ -113,7 +119,7 @@ If there is a conflict, those 3 above mentioned documents takes precedence.
 
 
 2. **ClinicalTrialEligibilityQuestionnaire.jsx** - Patient data collection
-   - 10-cluster questionnaire (CMB, PTH, AIC, AAO, AGE, NPV, CPD, SEV, BMI, BIO, FLR)
+   - 10-cluster questionnaire (CMB, PTH, AIC, AAO, AGE, DIT, DD, SEV, BMI, BIO)
    - Builds slot-filled patient responses
    - Accepts `onSubmit` prop to trigger matching
 
@@ -173,10 +179,9 @@ If there is a conflict, those 3 above mentioned documents takes precedence.
 - AIC: Active Infections/Conditions
 - AAO: Age at Onset / Measurements
 - SEV: Severity indicators
-- CPD: Condition patterns
-- NPV: Negative predictors
-- BIO: Biomarkers (NEW in v1.1)
-- FLR: Flare history (NEW in v1.1)
+- DD: Disease Duration (formerly CPD)
+- DIT: Disease Type (formerly NPV)
+- BIO: Biomarkers
 
 
 ---
@@ -245,6 +250,107 @@ Pass 3: AI SEMANTIC (if enabled)
 - Caching: Reuse previous API results
 - Early termination: Stop after exact/heuristic match
 - Model selection: Use Haiku for simple, Sonnet for complex
+
+
+### Complex Criteria Handling
+
+**OR-Logic Criteria:**
+
+Criteria that require "at least 1 of the following" conditions are handled specially in the matching system.
+
+**Example:**
+```
+Have at least 1 of the following cardiovascular risk factors:
+- Current cigarette smoker
+- Diagnosis of hypertension
+- Diagnosis of hyperlipidemia
+- Diabetes mellitus type 1 or 2
+- Obesity
+- Family history of premature CHD
+```
+
+**Current Implementation:**
+- Stored as **single criterion** in database with all sub-conditions in `raw_text`
+- No slot-filled fields for individual sub-conditions
+- Sub-conditions embedded in `raw_text`, NOT as separate criteria
+- `LOGICAL_OPERATOR: "OR"` field indicates OR-logic requirement
+
+**Evaluation Behavior:**
+1. **Rule-based matching:** Cannot evaluate sub-conditions independently
+2. **AI fallback:** For clusters with `aiEnabled: true`, AI analyzes `raw_text` semantically
+3. **AI understanding:** Can interpret OR-logic and match if patient has ANY listed condition
+4. **Limitation:** Granular tracking not available (cannot identify which specific sub-condition matched)
+
+**Clusters with AI Enabled for OR-Logic:**
+```json
+{
+  "CMB": { "aiEnabled": true },  // Comorbidities + AI follow-up questions
+  "PTH": { "aiEnabled": true },  // Treatment history + AI follow-up questions (NO hardcoded questions)
+  "AIC": { "aiEnabled": true },  // Active infections
+  "SEV": { "aiEnabled": true }   // Severity scores
+}
+```
+
+**PTH and CMB AI-Driven Follow-up Questions (v5.0+):**
+- **PTH Cluster:** Shows ONLY AI-generated follow-up questions (no hardcoded default questions)
+- **CMB Cluster:** Shows AI-generated follow-up questions for each condition
+- **Blocking Behavior:** If AI is unavailable (`aiGenerated: false`), shows blocking message instead of fallback questions
+- **Report Labeling:** Generated report includes `🤖 AI Follow-up Questions:` label with criterion IDs for each question
+- **Criterion Tracking (v5.0.3+):** Each AI question can reference **multiple** criteria via `criterionIds` array
+  - Single criterion: `{ id: "q1", text: "...", criterionIds: ["PTH_1234"] }`
+  - Multiple criteria: `{ id: "q1", text: "How long have you had gastritis?", criterionIds: ["CMB_2391", "CMB_2392"] }`
+  - **AI Intelligence:** Claude can consolidate related criteria into one question (e.g., "gastritis for 2 years" + "gastritis for 23 months" → one duration question)
+  - **Report Display:** Shows all relevant IDs: `"How long have you had gastritis? → 18 months (Criteria: CMB_2391, CMB_2392)"`
+  - **Backward Compatible:** Supports old single `criterionId` format (automatically converted to array)
+- **Prompt Consistency (v5.0.4):** AI prompts now consistently request `criterionIds` array format
+  - Both JSON example and instructions specify plural `criterionIds`
+  - Previous inconsistency (example showed array, instruction said singular) fixed
+  - Ensures reliable criterion ID inclusion in both treatment and condition questions
+- **Comprehensive Criteria Search (v5.0.5):** Enhanced search finds ALL relevant criteria using three-level matching:
+  1. **Drug Name Match:** Direct name/brand name substring matching (e.g., "adalimumab", "Humira")
+  2. **Drug Class Match:** Therapeutic class terms (e.g., for TNF inhibitors: "tnf", "tumor necrosis factor", "anti-tnf", other TNF drugs)
+  3. **Generic Category Match:** Higher-level classification terms:
+     - Biologics: "biologic", "biologic agent", "biological therapy", "monoclonal antibody", "antibody", "mAb"
+     - bDMARDs: "bDMARD", "DMARD", "biologic DMARD"
+     - csDMARDs: "csDMARD", "conventional DMARD", "conventional synthetic DMARD"
+     - Small molecules: "small molecule", "targeted synthetic", "tsDMARD"
+     - Immunosuppressants: "immunosuppressive", "immunosuppressant"
+  - **IL Subtype Expansion:** Automatically expands IL terms (e.g., "IL-17A" → includes "IL-17", "IL17", "interleukin-17")
+  - **Cluster-Scoped Search (v5.0.5):** Treatment follow-ups search ONLY in CLUSTER_PTH (not CMB)
+  - **Example:** Searching "adalimumab" generates 23 search terms → matches 10 PTH criteria
+  - **Implementation:** `findMatchingCriteria()`, `getGenericSearchTerms()`, `getClassSearchTerms()`, `expandILTerms()` in `FollowUpGenerator.js` and `DrugCategoryResolver.js`
+
+**Future Enhancement:**
+- Parser rewrite will split OR-criteria into separate entries with shared group ID
+- Add `LOGICAL_OPERATOR: "OR"` field support in matcher
+- Enable rule-based evaluation for OR-logic without AI dependency
+
+
+### Weight Criteria with Double-Negatives
+
+**Challenge:** Criteria like "must not weigh < 30kg" or "weighing ≤ 18kg" without slot-filled fields.
+
+**Solution:** Raw text parsing with pattern detection (implemented as of v5.0.1)
+
+**Patterns Detected:**
+```javascript
+// Double-negative pattern (inverted logic)
+"must not weigh < 30kg" → patient MUST weigh ≥ 30kg
+
+// Simple comparison patterns
+"weighing ≤ 18kg" → patient MUST weigh ≤ 18kg
+"weighing ≥ 50kg" → patient MUST weigh ≥ 50kg
+```
+
+**Logic Inversion:**
+For double-negatives in exclusion criteria, the matcher inverts the result:
+- Criterion: "must NOT weigh < 30kg" (exclusion)
+- Semantically means: "minimum weight 30kg" (inclusion-like requirement)
+- Patient 71kg: meets requirement (≥30kg)
+- Inversion: `matches = !meetsRequirement` = false
+- Result: Patient NOT excluded ✅
+
+**Implementation:** See `#parseWeightFromRawText()` in `ClinicalTrialMatcher.js`
 
 
 ### Confidence Scoring
@@ -900,54 +1006,132 @@ See [CHANGELOG.md](../CHANGELOG.md) for detailed version history.
 
 ---
 
+## Documentation Schema
+
+### Documentation Tree
+
+```mermaid
+graph TD
+    subgraph Root["📁 Root"]
+        README["📄 README.md<br/>Quick Start"]
+        CHANGELOG["📄 CHANGELOG.md<br/>Version History"]
+    end
+    
+    subgraph Docs["📁 docs/"]
+        ARCH["📄 ARCHITECTURE_AND_MATCHING_GUIDE.md<br/>🔴 CANONICAL - System Design"]
+        BACKUP["📄 BACKUP_CATALOG.md<br/>Backup Tracking"]
+        DEPLOY["📄 deployment_guide.md<br/>Installation & Deployment"]
+        ADMIN["📄 admin_guide.md<br/>Admin Panel Usage"]
+        TEST["📄 testing_guide.md<br/>Testing Procedures"]
+        SCHEMAS["📄 output_schemas.md<br/>🔄 AUTO-GENERATED"]
+        
+        subgraph Archive["📁 archive/"]
+            FC["📁 field_catalogs/<br/>Old FIELD_CATALOG versions"]
+            CONTRACTS["📁 contracts/<br/>Implementation contracts"]
+            FIRST["📁 1st_iteration/<br/>Historical docs"]
+        end
+    end
+    
+    subgraph GitHub["📁 .github/"]
+        COPILOT["📄 copilot-instructions.md<br/>🔴 PRIMARY - Dev Rules"]
+        LESSONS["📄 lesson learned.md<br/>Past Bugs & Fixes"]
+    end
+    
+    subgraph VSCode["📁 .vscode/"]
+        COMMANDS["📄 copilot-commands.md<br/>4-GATE Workflow"]
+    end
+    
+    subgraph ServerConfig["📁 server/config/"]
+        FIELD["📄 FIELD_CATALOG_v2.1.md<br/>🔴 ACTIVE - Parser Rules"]
+        OUTPUT_JSON["📄 output-schemas.json<br/>🔴 SOURCE - Schema JSON"]
+    end
+    
+    subgraph Data["📁 src/data/"]
+        DATABASE["📄 improved_slot_filled_database.json<br/>719 Parsed Criteria"]
+    end
+    
+    README --> ARCH
+    ARCH --> SCHEMAS
+    OUTPUT_JSON -.->|generates| SCHEMAS
+    FIELD --> ARCH
+```
+
+### Document Hierarchy
+
+| Priority | Document | Purpose |
+|----------|----------|---------|
+| 🔴 Primary | `.github/copilot-instructions.md` | AI development rules |
+| 🔴 Primary | `docs/ARCHITECTURE_AND_MATCHING_GUIDE.md` | System architecture |
+| 🔴 Primary | `.github/lesson learned.md` | Avoid past mistakes |
+| 🟡 Active | `server/config/FIELD_CATALOG_v2.1.md` | Parser field definitions |
+| 🟡 Active | `server/config/output-schemas.json` | JSON schema (source of truth) |
+| 🟢 Generated | `docs/output_schemas.md` | Human-readable schemas |
+| 🟢 Guide | `docs/deployment_guide.md` | How to deploy |
+| 🟢 Guide | `docs/admin_guide.md` | How to use admin panel |
+| 🟢 Guide | `docs/testing_guide.md` | How to run/write tests |
+| 📦 Archive | `docs/archive/*` | Old versions, historical |
+
+### Auto-Generated Documents
+
+| Document | Source | Command |
+|----------|--------|---------|
+| `docs/output_schemas.md` | `server/config/output-schemas.json` | `npm run docs:schemas` |
+
+**⚠️ Rule:** After modifying `output-schemas.json`, ALWAYS run `npm run docs:schemas` to regenerate documentation.
+
+### Documentation Update Rules
+
+When changing code, update docs:
+
+| Code Change | Required Doc Update |
+|-------------|---------------------|
+| New cluster/field | `FIELD_CATALOG_v2.1.md`, regenerate `output_schemas.md` |
+| New API endpoint | `ARCHITECTURE_AND_MATCHING_GUIDE.md` |
+| Bug fix | `.github/lesson learned.md` |
+| New feature | `CHANGELOG.md`, relevant guide |
+| Architecture change | `ARCHITECTURE_AND_MATCHING_GUIDE.md` |
+
+---
+
 
 ## Getting Help
 
 
-**Documentation**:
+**Core Documentation**:
+- [README.md](../README.md) - Quick start and overview
 - [CHANGELOG.md](../CHANGELOG.md) - Version history
-- [QUICK_START.md](../QUICK_START.md) - User guide
-- [INTEGRATION_GUIDE.md](../INTEGRATION_GUIDE.md) - Technical deep dive
-- [DATABASE_ANALYSIS_REPORT.md](../DATABASE_ANALYSIS_REPORT.md) - Database structure
-- [INCLUSION_CRITERIA_UPDATE.md](../INCLUSION_CRITERIA_UPDATE.md) - v3.1 changes
+- [output_schemas.md](output_schemas.md) - Cluster output formats
+- [deployment_guide.md](deployment_guide.md) - Installation & deployment
+- [admin_guide.md](admin_guide.md) - Admin panel usage
+- [testing_guide.md](testing_guide.md) - Testing procedures
 
 
-**Key Files**:
-- [ClinicalTrialMatcher.js](../src/ClinicalTrialMatcher.js) - Main matching logic
-- [EnhancedAIMatchingEngine.js](../src/EnhancedAIMatchingEngine.js) - AI integration
-- [improved_slot_filled_database.json](../src/improved_slot_filled_database.json) - Data
+**Key Code Files**:
+- [ClinicalTrialMatcher.js](../src/services/matcher/ClinicalTrialMatcher.js) - Main matching logic
+- [ClaudeClient.js](../server/services/ClaudeClient.js) - AI integration
+- [improved_slot_filled_database.json](../src/data/improved_slot_filled_database.json) - Trial database
 
 
 **Testing**:
 ```bash
-# Validate database
-node test_inclusion_criteria.js
+# Run all tests
+npm test
 
+# Run dev servers
+npm run dev:all
 
-# Run dev server
-npm start
-
-
-# Build production
-npm run build
+# Generate docs
+npm run docs:schemas
+npm run docs:toc
 ```
 
 
 ---
 
 
-## Contact & Support
-
-
-For questions about:
-- **Architecture**: See INTEGRATION_GUIDE.md
-- **Database**: See DATABASE_ANALYSIS_REPORT.md
-- **Inclusion criteria**: See INCLUSION_CRITERIA_UPDATE.md
-- **API usage**: See aiSemanticMatcher.js comments
-
-
-**Version**: 3.1 (2026-01-12)
-**Status**: Production Ready ✅
+**Version**: 5.1.0 (2026-02-16)  
+**Status**: Production Ready ✅  
+**Last Updated**: 2026-02-16
 
 
 

@@ -211,6 +211,91 @@ export async function initDatabase(dbPath) {
       value TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    -- App version table for cache invalidation
+    CREATE TABLE IF NOT EXISTS app_version (
+      id INTEGER PRIMARY KEY,
+      version TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    -- Parser job history (for Parser Testing UI)
+    CREATE TABLE IF NOT EXISTS parser_jobs (
+      id TEXT PRIMARY KEY,
+      createdAt TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      clusterType TEXT NOT NULL,
+      modelId TEXT NOT NULL,
+      totalCriteria INTEGER NOT NULL,
+      parsedCount INTEGER DEFAULT 0,
+      skippedCount INTEGER DEFAULT 0,
+      inputFile TEXT NOT NULL,
+      estimatedCost REAL,
+      actualCost REAL DEFAULT 0,
+      parserVersion TEXT NOT NULL,
+      inputData TEXT
+    );
+
+    -- Index for job lookups
+    CREATE INDEX IF NOT EXISTS idx_parser_jobs_status 
+    ON parser_jobs(status);
+
+    -- Index for job history ordering
+    CREATE INDEX IF NOT EXISTS idx_parser_jobs_created 
+    ON parser_jobs(createdAt DESC);
+
+    -- Parsed criteria cache (for Parser Testing UI)
+    CREATE TABLE IF NOT EXISTS parsed_criteria (
+      criterionId TEXT PRIMARY KEY,
+      nctId TEXT NOT NULL,
+      clusterType TEXT NOT NULL,
+      parsedAt TEXT NOT NULL,
+      parserVersion TEXT NOT NULL,
+      modelUsed TEXT NOT NULL,
+      inputTokens INTEGER,
+      outputTokens INTEGER,
+      cacheReadTokens INTEGER DEFAULT 0,
+      cacheWriteTokens INTEGER DEFAULT 0,
+      costUsd REAL,
+      rawInput TEXT NOT NULL,
+      parsedOutput TEXT NOT NULL,
+      validationStatus TEXT,
+      validationErrors TEXT,
+      jobId TEXT REFERENCES parser_jobs(id)
+    );
+
+    -- Index for NCT lookups
+    CREATE INDEX IF NOT EXISTS idx_parsed_criteria_nct 
+    ON parsed_criteria(nctId);
+
+    -- Index for job results
+    CREATE INDEX IF NOT EXISTS idx_parsed_criteria_job 
+    ON parsed_criteria(jobId);
+
+    -- Index for version lookups
+    CREATE INDEX IF NOT EXISTS idx_parsed_criteria_version 
+    ON parsed_criteria(parserVersion);
+
+    -- API usage tracking (for Parser Testing UI)
+    CREATE TABLE IF NOT EXISTS api_usage (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      timestamp TEXT NOT NULL,
+      modelId TEXT NOT NULL,
+      inputTokens INTEGER NOT NULL,
+      outputTokens INTEGER NOT NULL,
+      cacheReadTokens INTEGER DEFAULT 0,
+      cacheWriteTokens INTEGER DEFAULT 0,
+      costUsd REAL NOT NULL,
+      jobId TEXT REFERENCES parser_jobs(id)
+    );
+
+    -- Index for usage aggregation
+    CREATE INDEX IF NOT EXISTS idx_api_usage_timestamp 
+    ON api_usage(timestamp);
+
+    -- Index for job usage
+    CREATE INDEX IF NOT EXISTS idx_api_usage_job 
+    ON api_usage(jobId);
   `);
 
   return dbInstance;

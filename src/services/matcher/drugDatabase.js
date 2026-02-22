@@ -394,7 +394,7 @@ export function directStringMatch(patientDrug, criterionDrugs) {
   const normalizedPatient = patientDrug.toLowerCase().trim();
   
   return criterionDrugs.some(drug => {
-    if (!drug) return false;
+    if (!drug) {return false;}
     return drug.toLowerCase().trim() === normalizedPatient;
   });
 }

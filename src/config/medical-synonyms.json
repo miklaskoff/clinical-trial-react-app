@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "version": "1.0.0",
-    "lastUpdated": "2026-01-19",
+    "version": "1.0.1",
+    "lastUpdated": "2026-01-25",
     "description": "Medical condition synonyms and drug class keywords for semantic matching"
   },
   "conditions": {
@@ -38,7 +38,51 @@
       "malignant neoplasm",
       "carcinoma",
       "tumor",
-      "neoplastic disease"
+      "neoplastic disease",
+      "malignant tumor"
+    ],
+    "malignant tumors": [
+      "cancer",
+      "malignancy",
+      "malignant neoplasm",
+      "tumor",
+      "neoplasm",
+      "carcinoma"
+    ],
+    "breast cancer": [
+      "breast carcinoma",
+      "breast malignancy",
+      "mammary cancer",
+      "cancer",
+      "malignancy",
+      "tumor",
+      "malignant tumor"
+    ],
+    "lung cancer": [
+      "lung carcinoma",
+      "pulmonary cancer",
+      "lung malignancy",
+      "cancer",
+      "malignancy",
+      "tumor",
+      "malignant tumor"
+    ],
+    "colon cancer": [
+      "colorectal cancer",
+      "colon carcinoma",
+      "colorectal carcinoma",
+      "cancer",
+      "malignancy",
+      "tumor",
+      "malignant tumor"
+    ],
+    "prostate cancer": [
+      "prostate carcinoma",
+      "prostatic cancer",
+      "cancer",
+      "malignancy",
+      "tumor",
+      "malignant tumor"
     ],
     "tuberculosis": [
       "tb",

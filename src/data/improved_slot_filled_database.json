@@ -938,1616 +938,6 @@
       }
     ]
   },
-  "CLUSTER_NPV": {
-    "cluster_name": "Non-Plaque Psoriasis Variants",
-    "cluster_code": "NPV",
-    "total_criteria": 61,
-    "primary_question": "What form of psoriasis do you have?",
-    "answer_type": "autocomplete",
-    "criteria": [
-      {
-        "id": "NPV_2453",
-        "nct_id": "NCT06170840",
-        "raw_text": "Other types of psoriasis were diagnosed during screening, such as guttate psoriasis, erythrodermic psoriasis, generalized pustular psoriasis, arthropathic psoriasis, drug-induced or drug-aggravated psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2426",
-        "nct_id": "NCT06643260",
-        "raw_text": "Psoriasis limited to erythrodermic, guttate, palmar, plantar, or generalized pustular psoriasis in the absence of plaque psoriasis;",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2372",
-        "nct_id": "NCT03997786",
-        "raw_text": "Subject has predominantly non-plaque forms of psoriasis specifically erythrodermic psoriasis, predominantly pustular psoriasis, medication-induced or medication-exacerbated psoriasis, or new-onset guttate psoriasis",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2328",
-        "nct_id": "NCT07219420",
-        "raw_text": "Has drug-induced PSO (eg, first onset or current exacerbation due to beta blockers, calcium channel inhibitors, lithium, or tumor necrosis factor [TNF] inhibitor) or drug-induced pustular PSO (eg, acute generalized exanthematous pustulosis, acute localized exanthematous pustulosis)",
-        "PSORIASIS_VARIANT": [
-          "pustular",
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2327",
-        "nct_id": "NCT07219420",
-        "raw_text": "Has the following: palmoplantar PSO (plaque PSO on palms/soles), guttate PSO, erythrodermic PSO (EP), generalized pustular PSO (GPP), Acrodermatitis continua of Hallopeau (ACH), atopic dermatitis, dyshidrotic eczema or chronic hand eczema.",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "palmoplantar"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2317",
-        "nct_id": "NCT07033234",
-        "raw_text": "Guttate psoriasis, pustular psoriasis, erythrodermic psoriasis, drug-induced psoriasis, or other diseases that affect the treatment results;",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2299",
-        "nct_id": "NCT06477237",
-        "raw_text": "Drug-induced psoriasis",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2298",
-        "nct_id": "NCT06477237",
-        "raw_text": "Forms of psoriasis other than chronic plaque-type (e.g., pustular, erythrodermic and/or guttate psoriasis) at screening or baseline",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2263",
-        "nct_id": "NCT06648772",
-        "raw_text": "Non-plaque psoriasis (e.g., guttate psoriasis, pustular psoriasis, erythrodermic psoriasis, and arthropathic psoriasis) or drug-induced psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2195",
-        "nct_id": "NCT06628206",
-        "raw_text": "Currently have non-plaque forms of psoriasis e.g. erythrodermic, guttate or pustular with the exception of nail psoriasis which is allowed.",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "nail psoriasis",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2125",
-        "nct_id": "NCT06842199",
-        "raw_text": "Exclusion Criteria: 1. The diagnosis was non-plaque psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2109",
-        "nct_id": "NCT06672393",
-        "raw_text": "Diagnosis of non-plaque psoriasis or drug-induced psoriasis",
-        "PSORIASIS_VARIANT": [
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2087",
-        "nct_id": "NCT06926582",
-        "raw_text": "Diagnosis of non-plaque psoriasis or drug-induced psoriasis",
-        "PSORIASIS_VARIANT": [
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2054",
-        "nct_id": "NCT06143371",
-        "raw_text": "Psoriasis other than a plaque variant.",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2002",
-        "nct_id": "NCT06833307",
-        "raw_text": "Drug-induced psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_2001",
-        "nct_id": "NCT06833307",
-        "raw_text": "Forms of psoriasis other than chronic plaque-type (e.g., pustular, erythrodermic and guttate psoriasis) at Screening or Baseline/randomization.",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1993",
-        "nct_id": "NCT07130604",
-        "raw_text": "Erythrodermic psoriasis, pustular psoriasis, guttate psoriasis, reverse psoriasis, drug-induced psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1955",
-        "nct_id": "NCT06077331",
-        "raw_text": "Diagnosis of non-plaque psoriasis or drug-induced psoriasis",
-        "PSORIASIS_VARIANT": [
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1917",
-        "nct_id": "NCT06979453",
-        "raw_text": "Participants must not have non-plaque psoriasis (ie, guttate, inverse, pustular, erythrodermic, or drug-induced psoriasis) or any skin condition other than plaque psoriasis that could interfere with assessments of treatment effect at Screening or Day 1.",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1871",
-        "nct_id": "NCT06723171",
-        "raw_text": "Exclusion Criteria: 3. Has current drug-induced psoriasis (e.g., a new onset of psoriasis or an exacerbation of psoriasis from beta-blockers, calcium channel blockers, or lithium)",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1870",
-        "nct_id": "NCT06723171",
-        "raw_text": "Exclusion Criteria: 2. Has a non-plaque form of psoriasis (e.g., erythrodermic, guttate, or pustular) at Screening or at time of randomization",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1845",
-        "nct_id": "NCT06620692",
-        "raw_text": "Patients with the following subtype of psoriasis: New onset guttate psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "guttate"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1844",
-        "nct_id": "NCT06620692",
-        "raw_text": "Patients with the following subtype of psoriasis: edication-induced or medication-exacerbated psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "unspecified"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1843",
-        "nct_id": "NCT06620692",
-        "raw_text": "Patients with the following subtype of psoriasis: Generalized or localized pustular psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "pustular"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1842",
-        "nct_id": "NCT06620692",
-        "raw_text": "Patients with the following subtype of psoriasis: Erythrodermic psoriasis",
-        "PSORIASIS_VARIANT": [
-          "erythrodermic"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1788",
-        "nct_id": "NCT07129382",
-        "raw_text": "Forms of psoriasis other than plaque-type (e.g., erythrodermic, pustular, guttate, or drug-induced psoriasis).",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1767",
-        "nct_id": "NCT06058546",
-        "raw_text": "Psoriasis caused by drug-induced factors; combined with non-plaque Psoriasis at screening (such as guttate,arthropathica, pustular, erythrodermic and other types of Psoriasis); The skin lesions are exclusively observed in subjects with specific areas such as the face, scalp, nails, skin folds, glans penis, mucous membranes, palms, and soles.",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1766",
-        "nct_id": "NCT06058546",
-        "raw_text": "Psoriasis caused by drug-induced factors; combined with non-plaque Psoriasis at screening (such as guttate,arthropathica, pustular, erythrodermic and other types of Psoriasis); The skin lesions are exclusively observed in subjects with specific areas such as the face, scalp, nails, skin folds, glans penis, mucous membranes, palms, and soles.",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1698",
-        "nct_id": "NCT06425549",
-        "raw_text": "Study participant has a presence of guttate, inverse, pustular, or erythrodermic PSO or other dermatological condition that may impact the clinical assessment of PSO",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "inverse"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1688",
-        "nct_id": "NCT07029516",
-        "raw_text": "Patients with unrelated nail disorders: onychomycosis, nail psoriasis, genetically induced onychodystrophy.",
-        "PSORIASIS_VARIANT": [
-          "nail psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1653",
-        "nct_id": "NCT06506916",
-        "raw_text": "Study participant has a form of PSO other than plaque type (eg, pustular, erythrodermic and guttate PSO, or drug induced PSO)",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1633",
-        "nct_id": "NCT06945107",
-        "raw_text": "Previous diagnosis of drug-induced psoriasis (e.g., psoriasis induced by beta blockers, calcium channel inhibitors, etc.);",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1632",
-        "nct_id": "NCT06945107",
-        "raw_text": "Diagnosed with guttate psoriasis, pustular psoriasis, or erythrodermic psoriasis during screening or at baseline;",
-        "PSORIASIS_VARIANT": [
-          "erythrodermic"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1631",
-        "nct_id": "NCT06945107",
-        "raw_text": "Diagnosed with guttate psoriasis, pustular psoriasis, or erythrodermic psoriasis during screening or at baseline;",
-        "PSORIASIS_VARIANT": [
-          "pustular"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1630",
-        "nct_id": "NCT06945107",
-        "raw_text": "Diagnosed with guttate psoriasis, pustular psoriasis, or erythrodermic psoriasis during screening or at baseline;",
-        "PSORIASIS_VARIANT": [
-          "guttate"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1615",
-        "nct_id": "NCT06640257",
-        "raw_text": "Existence of any of the following medical history or comorbid diseases: drug-induced psoriasis; other active inflammatory diseases or autoimmune diseases; history of organ transplantation; history of lymphocytic proliferation; severe infections, etc.",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1606",
-        "nct_id": "NCT04123795",
-        "raw_text": "Study participant has guttate PSO without plaque PSO",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1605",
-        "nct_id": "NCT04123795",
-        "raw_text": "Study participant has generalized pustular or erythrodermic psoriasis (PSO)",
-        "PSORIASIS_VARIANT": [
-          "erythrodermic",
-          "pustular"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1602",
-        "nct_id": "NCT04123795",
-        "raw_text": "Study participants aged ≥12 years may alternatively have a diagnosis of moderate to severe mixed guttate/plaque PSO with >50 % to <80 % guttate lesions for ≥3 months, and must meet the same criteria listed above",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion"
-      },
-      {
-        "id": "NPV_1529",
-        "nct_id": "NCT06943950",
-        "raw_text": "Forms of psoriasis other than plaque psoriasis (Guttate psoriasis、erythrodermic psoriasis、Pustular psoriasis、Drug-induced psoriasis).",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1510",
-        "nct_id": "NCT06592274",
-        "raw_text": "Forms of psoriasis other than chronic plaque-type (e.g., pustular, erythrodermic and/or guttate psoriasis) at screening or baseline Drug-induced psoriasis",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1499",
-        "nct_id": "NCT06299982",
-        "raw_text": "Forms of psoriasis other than chronic plaque-type (e.g., pustular, erythrodermic and/or guttate psoriasis).",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1471",
-        "nct_id": "NCT06542614",
-        "raw_text": "Have other forms of psoriasis other than plaque psoriasis (e.g., guttate psoriasis, generalized pustular psoriasis, erythrodermic psoriasis, arthropathic psoriasis);",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1396",
-        "nct_id": "NCT06973291",
-        "raw_text": "Participant has evidence of nonplaque psoriasis (erythrodermic, pustular, predominantly guttate psoriasis, predominantly inverse, or drug-induced psoriasis). If a participant meets criteria for inclusion based on typical plaque psoriasis presentation, a limited amount of inverse psoriasis is not exclusionary.",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "inverse",
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1386",
-        "nct_id": "NCT07090330",
-        "raw_text": "Nonplaque forms of psoriasis (including guttate, erythrodermic, or pustular) or drug-induced psoriasis",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1355",
-        "nct_id": "NCT06176508",
-        "raw_text": "Non-plaque psoriasis (ie, guttate, inverse, pustular, erythrodermic or drug-induced psoriasis), with the exception of nail psoriasis, which is allowed.",
-        "PSORIASIS_VARIANT": [
-          "nail psoriasis",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1336",
-        "nct_id": "NCT07150988",
-        "raw_text": "Forms of psoriasis other than chronic plaque-type;",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1298",
-        "nct_id": "NCT06918743",
-        "raw_text": "Present with any of the following medical history or concomitant diseases: Diagnosis of other types of psoriasis other than plaque psoriasis during subject screening, Such as guttate psoriasis, pustular psoriasis, erythrodermic psoriasis, articular psoriasis, or drug-induced psoriasis",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1279",
-        "nct_id": "NCT06844799",
-        "raw_text": "Confirmation of other types of psoriasis, including but not limited to guttiform psoriasis, pustular psoriasis, erythrodermic psoriasis, drug-induced exacerbation of psoriasis from the screening period to the time before randomization;",
-        "PSORIASIS_VARIANT": [
-          "unspecified"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1257",
-        "nct_id": "NCT06380907",
-        "raw_text": "Other types of psoriasis dominant other than plaque psoriasis (e.g., psoriatic arthritis, pustular, erythrodermic, guttate, palmar, plantar, scalp or nail disease) or the lesion is not eligible for topical treatment only.",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1248",
-        "nct_id": "NCT06630559",
-        "raw_text": "Patient diagnosed with forms of psoriasis other than chronic plaque-type or medication-induced psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1195",
-        "nct_id": "NCT05642182",
-        "raw_text": "The forms of psoriasis other than chronic plaque psoriasis (such as drug-induced psoriasis or guttate, erythrodermic, or pustular psoriasis) or if the psoriasis does not meet the criterion of chronicity (defined as a clinically significant flare of psoriasis within 12 weeks before baseline).",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1185",
-        "nct_id": "NCT06863493",
-        "raw_text": "History of current drug-induced PsO or a drug-induced exacerbation of pre-existing psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1175",
-        "nct_id": "NCT04772079",
-        "raw_text": "Other forms of psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "unspecified"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1143",
-        "nct_id": "NCT06005532",
-        "raw_text": "4. Drug-induced psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1142",
-        "nct_id": "NCT06005532",
-        "raw_text": "3. Other (other than plaque) forms of psoriasis.",
-        "PSORIASIS_VARIANT": [
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1128",
-        "nct_id": "NCT06846710",
-        "raw_text": "Guttate psoriasis, pustular psoriasis, erythrodermic psoriasis, drug-induced psoriasis, or other diseases that affect the treatment results;",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1094",
-        "nct_id": "NCT07158268",
-        "raw_text": "Current drug-induced psoriasis",
-        "PSORIASIS_VARIANT": [
-          "drug-induced"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1093",
-        "nct_id": "NCT07158268",
-        "raw_text": "Non-plaque psoriasis (e.g., erythrodermic, guttate, or pustular psoriasis)",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1085",
-        "nct_id": "NCT06550076",
-        "raw_text": "Participant has developed evidence of non-plaque psoriasis (erythrodermic, pustular, predominantly guttate psoriasis, predominantly inverse, or drug-induced psoriasis) since enrollment in the parent study or Part A.",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "inverse",
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      },
-      {
-        "id": "NPV_1061",
-        "nct_id": "NCT06550076",
-        "raw_text": "Participant has evidence of non-plaque psoriasis (erythrodermic, pustular, predominantly guttate psoriasis, predominantly inverse, or drug-induced psoriasis). If a participant meets criteria for inclusion based on typical plaque psoriasis presentation, a limited amount of inverse psoriasis is not exclusionary.",
-        "PSORIASIS_VARIANT": [
-          "guttate",
-          "erythrodermic",
-          "pustular",
-          "inverse",
-          "drug-induced",
-          "plaque psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "EXCLUSION_STRENGTH": "mandatory_exclude"
-      }
-    ]
-  },
-  "CLUSTER_CPD": {
-    "cluster_name": "Chronic Plaque Psoriasis Duration Criteria",
-    "cluster_code": "CPD",
-    "total_criteria": 49,
-    "primary_question": "How long have you had psoriasis or psoriatic arthritis?",
-    "answer_type": "autocomplete",
-    "criteria": [
-      {
-        "id": "CPD_2448",
-        "nct_id": "NCT06170840",
-        "raw_text": "The patient meets the diagnosis of plaque psoriasis, has a history of plaque psoriasis for ≥ 6 months before randomization, and meets the following conditions.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2419",
-        "nct_id": "NCT06643260",
-        "raw_text": "Duration of psoriasis of at least 12 months;",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 12,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2367",
-        "nct_id": "NCT03997786",
-        "raw_text": "Diagnosis of predominantly plaque psoriasis for ≥6 months (as determined by subject interview and confirmation of diagnosis through physical examination by investigator).",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2321",
-        "nct_id": "NCT07219420",
-        "raw_text": "Have a palmoplantar pustulosis (PPP) diagnosis for at least 24 weeks prior to the Screening Visit",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 24,
-          "unit": "weeks",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2312",
-        "nct_id": "NCT07033234",
-        "raw_text": "Chronic plaque psoriasis for at least 6 months with or without psoriatic arthritis;",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2294",
-        "nct_id": "NCT06477237",
-        "raw_text": "Chronic plaque psoriasis (PSO) for at least 6 months prior to the Randomization.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2256",
-        "nct_id": "NCT06648772",
-        "raw_text": "Clinical diagnosis of plaque psoriasis before the first dose in this study, with a disease duration of ≥ 6 months (for those aged ≥ 12 years) or ≥ 3 months (for those aged 6-11 years) and stable for the last 4 weeks.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2220",
-        "nct_id": "NCT07013201",
-        "raw_text": "Mild to severe PPP current condition defined by: Disease duration of PPP of >6 months before randomisation.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2182",
-        "nct_id": "NCT06628206",
-        "raw_text": "PsA diagnosis of at least 3 months duration prior to the date of first screening with Classification of Psoriatic Arthritis (CASPAR) confirmed diagnosis at Screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 3,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2179",
-        "nct_id": "NCT06628206",
-        "raw_text": "Diagnosis of RA and meeting the 2010 American College of Rheumatology (ACR)/European League Against Rheumatism (EULAR) classification criteria for RA at least 3 months prior to screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 3,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2120",
-        "nct_id": "NCT06842199",
-        "raw_text": "Eligible subjects must meet all of the following criteria: 3. History of plaque psoriasis ≥6 months at baseline.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2104",
-        "nct_id": "NCT06672393",
-        "raw_text": "Diagnosis of plaque psoriasis for at least 6 months",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_2082",
-        "nct_id": "NCT06926582",
-        "raw_text": "Diagnosis of plaque psoriasis for at least 6 months",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1999",
-        "nct_id": "NCT06833307",
-        "raw_text": "Chronic plaque-type psoriasis present for at least 6 months and diagnosed before randomization.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1965",
-        "nct_id": "NCT06641089",
-        "raw_text": "Participants have a confirmed diagnosis of psoriatic arthritis (PsA) per the 2006 Classification for Psoriatic Arthritis (CASPAR) criteria with symptoms for ≥6 months before the Screening Visit.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1950",
-        "nct_id": "NCT06077331",
-        "raw_text": "Diagnosis of plaque psoriasis for at least 6 months",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1941",
-        "nct_id": "NCT06865105",
-        "raw_text": "Participant has a documented clinical diagnosis of PsA with symptom onset at least 6 months prior to the Screening Visit and fulfillment of the Classification Criteria for Psoriatic Arthritis (CASPAR) at Screening Visit.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1908",
-        "nct_id": "NCT06979453",
-        "raw_text": "Participants must have stable plaque psoriasis for 6 months or more prior to Screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1902",
-        "nct_id": "NCT07102888",
-        "raw_text": "History of plaque psoriasis ≥ 3 months.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 3,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1856",
-        "nct_id": "NCT06723171",
-        "raw_text": "Inclusion Criteria: 2. Have a diagnosis of plaque psoriasis (with or without psoriatic arthritis) for at least 6 months before the first administration of study treatment",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1830",
-        "nct_id": "NCT06620692",
-        "raw_text": "Patients who have well diagnosed chronic plaque psoriasis for at least 6 months before the Screening Visit (according to Am Fam Physician. 2013 May 1;87(9):626-633).",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1822",
-        "nct_id": "NCT06100744",
-        "raw_text": "Diagnosis of juvenile psoriatic arthritis (jPsA) according to International League of Associations for Rheumatology criteria for at least 6 months prior to screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1784",
-        "nct_id": "NCT07129382",
-        "raw_text": "Stable plaque psoriasis at screening, defined as no significant flare-ups or morphological changes during the 6 months prior to screening (investigator-assessed).",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1783",
-        "nct_id": "NCT07129382",
-        "raw_text": "Clinically diagnosed with chronic plaque psoriasis, defined as disease duration ≥ 6 months at screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1709",
-        "nct_id": "NCT06807424",
-        "raw_text": "Have a diagnosis of psoriatic arthritis (PsA) for at least 3 months before the first administration of study intervention and meet classification criteria for Psoriatic Arthritis (CASPAR) at screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 3,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1691",
-        "nct_id": "NCT06425549",
-        "raw_text": "Study participant has had a diagnosis of moderate to severe plaque psoriasis (PSO) for at least 3 months prior to the Screening Visit",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 3,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1643",
-        "nct_id": "NCT06506916",
-        "raw_text": "Cohort B only: In addition to the criteria specified above, study participant has a documented diagnosis of adult-onset psoriatic arthritis (PsA) and meets the CASPAR classification criteria for at least 6 months prior to Screening for active PsA and must have ≥1 tender joint count (TJC) out of 68 and ≥1 swollen joint count (SJC) out of 66 at Screening or up to 3 months before Screening (documented evidence)",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1642",
-        "nct_id": "NCT06506916",
-        "raw_text": "Study participant must have: Cohort A and Cohort B: Plaque psoriasis (PSO) diagnosed for at least 6 months prior to the Screening Visit",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1625",
-        "nct_id": "NCT06945107",
-        "raw_text": "Diagnosed with plaque psoriasis for ≥6 months, with or without psoriatic arthritis.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1593",
-        "nct_id": "NCT04123795",
-        "raw_text": "Study participant must have a diagnosis of moderate to severe plaque psoriasis (PSO) for ≥3 months and:",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 3,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1553",
-        "nct_id": "NCT06878404",
-        "raw_text": "Have a diagnosis of psoriatic arthritis (PsA) for at least 3 months before the first administration of study intervention and meet classification criteria for psoriatic arthritis (CASPAR) at screening",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 3,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1521",
-        "nct_id": "NCT06943950",
-        "raw_text": "Subjects with a clinical diagnosis of stable moderate-to-severe plaque psoriasis with a history ≥6 months before randomization.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1504",
-        "nct_id": "NCT06592274",
-        "raw_text": "Chronic plaque psoriasis (PSO) for at least 6 months prior to the randomization.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1463",
-        "nct_id": "NCT06542614",
-        "raw_text": "Clinically diagnosed with stable moderate to severe plaque psoriasis with a history ≥ 6 months (from randomization), and no morphological changes in skin lesions or significant disease outbreaks as assessed by the investigator;",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1392",
-        "nct_id": "NCT06973291",
-        "raw_text": "Participant has stable plaque psoriasis, defined as no significant flare or change in morphology (as assessed by the investigator) in psoriasis, for 6 months before screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1391",
-        "nct_id": "NCT06973291",
-        "raw_text": "Participant has a diagnosis of chronic plaque psoriasis for 6 months prior to the screening visit.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1382",
-        "nct_id": "NCT07090330",
-        "raw_text": "Have a diagnosis of plaque psoriasis for > 6 months",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1349",
-        "nct_id": "NCT06176508",
-        "raw_text": "Has a history of psoriatic arthritis (PsA) for at least 6 months, and meets the Classification Criteria for Psoriatic Arthritis (CASPAR) at screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1292",
-        "nct_id": "NCT06918743",
-        "raw_text": "A history of plaque psoriasis ≥6 months prior to randomization",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1274",
-        "nct_id": "NCT06844799",
-        "raw_text": "Diagnosed plaque psoriasis for at least 6 months before randomization, with or without psoriatic arthritis;",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1253",
-        "nct_id": "NCT06380907",
-        "raw_text": "Clinical diagnosis of psoriasis vulgaris of at least 6 months duration as determined by Investigator via medical records or in medical history obtained from the patient, is currently eligible for topical treatment and meets all the following criteria at screening and baseline.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1247",
-        "nct_id": "NCT06630559",
-        "raw_text": "Patient has had a diagnosis of chronic plaque psoriasis for at least 24 weeks.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 24,
-          "unit": "weeks",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1228",
-        "nct_id": "NCT06641076",
-        "raw_text": "Participants have a confirmed diagnosis of psoriatic arthritis (PsA) per the 2006 Classification for Psoriatic Arthritis (CASPAR) criteria with symptoms for ≥6 months before the Screening Visit.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1169",
-        "nct_id": "NCT04772079",
-        "raw_text": "Plaque psoriasis for at least 6 months.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1134",
-        "nct_id": "NCT06005532",
-        "raw_text": "3. Established clinical diagnosis plaque psoriasis, lasting at least 6 months before the screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1124",
-        "nct_id": "NCT06846710",
-        "raw_text": "Chronic plaque psoriasis for at least 6 months with or without psoriatic arthritis;",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1088",
-        "nct_id": "NCT07158268",
-        "raw_text": "Confirmed diagnosis of plaque psoriasis with a disease duration of at least 26 weeks before the first administration of the study intervention",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 26,
-          "unit": "weeks",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1056",
-        "nct_id": "NCT06550076",
-        "raw_text": "Participant has stable plaque psoriasis defined as no significant flare or change in morphology (as assessed by the investigator) in psoriasis for >=6 months before screening.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      },
-      {
-        "id": "CPD_1055",
-        "nct_id": "NCT06550076",
-        "raw_text": "Participant has a diagnosis of chronic plaque psoriasis for >=6 months prior to the screening visit.",
-        "CONDITION_TYPE": [
-          "chronic plaque psoriasis",
-          "psoriatic arthritis"
-        ],
-        "EXCLUSION_STRENGTH": "inclusion",
-        "TIMEFRAME": {
-          "relation": "at least",
-          "amount": 6,
-          "unit": "months",
-          "reference": "diagnosis"
-        }
-      }
-    ]
-  },
   "CLUSTER_SEV": {
     "cluster_name": "Severity Scores",
     "cluster_code": "SEV",
@@ -12189,1340 +10579,6 @@
       }
     ]
   },
-  "CLUSTER_FLR": {
-    "cluster_name": "Flare History",
-    "cluster_code": "FLR",
-    "total_criteria": 52,
-    "primary_question": "Have you experienced disease flares?",
-    "answer_type": "autocomplete",
-    "criteria": [
-      {
-        "id": "FLR_2462",
-        "nct_id": "NCT06170840",
-        "raw_text": "Use of a suppressant of CYP3A liver metabolic enzyme, or use of any medication, including prescription, over-the-counter, and herbal oral or topical drugs, other than vitamins and/or Paracetamol, within 2 weeks prior to initial administration.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of suppressant of CYP3A liver metabolic enzyme",
-          "use of any medication excluding vitamins and/or Paracetamol"
-        ],
-        "CONDITION_PATTERN": [
-          "current use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "liver"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "prior to initial administration"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no use of suppressant of CYP3A liver metabolic enzyme",
-          "no use of any medication except vitamins and/or Paracetamol"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to medication use affecting metabolism"
-        ]
-      },
-      {
-        "id": "FLR_2459",
-        "nct_id": "NCT06170840",
-        "raw_text": "Receive contraindicated drugs, supplements, and other treatments prescribed in this trial that may affect the course of psoriasis within the specified time period prior to initial dosing or planned for the duration of the trial.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of contraindicated drugs, supplements, and other treatments affecting psoriasis course"
-        ],
-        "CONDITION_PATTERN": [
-          "current use",
-          "planned use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "psoriasis"
-        ],
-        "TIMEFRAME": {
-          "relation": "prior to or during",
-          "amount": null,
-          "unit": null,
-          "reference": "prior to initial dosing or planned for duration of trial"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no receipt of contraindicated drugs, supplements, or treatments"
-        ],
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "AMBIGUITY_FLAG": true,
-        "IMPACT": [
-          "exclusion due to interference with psoriasis treatment"
-        ]
-      },
-      {
-        "id": "FLR_2457",
-        "nct_id": "NCT06170840",
-        "raw_text": "Patients who have failed or are intolerant to previous treatment with Phosphodiesterase-4 (PDE4) inhibitors.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "failure or intolerance to Phosphodiesterase-4 (PDE4) inhibitors"
-        ],
-        "CONDITION_PATTERN": [
-          "history"
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "previous treatment with PDE4 inhibitors failed or intolerant"
-        ],
-        "IMPACT": [
-          "exclusion due to prior treatment failure or intolerance"
-        ]
-      },
-      {
-        "id": "FLR_2456",
-        "nct_id": "NCT06170840",
-        "raw_text": "Taking drugs that can aggravate psoriasis (such as lithium, antimalarial drugs, etc.).",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of drugs that can aggravate psoriasis (e.g., lithium, antimalarial drugs)"
-        ],
-        "CONDITION_PATTERN": [
-          "current use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "psoriasis"
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "no use of drugs that aggravate psoriasis"
-        ],
-        "IMPACT": [
-          "exclusion due to potential psoriasis aggravation"
-        ]
-      },
-      {
-        "id": "FLR_2440",
-        "nct_id": "NCT06643260",
-        "raw_text": "Concomitant use of strong cytochrome P450 inducers, e.g., rifampin, phenobarbital, phenytoin, carbamazepine;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of strong cytochrome P450 inducers (e.g., rifampin, phenobarbital, phenytoin, carbamazepine)"
-        ],
-        "CONDITION_PATTERN": [
-          "current use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "liver"
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "no concomitant use of strong cytochrome P450 inducers"
-        ],
-        "IMPACT": [
-          "exclusion due to drug interaction risk"
-        ]
-      },
-      {
-        "id": "FLR_2431",
-        "nct_id": "NCT06643260",
-        "raw_text": "Treatment with lithium, hydroxychloroquine or chloroquine within 2 weeks of the Baseline visit, or anticipated need for such drugs during the study period, unless dose has been stable for 3 months prior to the Screening visit and will remain stable throughout the trial;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "treatment with lithium",
-          "treatment with hydroxychloroquine",
-          "treatment with chloroquine"
-        ],
-        "CONDITION_PATTERN": [
-          "current use",
-          "planned use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "Baseline visit"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no treatment within 2 weeks of Baseline visit unless dose stable for 3 months prior to Screening and remains stable"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "IMPACT": [
-          "exclusion or monitoring due to recent or planned treatment"
-        ]
-      },
-      {
-        "id": "FLR_2430",
-        "nct_id": "NCT06643260",
-        "raw_text": "Ultraviolet or Dead Sea therapy within 4 weeks of the Baseline visit, or anticipated need for either of these therapies during the study period;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "Ultraviolet therapy",
-          "Dead Sea therapy"
-        ],
-        "CONDITION_PATTERN": [
-          "current use",
-          "planned use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "Baseline visit"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no therapy within 4 weeks of Baseline visit or planned during study"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent or planned phototherapy"
-        ]
-      },
-      {
-        "id": "FLR_2429",
-        "nct_id": "NCT06643260",
-        "raw_text": "Treatment with Vitamin D analogs, keratolytics, coal tar (other than on the scalp, palms, groin, and/or soles), any topical corticosteroid, calcineurin inhibitors, vitamin A analogs, retinoids, anthralin, calcipotriene, tazarotene, methoxsalen, trimethyl-psoralens, fumarate, PDE4 inhibitors, or aryl hydrocarbon receptor-modulating agents within 2 weeks of the Baseline visit;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "treatment with Vitamin D analogs",
-          "keratolytics",
-          "coal tar (except scalp, palms, groin, soles)",
-          "topical corticosteroids",
-          "calcineurin inhibitors",
-          "vitamin A analogs",
-          "retinoids",
-          "anthralin",
-          "calcipotriene",
-          "tazarotene",
-          "methoxsalen",
-          "trimethyl-psoralens",
-          "fumarate",
-          "PDE4 inhibitors",
-          "aryl hydrocarbon receptor-modulating agents"
-        ],
-        "CONDITION_PATTERN": [
-          "current use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "scalp",
-          "palms",
-          "groin",
-          "soles"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "Baseline visit"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no treatment with listed agents within 2 weeks of Baseline visit"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent topical or systemic treatments"
-        ]
-      },
-      {
-        "id": "FLR_2428",
-        "nct_id": "NCT06643260",
-        "raw_text": "Treatment with a monoclonal antibody or other biologic agent for psoriasis within 8 weeks for etanercept, adalimumab, or infliximab, or within 12 weeks for all other agents, prior to the Baseline visit;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "treatment with monoclonal antibody or biologic agent for psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "history"
-        ],
-        "TIMEFRAME": [
-          {
-            "relation": "within",
-            "amount": 8,
-            "unit": "weeks",
-            "reference": "prior to Baseline visit for etanercept, adalimumab, infliximab"
-          },
-          {
-            "relation": "within",
-            "amount": 12,
-            "unit": "weeks",
-            "reference": "prior to Baseline visit for all other agents"
-          }
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "no treatment with specified biologics within defined washout periods"
-        ],
-        "IMPACT": [
-          "exclusion due to recent biologic therapy"
-        ]
-      },
-      {
-        "id": "FLR_2427",
-        "nct_id": "NCT06643260",
-        "raw_text": "Treatment with systemic retinoids, systemic corticosteroids, tofacitinib, apremilast, immunosuppressive agents (e.g., methotrexate, cyclosporine), or any other approved drugs for the indication of plaque psoriasis (e.g., deucravacitinib) within 4 weeks of the Baseline visit;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "treatment with systemic retinoids",
-          "systemic corticosteroids",
-          "tofacitinib",
-          "apremilast",
-          "immunosuppressive agents (e.g., methotrexate, cyclosporine)",
-          "other approved drugs for plaque psoriasis (e.g., deucravacitinib)"
-        ],
-        "CONDITION_PATTERN": [
-          "current use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "Baseline visit"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no treatment with listed systemic agents within 4 weeks of Baseline visit"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent systemic therapy"
-        ]
-      },
-      {
-        "id": "FLR_2406",
-        "nct_id": "NCT06380153",
-        "raw_text": "who had used prescription drugs, over-the-counter drugs, health supplements, herbal products or vaccines other than those used to treat renal impairment and other concomitant diseases within 2 weeks before screening.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of prescription drugs",
-          "use of over-the-counter drugs",
-          "use of health supplements",
-          "use of herbal products",
-          "use of vaccines"
-        ],
-        "CONDITION_PATTERN": [
-          "current use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "before screening"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no use except for treatment of renal impairment and other concomitant diseases"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "AMBIGUITY_FLAG": true,
-        "IMPACT": [
-          "exclusion due to recent medication or supplement use"
-        ]
-      },
-      {
-        "id": "FLR_2405",
-        "nct_id": "NCT06380153",
-        "raw_text": "use of any drugs (e.g., inductors-barbiturates, pioglitazone, carbamazepine, phenytoin, glucocorticoids) that induce or inhibit hepatic drug-metabolizing enzymes within 30 days before screening.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of drugs inducing or inhibiting hepatic drug-metabolizing enzymes (e.g., barbiturates, pioglitazone, carbamazepine, phenytoin, glucocorticoids)"
-        ],
-        "CONDITION_PATTERN": [
-          "current use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "liver"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 30,
-          "unit": "days",
-          "reference": "before screening"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no use of enzyme inducers or inhibitors within 30 days before screening"
-        ],
-        "IMPACT": [
-          "exclusion due to drug interaction risk"
-        ]
-      },
-      {
-        "id": "FLR_2385",
-        "nct_id": "NCT06380153",
-        "raw_text": "no new concomitant medications in the 2 weeks before screening, no adjustment in the treatment regimen (including the type, dose, or frequency of medications) for underlying diseases in the 4 weeks before screening.",
-        "EXCLUSION_STRENGTH": "inclusion",
-        "CONDITION_TYPE": [
-          "use of new concomitant medications",
-          "adjustment in treatment regimen for underlying diseases"
-        ],
-        "CONDITION_PATTERN": [
-          "current use",
-          "treatment adjustment"
-        ],
-        "TIMEFRAME": [
-          {
-            "relation": "within",
-            "amount": 2,
-            "unit": "weeks",
-            "reference": "before screening"
-          },
-          {
-            "relation": "within",
-            "amount": 4,
-            "unit": "weeks",
-            "reference": "before screening"
-          }
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "no new concomitant medications within 2 weeks before screening",
-          "no adjustment in treatment regimen within 4 weeks before screening"
-        ],
-        "LOGICAL_OPERATOR": "AND",
-        "IMPACT": [
-          "exclusion due to medication changes"
-        ]
-      },
-      {
-        "id": "FLR_2374",
-        "nct_id": "NCT03997786",
-        "raw_text": "Subject who is expected to require topical therapy, phototherapy, or additional systemic therapy for psoriasis during the trial",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "requirement for topical therapy",
-          "requirement for phototherapy",
-          "requirement for additional systemic therapy for psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "planned use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "psoriasis"
-        ],
-        "TIMEFRAME": {
-          "relation": "during",
-          "amount": null,
-          "unit": null,
-          "reference": "during the trial"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "expected requirement for topical, phototherapy, or systemic therapy during trial"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "AMBIGUITY_FLAG": true,
-        "IMPACT": [
-          "exclusion or monitoring due to anticipated additional therapy"
-        ]
-      },
-      {
-        "id": "FLR_2359",
-        "nct_id": "NCT06610890",
-        "raw_text": "who used any prescription medication, over-the-counter medication, nutrine, herbal medicine product or received a vaccination within 14 days before the trial; Or plan to take non-trial drugs or supplements during the trial; Or use of a drug for less than 5 half-lives before taking the study drug, whichever is longer;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of prescription medication",
-          "use of over-the-counter medication",
-          "use of nutrine",
-          "use of herbal medicine product",
-          "vaccination"
-        ],
-        "CONDITION_PATTERN": [
-          "current use",
-          "planned use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 14,
-          "unit": "days",
-          "reference": "before trial"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no use within 14 days before trial",
-          "no planned use during trial",
-          "no use of drug less than 5 half-lives before study drug"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent or planned medication or vaccination"
-        ]
-      },
-      {
-        "id": "FLR_2356",
-        "nct_id": "NCT06610890",
-        "raw_text": "use of any drugs (e.g., inducers - barbiturates, carbamazepine, phenytoin, glucocorticoids) that inhibit or induce hepatic drug-metabolizing enzymes within 30 days before the test; Inhibitors (SSRI antidepressants, cimetidine, sedative-hypnotics, verapamil, fluoroquinolones, antihistamines);",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of drugs inhibiting or inducing hepatic drug-metabolizing enzymes (e.g., barbiturates, carbamazepine, phenytoin, glucocorticoids)",
-          "use of inhibitors (SSRI antidepressants, cimetidine, sedative-hypnotics, verapamil, fluoroquinolones, antihistamines)"
-        ],
-        "CONDITION_PATTERN": [
-          "current use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "liver"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 30,
-          "unit": "days",
-          "reference": "before test"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no use of listed enzyme inhibitors or inducers within 30 days before test"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to drug interaction risk"
-        ]
-      },
-      {
-        "id": "FLR_2304",
-        "nct_id": "NCT06477237",
-        "raw_text": "Have concurrent or recent use of any biologic agent within the following washout periods: etanercept <28 days; infliximab and adalimumab <60 days; golimumab < 90 days; anti-IL-12/anti-IL-23 or anti-IL-23p19 antibody drugs <6 months; or other anti-psoriatic therapy not listed herein within its 5 half-lives prior to randomization",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of biologic agents (etanercept, infliximab, adalimumab, golimumab, anti-IL-12/anti-IL-23 or anti-IL-23p19 antibody drugs)",
-          "use of other anti-psoriatic therapy"
-        ],
-        "CONDITION_PATTERN": [
-          "current use",
-          "recent use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "psoriasis"
-        ],
-        "TIMEFRAME": [
-          {
-            "relation": "within",
-            "amount": 28,
-            "unit": "days",
-            "reference": "prior to randomization for etanercept"
-          },
-          {
-            "relation": "within",
-            "amount": 60,
-            "unit": "days",
-            "reference": "prior to randomization for infliximab and adalimumab"
-          },
-          {
-            "relation": "within",
-            "amount": 90,
-            "unit": "days",
-            "reference": "prior to randomization for golimumab"
-          },
-          {
-            "relation": "within",
-            "amount": 6,
-            "unit": "months",
-            "reference": "prior to randomization for anti-IL-12/anti-IL-23 or anti-IL-23p19 antibody drugs"
-          },
-          {
-            "relation": "within",
-            "amount": null,
-            "unit": "half-lives",
-            "reference": "prior to randomization for other anti-psoriatic therapy"
-          }
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "no use within specified washout periods"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent biologic or anti-psoriatic therapy"
-        ]
-      },
-      {
-        "id": "FLR_2303",
-        "nct_id": "NCT06477237",
-        "raw_text": "Have previously received any drug that directly targets IL-17 or IL-17 receptor",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "prior use of any drug targeting IL-17 or IL-17 receptor"
-        ],
-        "CONDITION_PATTERN": [
-          "history"
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "no prior use of IL-17 or IL-17 receptor targeting drugs"
-        ],
-        "IMPACT": [
-          "exclusion due to prior targeted therapy"
-        ]
-      },
-      {
-        "id": "FLR_2292",
-        "nct_id": "NCT06477536",
-        "raw_text": "Patients who are experiencing GPP flare",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "experiencing GPP flare"
-        ],
-        "CONDITION_PATTERN": [
-          "current"
-        ],
-        "IMPACT": [
-          "exclusion due to active disease flare"
-        ]
-      },
-      {
-        "id": "FLR_2271",
-        "nct_id": "NCT06648772",
-        "raw_text": "Prior use of lithium-containing agents or antimalarials within 4 weeks (or 5 half-lives, whichever is longer) prior to the first dose of this study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "prior use of lithium-containing agents",
-          "prior use of antimalarials"
-        ],
-        "CONDITION_PATTERN": [
-          "history"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "prior to first dose"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "no prior use within 4 weeks or 5 half-lives, whichever is longer"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent prior treatment"
-        ]
-      },
-      {
-        "id": "FLR_2270",
-        "nct_id": "NCT06648772",
-        "raw_text": "Prior use of antihistamines, potent cytochrome P (CYP) 450 enzyme inhibitors (such as indinavir, nelfinavir, ritonavir, clarithromycin, itraconazole, ketoconazole, nefazodone, saquinavir and telithromycin) or inducers (such as efavirenz, barbiturates, phenytoin sodium, and rifampicin) within 2 weeks before the first dose of this study or these drugs cannot be discontinued during the study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of antihistamines",
-          "use of potent cytochrome P450 enzyme inhibitors",
-          "use of cytochrome P450 enzyme inducers"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use",
-          "current use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "before the first dose of this study"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "discontinuation of these drugs during the study not allowed"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent or ongoing use of interacting drugs"
-        ]
-      },
-      {
-        "id": "FLR_2269",
-        "nct_id": "NCT06648772",
-        "raw_text": "Prior use of ZORYVE® cream or foam; prior use of oral roflumilast or other phosphodiesterase-4 (PDE4) inhibitors (apremilast, etc.) within 4 weeks prior to the first dose of this study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of ZORYVE cream or foam",
-          "use of oral roflumilast",
-          "use of other phosphodiesterase-4 inhibitors"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "prior to the first dose of this study"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent use of specified psoriasis treatments"
-        ]
-      },
-      {
-        "id": "FLR_2268",
-        "nct_id": "NCT06648772",
-        "raw_text": "Prior use of psoralen plus ultraviolet A (PUVA) or ultraviolet B (UVB) phototherapy within 4 weeks before the first dose of this study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of psoralen plus ultraviolet A (PUVA) phototherapy",
-          "use of ultraviolet B (UVB) phototherapy"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "before the first dose of this study"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent phototherapy"
-        ]
-      },
-      {
-        "id": "FLR_2267",
-        "nct_id": "NCT06648772",
-        "raw_text": "Prior use of topical agents for psoriasis treatment or any other agents which may impact efficacy assessment of psoriasis, including but not limited to topical glucocorticoids, vitamin D analogues, benvitimod and prescription emollients or emollients containing additives (e.g., ceramides, hyaluronic acid, urea, or filamentous proteolytic products) or antipruritic ingredients (e.g., menthol, polyhydroxyethanol, pramoxine, lidocaine, prilocaine, capsaicin, naltrexone, N-palmitoylethanolamine, etc.) or a class of drugs (including Chinese herbal formulas, herbs, proprietary Chinese medicines, etc.) containing Chinese medicinal ingredients for topical use (Note: for the treatment of diseases other than psoriasis, except in cases where the use of such medicines is deemed necessary in the medical judgment of the investigator and/or the specialist and would not interfere with the assessment of the study), etc. within 2 weeks.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of topical agents for psoriasis treatment",
-          "use of topical glucocorticoids",
-          "use of vitamin D analogues",
-          "use of benvitimod",
-          "use of prescription emollients or emollients containing additives",
-          "use of antipruritic ingredients",
-          "use of Chinese herbal formulas or proprietary Chinese medicines for topical use"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "prior to first dose"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "discontinuation of these agents unless deemed necessary by investigator and not interfering with study assessment"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "AMBIGUITY_FLAG": true,
-        "IMPACT": [
-          "potential interference with efficacy assessment of psoriasis"
-        ]
-      },
-      {
-        "id": "FLR_2266",
-        "nct_id": "NCT06648772",
-        "raw_text": "Prior use of systemic drugs for psoriasis treatment or any other agents which may impact efficacy assessment of psoriasis, including but not limited to oral or intravenous glucocorticoids, retinoic acids, methotrexate, cyclosporine, and other systemic immunosuppressive agents or a class of drugs (including Chinese herbal formulas, herbs, proprietary Chinese medicines, etc.) containing Chinese medicinal ingredients within 4 weeks of the first dose of this study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of systemic drugs for psoriasis treatment",
-          "use of oral or intravenous glucocorticoids",
-          "use of retinoic acids",
-          "use of methotrexate",
-          "use of cyclosporine",
-          "use of systemic immunosuppressive agents",
-          "use of Chinese herbal formulas or proprietary Chinese medicines containing Chinese medicinal ingredients"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "prior to first dose"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent systemic psoriasis treatments"
-        ]
-      },
-      {
-        "id": "FLR_2246",
-        "nct_id": "NCT07013201",
-        "raw_text": "Other transdermal or cutaneously applied therapy on the palms or soles (except for the use of the participant's own non-medicated emollients) within 1 week prior to baseline.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of transdermal or cutaneously applied therapy"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "palms",
-          "soles"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 1,
-          "unit": "week",
-          "reference": "prior to baseline"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "except participant's own non-medicated emollients"
-        ],
-        "IMPACT": [
-          "exclusion due to recent topical therapy on palms or soles"
-        ]
-      },
-      {
-        "id": "FLR_2245",
-        "nct_id": "NCT07013201",
-        "raw_text": "Use of systemic antibiotics or cutaneously applied antibiotics on the palms or soles within 2 weeks prior to baseline.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of systemic antibiotics",
-          "use of cutaneously applied antibiotics"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "palms",
-          "soles"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "prior to baseline"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent antibiotic use on palms or soles"
-        ]
-      },
-      {
-        "id": "FLR_2244",
-        "nct_id": "NCT07013201",
-        "raw_text": "Cutaneously applied treatment with immunomodulators (e.g., phosphodiesterase-4 [PDE-4] inhibitors, pimecrolimus, tacrolimus, tapinarof, vitamin D3 derivatives) or TCS on the palms or soles within 2 weeks prior to baseline.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "cutaneous treatment with immunomodulators",
-          "use of topical corticosteroids (TCS)"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "palms",
-          "soles"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "prior to baseline"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent immunomodulator or TCS use on palms or soles"
-        ]
-      },
-      {
-        "id": "FLR_2243",
-        "nct_id": "NCT07013201",
-        "raw_text": "Use of systemic or topical janus kinase inhibitors (including delgocitinib/LEO 124249) within 4 weeks prior to baseline.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of systemic janus kinase inhibitors",
-          "use of topical janus kinase inhibitors"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "prior to baseline"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent use of janus kinase inhibitors"
-        ]
-      },
-      {
-        "id": "FLR_2242",
-        "nct_id": "NCT07013201",
-        "raw_text": "Use of tanning beds or phototherapy (e.g., ultraviolet B [UVB], ultraviolet A1 [UVA1], psoralen ultraviolet A [PUVA]) on the palms or soles within 4 weeks prior to baseline.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of tanning beds",
-          "use of phototherapy (UVB, UVA1, PUVA)"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "palms",
-          "soles"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "prior to baseline"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent tanning or phototherapy on palms or soles"
-        ]
-      },
-      {
-        "id": "FLR_2241",
-        "nct_id": "NCT07013201",
-        "raw_text": "Systemic treatment within 4 weeks prior to baseline with immunosuppressive drugs (e.g., methotrexate, cyclosporine, azathioprine), immunomodulating drugs, retinoids (e.g., acitretin), tyrosine kinase inhibitors, phosphodiesterase-4 inhibitors, or corticosteroids (steroid eye drops and inhaled or intranasal steroids in the doses recommended in the product prescribing information for the treatment of allergic conjunctivitis, asthma, or rhinitis are allowed).",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of systemic immunosuppressive drugs",
-          "use of immunomodulating drugs",
-          "use of retinoids",
-          "use of tyrosine kinase inhibitors",
-          "use of phosphodiesterase-4 inhibitors",
-          "use of corticosteroids"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "prior to baseline"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "allowed steroid eye drops and inhaled or intranasal steroids at recommended doses for allergic conjunctivitis, asthma, or rhinitis"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent systemic immunosuppressive or related drug use"
-        ]
-      },
-      {
-        "id": "FLR_2226",
-        "nct_id": "NCT07013201",
-        "raw_text": "Presence or known history of drug-induced PPP (e.g., a new onset of PPP or an exacerbation of PPP from beta blockers, calcium channel blockers, lithium, or biologic therapy including infliximab, adalimumab, or etanercept).",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "drug-induced palmoplantar pustulosis (PPP)"
-        ],
-        "CONDITION_PATTERN": [
-          "presence",
-          "known history"
-        ],
-        "ANATOMICAL_LOCATION": [
-          "palms",
-          "soles"
-        ],
-        "IMPACT": [
-          "exclusion due to drug-induced PPP presence or history"
-        ]
-      },
-      {
-        "id": "FLR_2224",
-        "nct_id": "NCT07013201",
-        "raw_text": "Participants with prior experiences of inadequate response with topical corticosteroid(s) (TCS) or for whom TCS are inadvisable, as judged by the investigators.",
-        "EXCLUSION_STRENGTH": "inclusion",
-        "CONDITION_TYPE": [
-          "inadequate response to topical corticosteroids (TCS)",
-          "TCS inadvisable"
-        ],
-        "CONDITION_PATTERN": [
-          "prior experience"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "IMPACT": [
-          "exclusion based on investigator judgment of TCS response or advisability"
-        ]
-      },
-      {
-        "id": "FLR_2201",
-        "nct_id": "NCT06628206",
-        "raw_text": "No high potency opioid analgesics 2 weeks prior to baseline and during study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of high potency opioid analgesics"
-        ],
-        "CONDITION_PATTERN": [
-          "no use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "prior to baseline and during study"
-        },
-        "IMPACT": [
-          "exclusion due to recent or ongoing use of high potency opioid analgesics"
-        ]
-      },
-      {
-        "id": "FLR_2200",
-        "nct_id": "NCT06628206",
-        "raw_text": "Use of psoriasis treatments: Oral or topical retinoids 2 weeks prior to Day 1 and throughout the study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of oral retinoids",
-          "use of topical retinoids"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use",
-          "current use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": "prior to Day 1 and throughout the study"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent or ongoing use of retinoids"
-        ]
-      },
-      {
-        "id": "FLR_2199",
-        "nct_id": "NCT06628206",
-        "raw_text": "If on prednisone, subject must be on stable dose, not to exceed equivalent of 10mg of prednisone per day (RA and PsA), and dose must be stable for ≥ 4 weeks prior to Day 1.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of prednisone"
-        ],
-        "CONDITION_PATTERN": [
-          "current use",
-          "stable dose"
-        ],
-        "SEVERITY": "dose not to exceed equivalent of 10mg prednisone per day",
-        "TIMEFRAME": {
-          "relation": "stable for",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "prior to Day 1"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "dose must be stable"
-        ],
-        "IMPACT": [
-          "eligibility dependent on stable and limited prednisone dose"
-        ]
-      },
-      {
-        "id": "FLR_2198",
-        "nct_id": "NCT06628206",
-        "raw_text": "Lack of response to > 1 therapeutic agent targeting tumor necrosis factor.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "therapeutic agents targeting tumor necrosis factor"
-        ],
-        "CONDITION_PATTERN": [
-          "lack of response"
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "lack of response to more than one agent"
-        ],
-        "IMPACT": [
-          "exclusion due to lack of response to TNF-targeting therapies"
-        ]
-      },
-      {
-        "id": "FLR_2181",
-        "nct_id": "NCT06628206",
-        "raw_text": "Participants received conventional synthetic disease-modifying antirheumatic drug (csDMARD) therapy for ≥ 3 months and on a stable dose for ≥ 4 weeks prior to the first dose of study drug.",
-        "EXCLUSION_STRENGTH": "inclusion",
-        "CONDITION_TYPE": [
-          "conventional synthetic disease-modifying antirheumatic drug (csDMARD) therapy"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use",
-          "stable dose"
-        ],
-        "TIMEFRAME": {
-          "relation": "for",
-          "amount": 3,
-          "unit": "months",
-          "reference": "prior to first dose"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "stable dose for at least 4 weeks prior to first dose"
-        ],
-        "IMPACT": [
-          "eligibility requires stable csDMARD therapy"
-        ]
-      },
-      {
-        "id": "FLR_2171",
-        "nct_id": "NCT07038720",
-        "raw_text": "Has received any drugs that inhibit or induce hepatic drug-metabolizing enzymes within 7 days before screening; Ingestion of foods or beverages that induce or inhibit liver metabolism enzymes (e.g., grapefruit, etc.) within 48 hours before administration; Inability to comply with the prohibition of ingestion of any foods or beverages containing or metabolically producing caffeine or xanthine (e.g., coffee, tea, chocolate) within 48 hours before the first administration until the completion of the last PK blood sample;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of drugs that inhibit or induce hepatic drug-metabolizing enzymes",
-          "ingestion of foods or beverages that induce or inhibit liver metabolism enzymes",
-          "ingestion of foods or beverages containing or metabolically producing caffeine or xanthine"
-        ],
-        "CONDITION_PATTERN": [
-          "prior use",
-          "prohibition of ingestion"
-        ],
-        "TIMEFRAME": [
-          {
-            "relation": "within",
-            "amount": 7,
-            "unit": "days",
-            "reference": "before screening"
-          },
-          {
-            "relation": "within",
-            "amount": 48,
-            "unit": "hours",
-            "reference": "before administration"
-          },
-          {
-            "relation": "from 48 hours before first administration until completion of last PK blood sample"
-          }
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "prohibition of ingestion of caffeine or xanthine containing foods/beverages during specified period"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "exclusion due to recent use of enzyme affecting drugs or prohibited ingestion affecting metabolism"
-        ]
-      },
-      {
-        "id": "FLR_2146",
-        "nct_id": "NCT07038720",
-        "raw_text": "Has received IL-17 small molecule inhibitors in the past;",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "use of IL-17 small molecule inhibitors"
-        ],
-        "CONDITION_PATTERN": [
-          "past use"
-        ],
-        "IMPACT": [
-          "exclusion due to prior use of IL-17 inhibitors"
-        ]
-      },
-      {
-        "id": "FLR_2121",
-        "nct_id": "NCT06842199",
-        "raw_text": "Eligible subjects must meet all of the following criteria: 4. Subjects need to receive systemic therapy and/or phototherapy.",
-        "EXCLUSION_STRENGTH": "inclusion",
-        "CONDITION_TYPE": [
-          "psoriasis"
-        ],
-        "TREATMENT_REQUIREMENT": [
-          "systemic therapy",
-          "phototherapy"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "eligibility requirement"
-        ]
-      },
-      {
-        "id": "FLR_2115",
-        "nct_id": "NCT06672393",
-        "raw_text": "Prior exposure to TYK2 inhibitors",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "exposure to TYK2 inhibitors"
-        ],
-        "CONDITION_PATTERN": [
-          "prior exposure"
-        ],
-        "IMPACT": [
-          "exclusion or inclusion based on prior treatment"
-        ]
-      },
-      {
-        "id": "FLR_2102",
-        "nct_id": "NCT05442190",
-        "raw_text": "Received phototherapy (including laser) or photodynamic (light activated drug) therapy within 4 weeks prior to the beginning of the study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "phototherapy",
-          "photodynamic therapy"
-        ],
-        "CONDITION_PATTERN": [
-          "received"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "beginning of the study"
-        },
-        "LOGICAL_OPERATOR": "OR",
-        "IMPACT": [
-          "eligibility based on recent treatment"
-        ]
-      },
-      {
-        "id": "FLR_2101",
-        "nct_id": "NCT05442190",
-        "raw_text": "Received systemic psoriasis therapy within 4 weeks prior to the beginning of the study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "systemic psoriasis therapy"
-        ],
-        "CONDITION_PATTERN": [
-          "received"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 4,
-          "unit": "weeks",
-          "reference": "beginning of the study"
-        },
-        "IMPACT": [
-          "eligibility based on recent treatment"
-        ]
-      },
-      {
-        "id": "FLR_2100",
-        "nct_id": "NCT05442190",
-        "raw_text": "Received systemic biologic therapy to treat psoriasis within 12 weeks prior to the beginning of the study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "systemic biologic therapy for psoriasis"
-        ],
-        "CONDITION_PATTERN": [
-          "received"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 12,
-          "unit": "weeks",
-          "reference": "beginning of the study"
-        },
-        "IMPACT": [
-          "eligibility based on recent treatment"
-        ]
-      },
-      {
-        "id": "FLR_2099",
-        "nct_id": "NCT05442190",
-        "raw_text": "Use of topical anti psoriatic therapy within one week prior to the beginning of the study and willing to not use other psoriasis treatments for 4 weeks following completion of the treatment portion of the study.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "topical anti-psoriatic therapy"
-        ],
-        "CONDITION_PATTERN": [
-          "use"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 1,
-          "unit": "week",
-          "reference": "prior to beginning of the study"
-        },
-        "TREATMENT_REQUIREMENT": [
-          "willingness to not use other psoriasis treatments for 4 weeks following completion of treatment portion of study"
-        ],
-        "IMPACT": [
-          "eligibility based on recent and post-study treatment"
-        ]
-      },
-      {
-        "id": "FLR_2093",
-        "nct_id": "NCT06926582",
-        "raw_text": "Prior exposure to TYK2 inhibitors",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "exposure to TYK2 inhibitors"
-        ],
-        "CONDITION_PATTERN": [
-          "prior exposure"
-        ],
-        "IMPACT": [
-          "exclusion or inclusion based on prior treatment"
-        ]
-      },
-      {
-        "id": "FLR_2059",
-        "nct_id": "NCT06143371",
-        "raw_text": "2 weeks for immunizations or drugs known to possibly worsen psoriasis, unless on a stable dose for >12 weeks.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "immunizations",
-          "drugs that may worsen psoriasis"
-        ],
-        "TIMEFRAME": {
-          "relation": "2 weeks",
-          "amount": 2,
-          "unit": "weeks",
-          "reference": ""
-        },
-        "TREATMENT_REQUIREMENT": [
-          "stable dose for >12 weeks"
-        ],
-        "LOGICAL_OPERATOR": "OR",
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "AMBIGUITY_FLAG": true,
-        "IMPACT": [
-          "eligibility related to immunization or drug use"
-        ]
-      },
-      {
-        "id": "FLR_2003",
-        "nct_id": "NCT06833307",
-        "raw_text": "Had a clinically significant flare of psoriasis during the 12 weeks prior to baseline (Week 0).",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "psoriasis flare"
-        ],
-        "CONDITION_PATTERN": [
-          "clinically significant flare"
-        ],
-        "TIMEFRAME": {
-          "relation": "during",
-          "amount": 12,
-          "unit": "weeks",
-          "reference": "prior to baseline (Week 0)"
-        },
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "IMPACT": [
-          "eligibility based on recent disease activity"
-        ]
-      },
-      {
-        "id": "FLR_1986",
-        "nct_id": "NCT05669833",
-        "raw_text": "Use of moderate to high dose glucocorticoids (>10 mg);",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "glucocorticoid use"
-        ],
-        "CONDITION_PATTERN": [
-          "use"
-        ],
-        "SEVERITY": "moderate to high dose (>10 mg)",
-        "IMPACT": [
-          "eligibility based on medication dose"
-        ]
-      },
-      {
-        "id": "FLR_1976",
-        "nct_id": "NCT06641089",
-        "raw_text": "Previous exposure to sonelokimab.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "exposure to sonelokimab"
-        ],
-        "CONDITION_PATTERN": [
-          "previous exposure"
-        ],
-        "IMPACT": [
-          "exclusion or inclusion based on prior treatment"
-        ]
-      },
-      {
-        "id": "FLR_1197",
-        "nct_id": "NCT05642182",
-        "raw_text": "A clinically significant flare of psoriasis within 12 weeks before baseline.",
-        "EXCLUSION_STRENGTH": "mandatory_exclude",
-        "CONDITION_TYPE": [
-          "psoriasis flare"
-        ],
-        "CONDITION_PATTERN": [
-          "clinically significant flare"
-        ],
-        "TIMEFRAME": {
-          "relation": "within",
-          "amount": 12,
-          "unit": "weeks",
-          "reference": "before baseline"
-        },
-        "REQUIRES_CLINICAL_JUDGMENT": true,
-        "IMPACT": [
-          "eligibility based on recent disease activity"
-        ]
-      }
-    ]
-  },
   "CLUSTER_PTH": {
     "cluster_name": "Psoriasis Treatment History and Restrictions",
     "cluster_code": "PTH",
@@ -14310,6 +11366,1616 @@
           }
         ],
         "EXCLUSION_STRENGTH": "mandatory_exclude"
+      }
+    ]
+  },
+  "CLUSTER_DIT": {
+    "cluster_name": "Disease Type",
+    "cluster_code": "DIT",
+    "total_criteria": 61,
+    "primary_question": "What type/variant of your disease do you have?",
+    "answer_type": "autocomplete",
+    "criteria": [
+      {
+        "id": "DIT_2453",
+        "nct_id": "NCT06170840",
+        "raw_text": "Other types of psoriasis were diagnosed during screening, such as guttate psoriasis, erythrodermic psoriasis, generalized pustular psoriasis, arthropathic psoriasis, drug-induced or drug-aggravated psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_2426",
+        "nct_id": "NCT06643260",
+        "raw_text": "Psoriasis limited to erythrodermic, guttate, palmar, plantar, or generalized pustular psoriasis in the absence of plaque psoriasis;",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2372",
+        "nct_id": "NCT03997786",
+        "raw_text": "Subject has predominantly non-plaque forms of psoriasis specifically erythrodermic psoriasis, predominantly pustular psoriasis, medication-induced or medication-exacerbated psoriasis, or new-onset guttate psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2328",
+        "nct_id": "NCT07219420",
+        "raw_text": "Has drug-induced PSO (eg, first onset or current exacerbation due to beta blockers, calcium channel inhibitors, lithium, or tumor necrosis factor [TNF] inhibitor) or drug-induced pustular PSO (eg, acute generalized exanthematous pustulosis, acute localized exanthematous pustulosis)",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "pustular",
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_2327",
+        "nct_id": "NCT07219420",
+        "raw_text": "Has the following: palmoplantar PSO (plaque PSO on palms/soles), guttate PSO, erythrodermic PSO (EP), generalized pustular PSO (GPP), Acrodermatitis continua of Hallopeau (ACH), atopic dermatitis, dyshidrotic eczema or chronic hand eczema.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "palmoplantar"
+        ]
+      },
+      {
+        "id": "DIT_2317",
+        "nct_id": "NCT07033234",
+        "raw_text": "Guttate psoriasis, pustular psoriasis, erythrodermic psoriasis, drug-induced psoriasis, or other diseases that affect the treatment results;",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_2299",
+        "nct_id": "NCT06477237",
+        "raw_text": "Drug-induced psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_2298",
+        "nct_id": "NCT06477237",
+        "raw_text": "Forms of psoriasis other than chronic plaque-type (e.g., pustular, erythrodermic and/or guttate psoriasis) at screening or baseline",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2263",
+        "nct_id": "NCT06648772",
+        "raw_text": "Non-plaque psoriasis (e.g., guttate psoriasis, pustular psoriasis, erythrodermic psoriasis, and arthropathic psoriasis) or drug-induced psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2195",
+        "nct_id": "NCT06628206",
+        "raw_text": "Currently have non-plaque forms of psoriasis e.g. erythrodermic, guttate or pustular with the exception of nail psoriasis which is allowed.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "nail psoriasis",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2125",
+        "nct_id": "NCT06842199",
+        "raw_text": "Exclusion Criteria: 1. The diagnosis was non-plaque psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2109",
+        "nct_id": "NCT06672393",
+        "raw_text": "Diagnosis of non-plaque psoriasis or drug-induced psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2087",
+        "nct_id": "NCT06926582",
+        "raw_text": "Diagnosis of non-plaque psoriasis or drug-induced psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2054",
+        "nct_id": "NCT06143371",
+        "raw_text": "Psoriasis other than a plaque variant.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_2002",
+        "nct_id": "NCT06833307",
+        "raw_text": "Drug-induced psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_2001",
+        "nct_id": "NCT06833307",
+        "raw_text": "Forms of psoriasis other than chronic plaque-type (e.g., pustular, erythrodermic and guttate psoriasis) at Screening or Baseline/randomization.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1993",
+        "nct_id": "NCT07130604",
+        "raw_text": "Erythrodermic psoriasis, pustular psoriasis, guttate psoriasis, reverse psoriasis, drug-induced psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1955",
+        "nct_id": "NCT06077331",
+        "raw_text": "Diagnosis of non-plaque psoriasis or drug-induced psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1917",
+        "nct_id": "NCT06979453",
+        "raw_text": "Participants must not have non-plaque psoriasis (ie, guttate, inverse, pustular, erythrodermic, or drug-induced psoriasis) or any skin condition other than plaque psoriasis that could interfere with assessments of treatment effect at Screening or Day 1.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1871",
+        "nct_id": "NCT06723171",
+        "raw_text": "Exclusion Criteria: 3. Has current drug-induced psoriasis (e.g., a new onset of psoriasis or an exacerbation of psoriasis from beta-blockers, calcium channel blockers, or lithium)",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1870",
+        "nct_id": "NCT06723171",
+        "raw_text": "Exclusion Criteria: 2. Has a non-plaque form of psoriasis (e.g., erythrodermic, guttate, or pustular) at Screening or at time of randomization",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1845",
+        "nct_id": "NCT06620692",
+        "raw_text": "Patients with the following subtype of psoriasis: New onset guttate psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate"
+        ]
+      },
+      {
+        "id": "DIT_1844",
+        "nct_id": "NCT06620692",
+        "raw_text": "Patients with the following subtype of psoriasis: edication-induced or medication-exacerbated psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "unspecified"
+        ]
+      },
+      {
+        "id": "DIT_1843",
+        "nct_id": "NCT06620692",
+        "raw_text": "Patients with the following subtype of psoriasis: Generalized or localized pustular psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "pustular"
+        ]
+      },
+      {
+        "id": "DIT_1842",
+        "nct_id": "NCT06620692",
+        "raw_text": "Patients with the following subtype of psoriasis: Erythrodermic psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "erythrodermic"
+        ]
+      },
+      {
+        "id": "DIT_1788",
+        "nct_id": "NCT07129382",
+        "raw_text": "Forms of psoriasis other than plaque-type (e.g., erythrodermic, pustular, guttate, or drug-induced psoriasis).",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1767",
+        "nct_id": "NCT06058546",
+        "raw_text": "Psoriasis caused by drug-induced factors; combined with non-plaque Psoriasis at screening (such as guttate,arthropathica, pustular, erythrodermic and other types of Psoriasis); The skin lesions are exclusively observed in subjects with specific areas such as the face, scalp, nails, skin folds, glans penis, mucous membranes, palms, and soles.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1766",
+        "nct_id": "NCT06058546",
+        "raw_text": "Psoriasis caused by drug-induced factors; combined with non-plaque Psoriasis at screening (such as guttate,arthropathica, pustular, erythrodermic and other types of Psoriasis); The skin lesions are exclusively observed in subjects with specific areas such as the face, scalp, nails, skin folds, glans penis, mucous membranes, palms, and soles.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1698",
+        "nct_id": "NCT06425549",
+        "raw_text": "Study participant has a presence of guttate, inverse, pustular, or erythrodermic PSO or other dermatological condition that may impact the clinical assessment of PSO",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "inverse"
+        ]
+      },
+      {
+        "id": "DIT_1688",
+        "nct_id": "NCT07029516",
+        "raw_text": "Patients with unrelated nail disorders: onychomycosis, nail psoriasis, genetically induced onychodystrophy.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "nail psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1653",
+        "nct_id": "NCT06506916",
+        "raw_text": "Study participant has a form of PSO other than plaque type (eg, pustular, erythrodermic and guttate PSO, or drug induced PSO)",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1633",
+        "nct_id": "NCT06945107",
+        "raw_text": "Previous diagnosis of drug-induced psoriasis (e.g., psoriasis induced by beta blockers, calcium channel inhibitors, etc.);",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1632",
+        "nct_id": "NCT06945107",
+        "raw_text": "Diagnosed with guttate psoriasis, pustular psoriasis, or erythrodermic psoriasis during screening or at baseline;",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "erythrodermic"
+        ]
+      },
+      {
+        "id": "DIT_1631",
+        "nct_id": "NCT06945107",
+        "raw_text": "Diagnosed with guttate psoriasis, pustular psoriasis, or erythrodermic psoriasis during screening or at baseline;",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "pustular"
+        ]
+      },
+      {
+        "id": "DIT_1630",
+        "nct_id": "NCT06945107",
+        "raw_text": "Diagnosed with guttate psoriasis, pustular psoriasis, or erythrodermic psoriasis during screening or at baseline;",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate"
+        ]
+      },
+      {
+        "id": "DIT_1615",
+        "nct_id": "NCT06640257",
+        "raw_text": "Existence of any of the following medical history or comorbid diseases: drug-induced psoriasis; other active inflammatory diseases or autoimmune diseases; history of organ transplantation; history of lymphocytic proliferation; severe infections, etc.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1606",
+        "nct_id": "NCT04123795",
+        "raw_text": "Study participant has guttate PSO without plaque PSO",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1605",
+        "nct_id": "NCT04123795",
+        "raw_text": "Study participant has generalized pustular or erythrodermic psoriasis (PSO)",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "erythrodermic",
+          "pustular"
+        ]
+      },
+      {
+        "id": "DIT_1602",
+        "nct_id": "NCT04123795",
+        "raw_text": "Study participants aged ≥12 years may alternatively have a diagnosis of moderate to severe mixed guttate/plaque PSO with >50 % to <80 % guttate lesions for ≥3 months, and must meet the same criteria listed above",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1529",
+        "nct_id": "NCT06943950",
+        "raw_text": "Forms of psoriasis other than plaque psoriasis (Guttate psoriasis、erythrodermic psoriasis、Pustular psoriasis、Drug-induced psoriasis).",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1510",
+        "nct_id": "NCT06592274",
+        "raw_text": "Forms of psoriasis other than chronic plaque-type (e.g., pustular, erythrodermic and/or guttate psoriasis) at screening or baseline Drug-induced psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1499",
+        "nct_id": "NCT06299982",
+        "raw_text": "Forms of psoriasis other than chronic plaque-type (e.g., pustular, erythrodermic and/or guttate psoriasis).",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1471",
+        "nct_id": "NCT06542614",
+        "raw_text": "Have other forms of psoriasis other than plaque psoriasis (e.g., guttate psoriasis, generalized pustular psoriasis, erythrodermic psoriasis, arthropathic psoriasis);",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1396",
+        "nct_id": "NCT06973291",
+        "raw_text": "Participant has evidence of nonplaque psoriasis (erythrodermic, pustular, predominantly guttate psoriasis, predominantly inverse, or drug-induced psoriasis). If a participant meets criteria for inclusion based on typical plaque psoriasis presentation, a limited amount of inverse psoriasis is not exclusionary.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "inverse",
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1386",
+        "nct_id": "NCT07090330",
+        "raw_text": "Nonplaque forms of psoriasis (including guttate, erythrodermic, or pustular) or drug-induced psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1355",
+        "nct_id": "NCT06176508",
+        "raw_text": "Non-plaque psoriasis (ie, guttate, inverse, pustular, erythrodermic or drug-induced psoriasis), with the exception of nail psoriasis, which is allowed.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "nail psoriasis",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1336",
+        "nct_id": "NCT07150988",
+        "raw_text": "Forms of psoriasis other than chronic plaque-type;",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1298",
+        "nct_id": "NCT06918743",
+        "raw_text": "Present with any of the following medical history or concomitant diseases: Diagnosis of other types of psoriasis other than plaque psoriasis during subject screening, Such as guttate psoriasis, pustular psoriasis, erythrodermic psoriasis, articular psoriasis, or drug-induced psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1279",
+        "nct_id": "NCT06844799",
+        "raw_text": "Confirmation of other types of psoriasis, including but not limited to guttiform psoriasis, pustular psoriasis, erythrodermic psoriasis, drug-induced exacerbation of psoriasis from the screening period to the time before randomization;",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "unspecified"
+        ]
+      },
+      {
+        "id": "DIT_1257",
+        "nct_id": "NCT06380907",
+        "raw_text": "Other types of psoriasis dominant other than plaque psoriasis (e.g., psoriatic arthritis, pustular, erythrodermic, guttate, palmar, plantar, scalp or nail disease) or the lesion is not eligible for topical treatment only.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1248",
+        "nct_id": "NCT06630559",
+        "raw_text": "Patient diagnosed with forms of psoriasis other than chronic plaque-type or medication-induced psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1195",
+        "nct_id": "NCT05642182",
+        "raw_text": "The forms of psoriasis other than chronic plaque psoriasis (such as drug-induced psoriasis or guttate, erythrodermic, or pustular psoriasis) or if the psoriasis does not meet the criterion of chronicity (defined as a clinically significant flare of psoriasis within 12 weeks before baseline).",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1185",
+        "nct_id": "NCT06863493",
+        "raw_text": "History of current drug-induced PsO or a drug-induced exacerbation of pre-existing psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1175",
+        "nct_id": "NCT04772079",
+        "raw_text": "Other forms of psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "unspecified"
+        ]
+      },
+      {
+        "id": "DIT_1143",
+        "nct_id": "NCT06005532",
+        "raw_text": "4. Drug-induced psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1142",
+        "nct_id": "NCT06005532",
+        "raw_text": "3. Other (other than plaque) forms of psoriasis.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1128",
+        "nct_id": "NCT06846710",
+        "raw_text": "Guttate psoriasis, pustular psoriasis, erythrodermic psoriasis, drug-induced psoriasis, or other diseases that affect the treatment results;",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1094",
+        "nct_id": "NCT07158268",
+        "raw_text": "Current drug-induced psoriasis",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "drug-induced"
+        ]
+      },
+      {
+        "id": "DIT_1093",
+        "nct_id": "NCT07158268",
+        "raw_text": "Non-plaque psoriasis (e.g., erythrodermic, guttate, or pustular psoriasis)",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1085",
+        "nct_id": "NCT06550076",
+        "raw_text": "Participant has developed evidence of non-plaque psoriasis (erythrodermic, pustular, predominantly guttate psoriasis, predominantly inverse, or drug-induced psoriasis) since enrollment in the parent study or Part A.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "inverse",
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      },
+      {
+        "id": "DIT_1061",
+        "nct_id": "NCT06550076",
+        "raw_text": "Participant has evidence of non-plaque psoriasis (erythrodermic, pustular, predominantly guttate psoriasis, predominantly inverse, or drug-induced psoriasis). If a participant meets criteria for inclusion based on typical plaque psoriasis presentation, a limited amount of inverse psoriasis is not exclusionary.",
+        "CONDITION_PATTERN": [
+          "current"
+        ],
+        "EXCLUSION_STRENGTH": "mandatory_exclude",
+        "DISEASE_VARIANT": [
+          "guttate",
+          "erythrodermic",
+          "pustular",
+          "inverse",
+          "drug-induced",
+          "plaque psoriasis"
+        ]
+      }
+    ]
+  },
+  "CLUSTER_DD": {
+    "cluster_name": "Disease Duration",
+    "cluster_code": "DD",
+    "total_criteria": 49,
+    "primary_question": "How long have you had your diagnosed condition?",
+    "answer_type": "autocomplete",
+    "criteria": [
+      {
+        "id": "DD_2448",
+        "nct_id": "NCT06170840",
+        "raw_text": "The patient meets the diagnosis of plaque psoriasis, has a history of plaque psoriasis for ≥ 6 months before randomization, and meets the following conditions.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2419",
+        "nct_id": "NCT06643260",
+        "raw_text": "Duration of psoriasis of at least 12 months;",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 12,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2367",
+        "nct_id": "NCT03997786",
+        "raw_text": "Diagnosis of predominantly plaque psoriasis for ≥6 months (as determined by subject interview and confirmation of diagnosis through physical examination by investigator).",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2321",
+        "nct_id": "NCT07219420",
+        "raw_text": "Have a palmoplantar pustulosis (PPP) diagnosis for at least 24 weeks prior to the Screening Visit",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 24,
+          "unit": "weeks",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2312",
+        "nct_id": "NCT07033234",
+        "raw_text": "Chronic plaque psoriasis for at least 6 months with or without psoriatic arthritis;",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2294",
+        "nct_id": "NCT06477237",
+        "raw_text": "Chronic plaque psoriasis (PSO) for at least 6 months prior to the Randomization.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2256",
+        "nct_id": "NCT06648772",
+        "raw_text": "Clinical diagnosis of plaque psoriasis before the first dose in this study, with a disease duration of ≥ 6 months (for those aged ≥ 12 years) or ≥ 3 months (for those aged 6-11 years) and stable for the last 4 weeks.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2220",
+        "nct_id": "NCT07013201",
+        "raw_text": "Mild to severe PPP current condition defined by: Disease duration of PPP of >6 months before randomisation.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2182",
+        "nct_id": "NCT06628206",
+        "raw_text": "PsA diagnosis of at least 3 months duration prior to the date of first screening with Classification of Psoriatic Arthritis (CASPAR) confirmed diagnosis at Screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 3,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2179",
+        "nct_id": "NCT06628206",
+        "raw_text": "Diagnosis of RA and meeting the 2010 American College of Rheumatology (ACR)/European League Against Rheumatism (EULAR) classification criteria for RA at least 3 months prior to screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 3,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2120",
+        "nct_id": "NCT06842199",
+        "raw_text": "Eligible subjects must meet all of the following criteria: 3. History of plaque psoriasis ≥6 months at baseline.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2104",
+        "nct_id": "NCT06672393",
+        "raw_text": "Diagnosis of plaque psoriasis for at least 6 months",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_2082",
+        "nct_id": "NCT06926582",
+        "raw_text": "Diagnosis of plaque psoriasis for at least 6 months",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1999",
+        "nct_id": "NCT06833307",
+        "raw_text": "Chronic plaque-type psoriasis present for at least 6 months and diagnosed before randomization.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1965",
+        "nct_id": "NCT06641089",
+        "raw_text": "Participants have a confirmed diagnosis of psoriatic arthritis (PsA) per the 2006 Classification for Psoriatic Arthritis (CASPAR) criteria with symptoms for ≥6 months before the Screening Visit.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1950",
+        "nct_id": "NCT06077331",
+        "raw_text": "Diagnosis of plaque psoriasis for at least 6 months",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1941",
+        "nct_id": "NCT06865105",
+        "raw_text": "Participant has a documented clinical diagnosis of PsA with symptom onset at least 6 months prior to the Screening Visit and fulfillment of the Classification Criteria for Psoriatic Arthritis (CASPAR) at Screening Visit.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1908",
+        "nct_id": "NCT06979453",
+        "raw_text": "Participants must have stable plaque psoriasis for 6 months or more prior to Screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1902",
+        "nct_id": "NCT07102888",
+        "raw_text": "History of plaque psoriasis ≥ 3 months.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 3,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1856",
+        "nct_id": "NCT06723171",
+        "raw_text": "Inclusion Criteria: 2. Have a diagnosis of plaque psoriasis (with or without psoriatic arthritis) for at least 6 months before the first administration of study treatment",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1830",
+        "nct_id": "NCT06620692",
+        "raw_text": "Patients who have well diagnosed chronic plaque psoriasis for at least 6 months before the Screening Visit (according to Am Fam Physician. 2013 May 1;87(9):626-633).",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1822",
+        "nct_id": "NCT06100744",
+        "raw_text": "Diagnosis of juvenile psoriatic arthritis (jPsA) according to International League of Associations for Rheumatology criteria for at least 6 months prior to screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1784",
+        "nct_id": "NCT07129382",
+        "raw_text": "Stable plaque psoriasis at screening, defined as no significant flare-ups or morphological changes during the 6 months prior to screening (investigator-assessed).",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1783",
+        "nct_id": "NCT07129382",
+        "raw_text": "Clinically diagnosed with chronic plaque psoriasis, defined as disease duration ≥ 6 months at screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1709",
+        "nct_id": "NCT06807424",
+        "raw_text": "Have a diagnosis of psoriatic arthritis (PsA) for at least 3 months before the first administration of study intervention and meet classification criteria for Psoriatic Arthritis (CASPAR) at screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 3,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1691",
+        "nct_id": "NCT06425549",
+        "raw_text": "Study participant has had a diagnosis of moderate to severe plaque psoriasis (PSO) for at least 3 months prior to the Screening Visit",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 3,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1643",
+        "nct_id": "NCT06506916",
+        "raw_text": "Cohort B only: In addition to the criteria specified above, study participant has a documented diagnosis of adult-onset psoriatic arthritis (PsA) and meets the CASPAR classification criteria for at least 6 months prior to Screening for active PsA and must have ≥1 tender joint count (TJC) out of 68 and ≥1 swollen joint count (SJC) out of 66 at Screening or up to 3 months before Screening (documented evidence)",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1642",
+        "nct_id": "NCT06506916",
+        "raw_text": "Study participant must have: Cohort A and Cohort B: Plaque psoriasis (PSO) diagnosed for at least 6 months prior to the Screening Visit",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1625",
+        "nct_id": "NCT06945107",
+        "raw_text": "Diagnosed with plaque psoriasis for ≥6 months, with or without psoriatic arthritis.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1593",
+        "nct_id": "NCT04123795",
+        "raw_text": "Study participant must have a diagnosis of moderate to severe plaque psoriasis (PSO) for ≥3 months and:",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 3,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1553",
+        "nct_id": "NCT06878404",
+        "raw_text": "Have a diagnosis of psoriatic arthritis (PsA) for at least 3 months before the first administration of study intervention and meet classification criteria for psoriatic arthritis (CASPAR) at screening",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 3,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1521",
+        "nct_id": "NCT06943950",
+        "raw_text": "Subjects with a clinical diagnosis of stable moderate-to-severe plaque psoriasis with a history ≥6 months before randomization.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1504",
+        "nct_id": "NCT06592274",
+        "raw_text": "Chronic plaque psoriasis (PSO) for at least 6 months prior to the randomization.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1463",
+        "nct_id": "NCT06542614",
+        "raw_text": "Clinically diagnosed with stable moderate to severe plaque psoriasis with a history ≥ 6 months (from randomization), and no morphological changes in skin lesions or significant disease outbreaks as assessed by the investigator;",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1392",
+        "nct_id": "NCT06973291",
+        "raw_text": "Participant has stable plaque psoriasis, defined as no significant flare or change in morphology (as assessed by the investigator) in psoriasis, for 6 months before screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1391",
+        "nct_id": "NCT06973291",
+        "raw_text": "Participant has a diagnosis of chronic plaque psoriasis for 6 months prior to the screening visit.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1382",
+        "nct_id": "NCT07090330",
+        "raw_text": "Have a diagnosis of plaque psoriasis for > 6 months",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1349",
+        "nct_id": "NCT06176508",
+        "raw_text": "Has a history of psoriatic arthritis (PsA) for at least 6 months, and meets the Classification Criteria for Psoriatic Arthritis (CASPAR) at screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1292",
+        "nct_id": "NCT06918743",
+        "raw_text": "A history of plaque psoriasis ≥6 months prior to randomization",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1274",
+        "nct_id": "NCT06844799",
+        "raw_text": "Diagnosed plaque psoriasis for at least 6 months before randomization, with or without psoriatic arthritis;",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1253",
+        "nct_id": "NCT06380907",
+        "raw_text": "Clinical diagnosis of psoriasis vulgaris of at least 6 months duration as determined by Investigator via medical records or in medical history obtained from the patient, is currently eligible for topical treatment and meets all the following criteria at screening and baseline.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1247",
+        "nct_id": "NCT06630559",
+        "raw_text": "Patient has had a diagnosis of chronic plaque psoriasis for at least 24 weeks.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 24,
+          "unit": "weeks",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1228",
+        "nct_id": "NCT06641076",
+        "raw_text": "Participants have a confirmed diagnosis of psoriatic arthritis (PsA) per the 2006 Classification for Psoriatic Arthritis (CASPAR) criteria with symptoms for ≥6 months before the Screening Visit.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1169",
+        "nct_id": "NCT04772079",
+        "raw_text": "Plaque psoriasis for at least 6 months.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1134",
+        "nct_id": "NCT06005532",
+        "raw_text": "3. Established clinical diagnosis plaque psoriasis, lasting at least 6 months before the screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1124",
+        "nct_id": "NCT06846710",
+        "raw_text": "Chronic plaque psoriasis for at least 6 months with or without psoriatic arthritis;",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1088",
+        "nct_id": "NCT07158268",
+        "raw_text": "Confirmed diagnosis of plaque psoriasis with a disease duration of at least 26 weeks before the first administration of the study intervention",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 26,
+          "unit": "weeks",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1056",
+        "nct_id": "NCT06550076",
+        "raw_text": "Participant has stable plaque psoriasis defined as no significant flare or change in morphology (as assessed by the investigator) in psoriasis for >=6 months before screening.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
+      },
+      {
+        "id": "DD_1055",
+        "nct_id": "NCT06550076",
+        "raw_text": "Participant has a diagnosis of chronic plaque psoriasis for >=6 months prior to the screening visit.",
+        "CONDITION_TYPE": [
+          "chronic plaque psoriasis",
+          "psoriatic arthritis"
+        ],
+        "EXCLUSION_STRENGTH": "inclusion",
+        "TIMEFRAME": {
+          "relation": "at least",
+          "amount": 6,
+          "unit": "months",
+          "reference": "diagnosis"
+        }
       }
     ]
   }

@@ -7,6 +7,626 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.3.0] - 2026-02-16
+
+### 🔄 Cluster Refactoring — Disease-Agnostic Architecture
+
+Refactored cluster and field names to support multiple diseases (not just psoriasis). This prepares the system for adding new disease types.
+
+### Changed
+
+- **CPD → DD (Disease Duration)**
+  - Cluster renamed from "Current Psoriasis Duration" to "Disease Duration"
+  - 49 criteria updated with new cluster_code
+  - State variables: `cpd_duration` → `dd_duration`, `cpd_unit` → `dd_unit`
+
+- **NPV → DIT (Disease Type)**
+  - Cluster renamed from "Non-Plaque Variant" to "Disease Type"
+  - 61 criteria updated with new cluster_code
+  - State variables: `npv_variant` → `dit_variant`
+
+- **PSORIASIS_VARIANT → DISEASE_VARIANT**
+  - Field renamed in universal-parser-v2.js and FIELD_CATALOG_v2.1.md
+  - Generic examples added for multiple diseases
+
+### Removed
+
+- **FLR (Flare) cluster**
+  - 52 criteria removed from database
+  - Cluster considered too disease-specific for multi-disease support
+
+### Files Modified
+
+**Backend:**
+- `server/parse-utils.js` — CLUSTER_NAMES mapping (removed FLR, NPV→DIT, CPD→DD)
+- `server/routes/parser.js` — FILENAME_TO_CLUSTER, CLUSTER_NAME_TO_CODE, validClusters array
+- `server/config/universal-parser-v2.js` — CLUSTER_PRIMARY_FIELDS, ALL_FIELDS (DISEASE_VARIANT)
+- `server/config/output-schemas.json` — Removed NPV/CPD/FLR schemas, added DD/DIT schemas
+- `server/config/output-validator.js` — Updated validation rules
+- `server/config/FIELD_CATALOG_v2.1.md` — PSORIASIS_VARIANT → DISEASE_VARIANT section
+
+**Frontend:**
+- `src/ClinicalTrialEligibilityQuestionnaire.jsx` — State variables, render functions (renderDITCluster, renderDDCluster), buildSlotFilledResponse
+- `src/services/matcher/ClinicalTrialMatcher.js` — Switch cases: DD→evaluateDuration, DIT→evaluateVariant, removed FLR
+
+**Data:**
+- `src/data/improved_slot_filled_database.json` — CLUSTER_DIT (61), CLUSTER_DD (49), CLUSTER_FLR removed
+
+**Tests:**
+- `src/__tests__/services/ClinicalTrialMatcher.test.js` — Mock database cluster_code, response objects
+
+### Migration Notes
+
+If restoring from backup PRE_CLUSTER_RENAME_20260216-001905:
+- Code expects NEW names (DD, DIT) but backup has OLD names (CPD, NPV, FLR)
+- Must restore BOTH code AND data, or fix mismatch manually
+
+### Technical Details
+
+- Total clusters: 11 → 10
+- All 391 tests passing
+- Backup: `c:\Users\lasko\Downloads\clinical-trial-backups\PRE_CLUSTER_RENAME_20260216-001905\`
+
+---
+
+## [5.2.1] - 2026-02-03
+
+### 🐛 Parser Polling Fix — Cost Display & Download Button
+
+Fixed race condition in Parser Testing UI where cost ($0.00 spent) wasn't updating and Download button didn't appear after parsing completed.
+
+### Fixed
+
+- **Polling useEffect race condition** (`src/components/Parser/ParserPage.jsx`)
+  - Added explicit `fetchJobStatus()` call when job status changes to 'completed'
+  - Ensures final cost value is fetched from backend after job completion
+  - Converted `fetchJobStatus` and `fetchJobResults` to `useCallback` to prevent stale closures
+  - Moved function definitions before useEffect to fix hoisting issues
+
+### Added
+
+- **E2E tests for parser polling** (`e2e/parser-polling.spec.js`)
+  - 4 new E2E tests covering cost updates, download button visibility, results table, and polling behavior
+  - Tests handle API credit scenarios gracefully
+
+- **data-testid attributes** for E2E testing
+  - `job-status`, `cost-display`, `download-button`, `results-section`
+
+### Technical Details
+
+- Root cause: useEffect cleared polling interval immediately when `jobStatus` changed to 'completed', 
+  before async `fetchJobResults()` could update the `results` state
+- Fix ensures final data is fetched AFTER status change is detected
+- Backend was returning correct data all along; issue was frontend race condition
+
+---
+
+## [5.2.0] - 2026-02-02
+
+### 🧪 Parser Testing UI — Full Implementation
+
+Added a complete Parser Testing UI for collaborative criteria parsing testing with model selection, cost estimation, pause/resume capability, and job history tracking.
+
+### Added
+
+- **Parser Testing UI** (`/parser` route)
+  - File upload with drag-and-drop support for JSON criteria files
+  - Model selection: Claude Opus 4, Sonnet 4, Haiku 3.5
+  - Real-time cost and time estimation before parsing
+  - Start/Pause/Resume job controls
+  - Live progress tracking with percentage and cost display
+  - Results table with parsed criteria and validation status
+  - "Skip already parsed" with force-reparse option
+  - Budget limit enforcement
+  - Job history with clickable entries
+  - API usage balance display
+
+- **Backend Parser Routes** (`server/routes/parser.js`)
+  - `GET /api/parser/version` — Parser version info
+  - `POST /api/parser/upload` — Upload and analyze criteria JSON
+  - `POST /api/parser/job/start` — Start parsing job
+  - `POST /api/parser/job/pause` — Pause active job
+  - `POST /api/parser/job/resume` — Resume paused job
+  - `GET /api/parser/job/:jobId/status` — Get job progress
+  - `GET /api/parser/job/:jobId/results` — Get parsed results
+  - `GET /api/parser/history` — Get all job history
+  - `GET /api/parser/balance` — Get API usage balance
+  - `POST /api/parser/estimate` — Calculate cost estimate
+  - `DELETE /api/parser/cache/:criterionId` — Clear criterion cache
+
+- **Database Tables** (SQLite)
+  - `parser_jobs` — Job metadata, status, progress, costs
+  - `parsed_criteria` — Individual parsed criterion results
+  - `api_usage` — Token and cost tracking per API call
+
+- **Parser Version Config** (`server/config/parser-version.js`)
+  - `PARSER_VERSION = '2.2.0'`
+  - `MODEL_PRICING` — Per-model token costs with cache read/write rates
+  - `calculateCostEstimate()` — Pre-parsing cost calculation
+  - `calculateActualCost()` — Post-parsing cost tracking
+
+- **Frontend Tests** (`ParserPage.test.jsx`)
+  - 28 unit/integration tests covering all UI functionality
+  - TDD approach: tests written before implementation
+
+- **Backend Tests** (`parser.test.js`)
+  - 24 API route tests covering all endpoints
+  - Upload, job lifecycle, history, balance, caching tests
+
+- **E2E Tests** (`e2e/parser.spec.js`)
+  - 20 Playwright end-to-end tests
+  - Navigation, file upload, model selection, workflow integration
+
+### Changed
+
+- **App.jsx** — Added `/parser` route with navigation
+- **Navigation** — Parser page includes links to main app and admin dashboard
+
+### Technical Details
+
+| Feature | Implementation |
+|---------|---------------|
+| File Upload | FileReader API (JSDOM compatible) |
+| Job State | In-memory `activeJobs` Map with pause support |
+| Polling | 2-second interval for running jobs |
+| Cost Model | Per-model rates from Anthropic pricing |
+| Cache | SQLite-based criterion-level caching |
+| UUID | `uuid` package for job IDs |
+
+### Test Summary
+
+| Test Type | Count | Status |
+|-----------|-------|--------|
+| Frontend Unit | 391 | ✅ Pass |
+| Backend Unit | 240 | ✅ Pass |
+| E2E (Playwright) | 9/20 | ⚠️ Partial |
+
+---
+
+## [5.1.2] - 2026-02-02
+
+### 🔀 Semicolon Branch Separation & Timeframe Scope Rules — Iteration 2.4
+
+Fixed parsing of compound criteria with semicolons and different timeframe scopes. Treatment events (hospitalization, IV therapy) now correctly go to TREATMENT_HISTORY instead of NESTED_CONDITION.
+
+### Added
+
+- **New Parsing Rules in FIELD_CATALOG v2.2:**
+  - **Rule 1: Semicolon Branch Separation** — Semicolons indicate TOP-LEVEL OR branches with different scopes
+  - **Rule 2: Timeframe Scope** — TIMEFRAME only applies to its grammatical clause
+  - **Rule 3: Treatment vs Condition Classification** — Hospitalization, IV therapy → TREATMENT_HISTORY
+  - **Rule 4: _parsing_notes Field** — Documents scope decisions for complex criteria
+
+- **Validator Functions** (`output-validator.js`)
+  - `detectSemicolonBranches()` — Splits criterion text by semicolons
+  - `classifyTreatmentVsCondition()` — Classifies terms as TREATMENT or CONDITION
+  - `validateTimeframeScope()` — Validates TIMEFRAME is correctly scoped
+  - `validateTreatmentPlacement()` — Detects treatment events incorrectly in NESTED_CONDITION
+
+- **New Tests** (`output-validator.semicolon.test.js`)
+  - 18 tests for semicolon parsing, treatment classification, timeframe scope
+  - Validation tests for correctly vs incorrectly parsed AIC_2319
+
+### Changed
+
+- **FIELD_CATALOG v2.1 → v2.2** — Added critical parsing rules section at top
+
+### Fixed
+
+- **AIC_2319 Parsing** — Previously had hospitalization/IV antibiotics in NESTED_CONDITION.nested_items; now correctly in TREATMENT_HISTORY with timing
+- **TIMEFRAME scope** — Previously applied globally; now documented that 2-month timeframe applies ONLY to hospitalization/IV branch
+
+### Technical Details
+
+| Criterion | Before | After |
+|-----------|--------|-------|
+| hospitalization | NESTED_CONDITION.nested_items | TREATMENT_HISTORY |
+| IV antibiotics | NESTED_CONDITION.nested_items | TREATMENT_HISTORY |
+| TIMEFRAME scope | Global | Per-branch (documented in _parsing_notes) |
+
+---
+
+## [5.1.1] - 2026-02-02
+
+### 🛡️ Ad-Hoc Field Prevention System — Iteration 2.3
+
+Comprehensive system to prevent LLM parser from inventing field names, types, or values not defined in schema.
+
+### Added
+
+- **Ad-Hoc Field Detection Functions** (`output-validator.js`)
+  - `detectAdhocFields()` — Comprehensive detection of all ad-hoc fields
+  - `validateNestedItemsTypes()` — Validates nested_items.type values
+  - `validateTreatmentHistorySubfields()` — Validates TREATMENT_HISTORY subfields
+  - `validateNegationDetectedStructure()` — Validates NEGATION_DETECTED fields
+  - `getValidNestedItemTypes()` — Returns whitelist of valid nested types
+  - `getValidTreatmentHistorySubfields()` — Returns whitelist of valid subfields
+  - `getValidNegationDetectedFields()` — Returns whitelist of valid negation fields
+
+- **Schema Updates** (`output-schemas.json`)
+  - Added `validNestedItemTypes` array: CONDITION_TYPE, ANATOMICAL_LOCATION, SEVERITY, TIMEFRAME, TREATMENT_HISTORY, CONDITION_PATTERN, MEASUREMENT, TREATMENT_REQUIREMENT, EXCEPTION
+  - Added `validTreatmentHistorySubfields` array: treatment, treatment_class, response, timing, confidence, requires_hospitalization, duration, count, route, dose, frequency, unfamiliar_term_flag
+  - Added `validNegationDetectedFields` array: is_negated, negated_term, context, negation_type, interpretation, affected_fields, parsing_note
+  - Updated AIC cluster optional fields to include all valid fields
+  - Added TREATMENT_HISTORY schema with complete subfield definitions
+  - Updated NEGATION_DETECTED schema with new fields (backwards compatible)
+
+- **Reference Lists Updates** (`reference-lists.json`)
+  - Added `valid_nested_item_types`
+  - Added `valid_treatment_history_subfields`
+  - Added `valid_negation_detected_fields`
+
+- **FIELD_CATALOG Updates** (`FIELD_CATALOG_v2.1.md`)
+  - Documented valid `nested_items.type` values with examples
+  - Documented forbidden ad-hoc types (infection_category, requirement)
+  - Updated NEGATION_DETECTED format with complete field list
+  - Added v2.2 field tables
+
+- **New Tests** (`output-validator.adhoc.test.js`)
+  - 16 tests covering all ad-hoc detection scenarios
+  - Integration test validates real AIC output
+  - Detects: unknown top-level fields, ad-hoc nested types, undefined subfields
+
+### Detected Ad-Hoc Fields in AIC Output
+
+The following ad-hoc types invented by LLM were correctly detected:
+- `infection_category` → Should use `CONDITION_TYPE`
+- `requirement` → Should use `TREATMENT_REQUIREMENT`
+
+### Technical Details
+
+- Backend tests: 206 passing (+16 new)
+- Implementation follows TDD workflow
+- Implementation Contract created and fulfilled
+
+---
+
+## [5.1.0] - 2026-02-02
+
+### 🚀 Parser Infrastructure — Iteration 2.2
+
+Major improvements to the 100% LLM criteria parser with cost optimization, file organization, and quality validation.
+
+### Added
+
+- **Anthropic Prompt Caching** — 70% cost reduction on batch parsing
+  - System prompt (~75KB FIELD_CATALOG) now cached via `cache_control: { type: 'ephemeral' }`
+  - First API call creates cache, subsequent calls within 5 minutes use cached prompt
+  - New tests: `ClaudeClient.promptCache.test.js` (5 tests)
+  - Expected savings: ~$1.40 per 30-criterion batch
+
+- **Disease-Based File Organization**
+  - Output now goes to `server/data/{disease}/CLUSTER_{code}.json`
+  - One file per cluster per disease (no duplicates)
+  - Automatic backup before overwriting existing files
+  - New utility module: `server/parse-utils.js`
+  - New tests: `parse-utils.test.js` (12 tests)
+
+- **Cross-Criterion Consistency Validation**
+  - `validateConsistency()` checks ALL fields for parsing consistency
+  - `findSimilarCriteria()` finds 3 similar criteria for comparison
+  - Flags when same patterns are parsed differently
+  - 9 consistency rules covering: CONDITION_PATTERN, SEVERITY, LOGICAL_OPERATOR, REQUIRES_CLINICAL_JUDGMENT, EXCEPTION_CONDITION, NEGATION_DETECTED
+  - New tests: `output-validator.consistency.test.js` (16 tests)
+
+### Removed
+
+- **Duplicate Files Cleanup**
+  - Deleted `slot-filled-cmb-clean.json` (legacy format)
+  - Deleted `slot-filled-cmb-output-clean.json` (duplicate)
+
+### Technical Details
+
+- Backend tests: 190 passing
+- Frontend tests: 363 passing
+- Total new tests: 33 tests added
+
+### Validator Integration (2026-02-02)
+
+- **Output Validator Integration into Parser Route**
+  - Parser route (`/api/parser/criterion`) now calls `validateCriterion()` automatically
+  - All optional fields are now added with proper defaults:
+    - Array fields: `[]` (MEASUREMENTS, TREATMENT_HISTORY, PSORIASIS_VARIANT)
+    - Boolean fields: `false` (REQUIRES_CLINICAL_JUDGMENT, AMBIGUITY_FLAG, SUBJECTIVE_ESTIMATE)
+    - Unit fields: `'years'` (AGE_UNIT), `'kg'` (WEIGHT_UNIT)
+    - Object fields: `null` (NESTED_CONDITION, NEGATION_DETECTED, TIMEFRAME, EXCEPTION_CONDITION)
+  - Ensures consistent field presence across all parsed criteria
+  - 40 validator tests + 16 consistency tests passing
+
+- **AIC Cluster Parsed (30/30 criteria)**
+  - Cluster: Active Infection History Criteria
+  - Output file: `server/data/slot-filled-aic-output.json`
+  - Infection-related exclusion criteria for clinical trials
+
+- **Reference Lists Updated**
+  - Added: `herpes zoster`, `herpes simplex`, `herpes` to `base_medical_terms`
+
+---
+
+## [5.0.7] - 2026-01-27
+
+### 🔧 AI Response Truncation Fix & Dropdown UI
+
+Fixed critical bug where AI-generated treatment questions failed due to response truncation.
+
+### Fixed
+
+- **AI Response Truncation** - Increased `max_tokens` from 1024 to 2048 in ClaudeClient.js
+  - Claude API responses were being cut off mid-JSON, causing parse failures
+  - Symptom: "AI Configuration Required" error despite valid API key
+  - Root cause: Complex JSON responses with slotMapping exceeded 1024 tokens
+
+- **Markdown Code Block Parsing** - Handle responses without closing backticks
+  - Added fallback parsing for `\`\`\`json` blocks that don't close properly
+  - More robust JSON extraction from AI responses
+
+### Changed
+
+- **Radio → Dropdown Conversion** - All follow-up questions now render as dropdowns
+  - Changed `type: 'radio'` to render as `<select>` elements
+  - More space-efficient UI for mobile and compact displays
+  - Backend post-processing ensures no `type: 'text'` questions
+
+### Added
+
+- **TDD Tests for Dropdown Rendering** (4 tests)
+  - `dropdownRendering.test.jsx` - Verifies radio/select types render as dropdowns
+  - Tests for proper option rendering and text input fields
+
+---
+
+## [5.0.6] - 2026-01-27
+
+### 🗄️ Cache Parity & Structured Questions
+
+Enhanced cache management with database persistence for conditions and structured question format with slot mapping.
+
+### Added
+
+- **Cache Parity for Conditions (CMB Cluster)**
+  - `generateConditionFollowUpQuestions()` now stores to SQLite DB cache (matching PTH behavior)
+  - Uses `condition:{conditionType}` prefix to avoid collision with treatment cache
+  - DB cache lookup before generating new questions
+  - Persists across server restarts
+
+- **Version-Based Cache Invalidation**
+  - New `app_version` table in SQLite to track application version
+  - `checkAndInvalidateCache(currentVersion)` function clears all caches when version changes
+  - Ensures stale AI responses are cleared on code updates
+
+- **Structured Questions with Slot Mapping**
+  - `deriveTimingOptions(criteria)` extracts timeframe boundaries from matched criteria
+  - Generates options like "Currently taking", "Stopped within last 12 weeks", etc.
+  - `slotMapping` field maps option labels to slot-filled field values
+  - `postProcessQuestions()` ensures all questions have valid types (no `text` type)
+  - `getDefaultQuestionsWithSlotMapping()` replaces `getDefaultQuestions()`
+
+- **New Test Files**
+  - `server/__tests__/services/FollowUpGenerator.cache.test.js` (7 tests)
+  - `server/__tests__/services/FollowUpGenerator.structured.test.js` (8 tests)
+
+### Changed
+
+- **AI Prompt Updated** to require `slotMapping` in response format
+- **Backend vitest.config.js** - Added `fileParallelism: false` to prevent database contention
+- **Cache prefixes standardized**: `treatment:{drugClass}` and `condition:{conditionType}`
+
+### Fixed
+
+- **Cache inconsistency** - CMB (conditions) cache now persists in DB like PTH (treatments)
+- **Test isolation** - Sequential test file execution prevents SQLite contention
+- **Function name error** - Fixed `getDefaultQuestions is not defined` for unknown drugs
+
+### Results
+
+| Feature | Before | After |
+|---------|--------|-------|
+| CMB Cache Persistence | Memory only | Memory + SQLite DB |
+| PTH Cache Persistence | Memory + SQLite DB | Memory + SQLite DB |
+| Cache Invalidation | Manual only | Automatic on version change |
+| Question Format | `text` type allowed | `select`/`radio` only |
+| Slot Mapping | Not included | Included for all questions |
+
+---
+
+## [5.0.5] - 2026-01-25
+
+### 🔍 Comprehensive Drug Criteria Search
+
+Enhanced drug-to-criteria matching with three-level search terms (drug name, class, and generic category).
+
+### Added
+
+- **`getGenericSearchTerms()` function** (`DrugCategoryResolver.js`)
+  - Returns higher-level classification terms for each drug type
+  - Biologics: "biologic", "biologic agent", "biological therapy", "monoclonal antibody", "antibody", "mAb"
+  - bDMARDs: "bDMARD", "DMARD", "biologic DMARD"
+  - csDMARDs: "csDMARD", "conventional DMARD", "conventional synthetic DMARD"
+  - Small molecules: "small molecule", "targeted synthetic", "tsDMARD"
+  - Immunosuppressants: "immunosuppressive", "immunosuppressant"
+
+- **Unit Tests** (`server/__tests__/services/DrugCategoryResolver.test.js`)
+  - Test: `resolveDrugCategory()` for adalimumab, secukinumab, methotrexate
+  - Test: `getClassSearchTerms()` for TNF, IL-17 inhibitors
+  - Test: `getGenericSearchTerms()` returns correct terms per drug type
+  - Test: Small molecules do NOT include biologic terms
+  - Test: Unknown drugs return empty array
+  - **Total: 12 new tests (all passing)**
+
+### Changed
+
+- **`findMatchingCriteria()` in `FollowUpGenerator.js`**
+  - Now uses all three search term levels: name + class + generic
+  - Deduplicates search terms with `[...new Set()]`
+  - Logs term count for debugging (e.g., "23 terms" for adalimumab)
+
+### Fixed
+
+- **Cluster-Scoped Search** - Treatment follow-ups now ONLY search CLUSTER_PTH (not FLR or CMB)
+
+### Results
+
+| Drug | Search Terms | Matched Criteria |
+|------|--------------|-----------------|
+| adalimumab | 23 | 10 (PTH_005, PTH_009, PTH_012, PTH_013, PTH_019, PTH_020, PTH_021, PTH_025, PTH_027, PTH_030) |
+| methotrexate | 9 | 3 (PTH_013, PTH_017, PTH_029) |
+| IL-17A inhibitor | 6 | 2 |
+
+### Verified
+
+- ✅ All 75 backend tests passing
+- ✅ All 345 frontend tests passing
+- ✅ TDD workflow followed: tests failed first, then implemented
+- ✅ Documentation updated (lesson learned, architecture guide)
+
+---
+
+## [5.0.4] - 2026-01-25
+
+### 🔧 Fixed Treatment Criterion IDs Prompt
+
+**Issue**: AI prompt inconsistency prevented criterion IDs from being reliably included in treatment follow-up questions.
+
+### Fixed
+
+- **Prompt Inconsistency in `FollowUpGenerator.js`** (line 169)
+  - **Before**: JSON example showed `criterionIds` array but instruction said `criterionId` (singular)
+  - **After**: Both example and instruction now consistently request `criterionIds` array
+  - **Impact**: Claude AI now correctly includes `criterionIds: ["PTH_XXXX", "PTH_YYYY"]` in treatment questions
+
+### Added
+
+- **Integration Tests** (`server/__tests__/services/FollowUpGenerator.treatmentCriteria.test.js`)
+  - Test: Database loading from CLUSTER_PTH
+  - Test: Criteria filtering by TREATMENT_TYPE/TREATMENT_PATTERN
+  - Test: criterionIds in AI responses
+  - Test: Criteria context in AI prompts
+  - Test: aiGenerated:false blocking behavior
+  - **Total: 5 new tests (all passing)**
+
+### Technical Details
+
+**Root Cause**: Mixed messaging in AI prompt
+```javascript
+// Line 163: Shows array format
+"criterionIds": ["PTH_XXXX", "PTH_YYYY"]
+
+// Line 169: Asked for singular (INCONSISTENT!)
+"include the 'criterionId' field"
+```
+
+**Solution**: Updated instruction to match example format
+```javascript
+"include the 'criterionIds' field as an array with ALL relevant criterion IDs"
+```
+
+### Verified
+
+- ✅ All 404 tests passing (59 backend + 345 frontend)
+- ✅ Database loading logic confirmed working (loads 7 criteria for adalimumab)
+- ✅ Prompt now consistently requests array format
+- ✅ Backward compatibility preserved (normalization in ClaudeClient)
+
+### Notes
+
+- **Discovery**: Database loading was ALREADY implemented correctly
+- **Issue**: Only prompt wording was inconsistent, causing AI confusion
+- **Impact**: Treatment questions should now include criterion IDs like conditions already do
+
+---
+
+## [5.0.3] - 2026-01-25
+
+### 🎯 Enhanced AI Follow-Up Questions
+
+AI-generated follow-up questions now support referencing **multiple related criteria** with a single question.
+
+### Added
+
+- **Multiple Criterion IDs Support** (Backend + Frontend)
+  - `ClaudeClient.js`: Normalizes `criterionId` to `criterionIds` array automatically
+  - `FollowUpGenerator.js`: AI prompts request `criterionIds` array for each question
+  - `App.jsx`: Report displays multiple IDs as "Criteria: ID1, ID2, ID3"
+  - Backward compatible with old single-ID format
+
+- **Integration Tests** (`src/__tests__/integration/multipleCriterionIds.test.jsx`)
+  - Test: Multiple IDs in CMB cluster (conditions)
+  - Test: Multiple IDs in PTH cluster (treatments)
+  - Test: Backward compatibility with old format
+  - Test: Graceful handling of missing IDs
+  - **Total: 4 new tests**
+
+### Changed
+
+- AI can now consolidate related criteria intelligently
+  - Example: "gastritis for 2 years" + "gastritis for 23 months" → ONE question: "How long have you had gastritis?"
+  - Question labeled with BOTH criterion IDs: `(Criteria: CMB_2391, CMB_2392)`
+
+### Verified
+
+- ✅ All 345 tests passing (341 existing + 4 new)
+- ✅ Backend normalization handles both old and new formats
+- ✅ Frontend report generation supports arrays
+- ✅ No breaking changes to existing functionality
+
+---
+
+## [5.0.2] - 2026-01-25
+
+### 🔴 Critical Fixes + Enhanced Matching
+
+Investigation and fix of clinical trial evaluation anomalies based on code simulation analysis.
+
+### Added
+
+- **Double-Negative Weight Parsing** (`ClinicalTrialMatcher.js`)
+  - New `#parseWeightFromRawText()` method to parse criteria without slot-filled fields
+  - Pattern detection: "must not weigh < X kg", "weighing ≤ X kg", "weighing ≥ X kg"
+  - Logic inversion for double-negatives in exclusion criteria
+  - Fixes BMI_1916 (NCT06979453) and NCT04772079 weight criteria bugs
+
+- **Enhanced Synonym Matching** (`utils/array.js`, `medical-synonyms.json`)
+  - Partial matching support in `arraysOverlap()` for compound medical terms
+  - Substring matching and word-level matching (>3 chars)
+  - New cancer-related synonyms: "malignant tumors", "breast cancer", "lung cancer", etc.
+  - Fixes cancer exclusion matching (Issues 2e/4: NCT07150988)
+
+- **Improved Report Formatting** (`App.jsx`)
+  - Criterion IDs now displayed in all report sections
+  - Criterion types shown (Inclusion/Exclusion/Mandatory Exclusion)
+  - Updated 3 sections: non-exact matches, flagged criteria, failed/matched criteria
+  - Better traceability and debugging
+
+- **Documentation Updates** (`ARCHITECTURE_AND_MATCHING_GUIDE.md`)
+  - New section: "Complex Criteria Handling" with OR-logic documentation
+  - New section: "Weight Criteria with Double-Negatives"
+  - Documented AI fallback behavior for OR-logic criteria
+
+- **Investigation Documentation** (7 files)
+  - Complete investigation package with factual code simulation
+  - Implementation plan and analysis documents
+
+### Fixed
+
+- **Issue 2a:** 71kg patients incorrectly excluded by "must not weigh < 30kg" criteria
+- **Issue 2e/4:** "breast cancer" now properly matches "malignant tumors" exclusion criteria
+- **Issue 1:** Reports missing criterion IDs and types
+
+### Changed
+
+- `arraysOverlap()` signature: 3rd parameter can now be boolean `true` for partial matching
+- `#evaluateComorbidity()` now uses partial matching for condition arrays
+- `medical-synonyms.json` version bumped to 1.0.1
+
+### Verified
+
+- Investigation based on actual code simulation (no mocks)
+- 7 issues analyzed with factual outputs
+- 3 critical/high priority issues fixed
+- 3 issues confirmed working correctly
+
+---
+
 ## [5.0.1] - 2026-01-20
 
 ### 🔧 Cache Key Collision Fix

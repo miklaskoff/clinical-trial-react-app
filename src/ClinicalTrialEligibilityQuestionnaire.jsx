@@ -7,12 +7,12 @@ import React, { useState, useEffect } from 'react';
  * 
  * This questionnaire systematically evaluates patient eligibility across 9 clusters:
  * 1. Comorbid Conditions (CMB)
- * 2. Psoriasis Treatment History (PTH)
+ * 2. Treatment History (PTH)
  * 3. Active Infection History (AIC)
  * 4. Affected Area and Organs (AAO)
  * 5. Age-Based Eligibility (AGE)
- * 6. Non-Plaque Psoriasis Variants (NPV)
- * 7. Chronic Plaque Psoriasis Duration (CPD)
+ * 6. Disease Type (DIT)
+ * 7. Disease Duration (DD)
  * 8. Severity Scores (SEV)
  * 9. Weight and BMI (BMI)
  */
@@ -20,7 +20,7 @@ import React, { useState, useEffect } from 'react';
 // ==============================================================================
 // IMPORT SLOT-FILLED DATABASE
 // ==============================================================================
-import SLOT_FILLED_DATABASE from './data/slot-filled-database.json';
+import SLOT_FILLED_DATABASE from './data/improved_slot_filled_database.json';
 
 // ==============================================================================
 // UTILITY FUNCTIONS
@@ -78,7 +78,7 @@ class SlotFilledResponseBuilder {
   }
 
   addComorbidCondition(conditionType, pattern, severity, timeframe, location) {
-    if (!this.responses.CMB) this.responses.CMB = [];
+    if (!this.responses.CMB) {this.responses.CMB = [];}
     
     this.responses.CMB.push({
       CONDITION_TYPE: conditionType,
@@ -90,7 +90,7 @@ class SlotFilledResponseBuilder {
   }
 
   addTreatmentHistory(treatmentType, pattern, timeframe, drugClassification) {
-    if (!this.responses.PTH) this.responses.PTH = [];
+    if (!this.responses.PTH) {this.responses.PTH = [];}
     
     this.responses.PTH.push({
       TREATMENT_TYPE: treatmentType,
@@ -101,7 +101,7 @@ class SlotFilledResponseBuilder {
   }
 
   addInfectionHistory(infectionType, pattern, severity, timeframe, treatment) {
-    if (!this.responses.AIC) this.responses.AIC = [];
+    if (!this.responses.AIC) {this.responses.AIC = [];}
     
     this.responses.AIC.push({
       INFECTION_TYPE: infectionType,
@@ -113,7 +113,7 @@ class SlotFilledResponseBuilder {
   }
 
   addAffectedArea(measurementType, value, threshold) {
-    if (!this.responses.AAO) this.responses.AAO = {};
+    if (!this.responses.AAO) {this.responses.AAO = {};}
     
     this.responses.AAO[measurementType] = {
       value: value,
@@ -125,19 +125,19 @@ class SlotFilledResponseBuilder {
     this.responses.AGE = { age: age };
   }
 
-  setPsoriasisVariant(variant) {
-    this.responses.NPV = { variant: variant };
+  setDiseaseVariant(variant) {
+    this.responses.DIT = { variant: variant };
   }
 
   setDiseaseDuration(duration, unit) {
-    this.responses.CPD = { 
+    this.responses.DD = { 
       duration: duration,
       unit: unit
     };
   }
 
   setSeverityScore(scoreType, value) {
-    if (!this.responses.SEV) this.responses.SEV = {};
+    if (!this.responses.SEV) {this.responses.SEV = {};}
     this.responses.SEV[scoreType] = value;
   }
 
@@ -347,6 +347,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             conditionName: data.conditionName || conditionName,
             conditionType: data.conditionType || 'medical condition',
             questions: data.questions || [],
+            matchedCriteriaIds: data.matchedCriteriaIds || [], // Criterion IDs from CMB cluster search
             source: data.source || 'backend',
             matchingCriteriaCount: data.matchingCriteriaCount || 0,
             aiGenerated: data.aiGenerated !== undefined ? data.aiGenerated : true  // Track if AI generated
@@ -390,6 +391,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             drugName: treatmentName,
             drugClass: data.drugClass || 'unknown',
             questions: data.questions || [],
+            matchedCriteriaIds: data.matchedCriteriaIds || [], // Criterion IDs from PTH cluster search
             source: data.source || 'backend',
             aiGenerated: data.aiGenerated !== undefined ? data.aiGenerated : true  // Track if AI generated
           }
@@ -440,15 +442,15 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
   const [age_value, setAge_value] = useState('');
   
   // ===========================================================================
-  // CLUSTER 6: NON-PLAQUE PSORIASIS VARIANTS (NPV)
+  // CLUSTER 6: DISEASE TYPE (DIT)
   // ===========================================================================
-  const [npv_variant, setNpv_variant] = useState('');
+  const [dit_variant, setDit_variant] = useState('');
   
   // ===========================================================================
-  // CLUSTER 7: CHRONIC PLAQUE PSORIASIS DURATION (CPD)
+  // CLUSTER 7: DISEASE DURATION (DD)
   // ===========================================================================
-  const [cpd_duration, setCpd_duration] = useState('');
-  const [cpd_unit, setCpd_unit] = useState('months');
+  const [dd_duration, setDd_duration] = useState('');
+  const [dd_unit, setDd_unit] = useState('months');
   
   // ===========================================================================
   // CLUSTER 8: SEVERITY SCORES (SEV)
@@ -514,16 +516,16 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
       component: renderAGECluster
     },
     {
-      code: 'NPV',
-      name: 'Non-Plaque Psoriasis Variants',
-      primary_question: 'What form of psoriasis do you have?',
-      component: renderNPVCluster
+      code: 'DIT',
+      name: 'Disease Type',
+      primary_question: 'What type/variant of your disease do you have?',
+      component: renderDITCluster
     },
     {
-      code: 'CPD',
-      name: 'Chronic Plaque Psoriasis Duration Criteria',
-      primary_question: 'How long have you had psoriasis or psoriatic arthritis?',
-      component: renderCPDCluster
+      code: 'DD',
+      name: 'Disease Duration',
+      primary_question: 'How long have you had your diagnosed condition?',
+      component: renderDDCluster
     },
     {
       code: 'SEV',
@@ -726,12 +728,13 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                 <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
                   {question.text || question}
                 </label>
-                {question.type === 'select' && question.options ? (
+                {/* Render both 'select' and 'radio' type questions as dropdowns for space efficiency */}
+                {(question.type === 'select' || question.type === 'radio') && question.options ? (
                   <select
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
                       const newDetails = { ...cmb_conditionDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
                       setCmb_conditionDetails(newDetails);
                     }}
@@ -748,7 +751,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
                       const newDetails = { ...cmb_conditionDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
                       setCmb_conditionDetails(newDetails);
                     }}
@@ -775,8 +778,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                   checked={details.pattern?.includes('current') || false}
                   onChange={(e) => {
                     const newDetails = { ...cmb_conditionDetails };
-                    if (!newDetails[idx]) newDetails[idx] = { pattern: [] };
-                    if (!newDetails[idx].pattern) newDetails[idx].pattern = [];
+                    if (!newDetails[idx]) {newDetails[idx] = { pattern: [] };}
+                    if (!newDetails[idx].pattern) {newDetails[idx].pattern = [];}
                     
                     if (e.target.checked) {
                       newDetails[idx].pattern = [...newDetails[idx].pattern, 'current'];
@@ -794,8 +797,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                   checked={details.pattern?.includes('history') || false}
                   onChange={(e) => {
                     const newDetails = { ...cmb_conditionDetails };
-                    if (!newDetails[idx]) newDetails[idx] = { pattern: [] };
-                    if (!newDetails[idx].pattern) newDetails[idx].pattern = [];
+                    if (!newDetails[idx]) {newDetails[idx] = { pattern: [] };}
+                    if (!newDetails[idx].pattern) {newDetails[idx].pattern = [];}
                     
                     if (e.target.checked) {
                       newDetails[idx].pattern = [...newDetails[idx].pattern, 'history'];
@@ -822,7 +825,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details.timeframe_amount || ''}
                     onChange={(e) => {
                       const newDetails = { ...cmb_conditionDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx].timeframe_amount = e.target.value;
                       setCmb_conditionDetails(newDetails);
                     }}
@@ -832,7 +835,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details.timeframe_unit || 'weeks'}
                     onChange={(e) => {
                       const newDetails = { ...cmb_conditionDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx].timeframe_unit = e.target.value;
                       setCmb_conditionDetails(newDetails);
                     }}
@@ -856,7 +859,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                 value={details.severity || 'none_specified'}
                 onChange={(e) => {
                   const newDetails = { ...cmb_conditionDetails };
-                  if (!newDetails[idx]) newDetails[idx] = {};
+                  if (!newDetails[idx]) {newDetails[idx] = {};}
                   newDetails[idx].severity = e.target.value;
                   setCmb_conditionDetails(newDetails);
                 }}
@@ -1058,12 +1061,13 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                 <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
                   {question.text || question}
                 </label>
-                {question.type === 'select' && question.options ? (
+                {/* Render both 'select' and 'radio' type questions as dropdowns for space efficiency */}
+                {(question.type === 'select' || question.type === 'radio') && question.options ? (
                   <select
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
                       const newDetails = { ...pth_treatmentDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
                       setPth_treatmentDetails(newDetails);
                     }}
@@ -1080,7 +1084,7 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
                     value={details[`dynamic_${qIdx}`] || ''}
                     onChange={(e) => {
                       const newDetails = { ...pth_treatmentDetails };
-                      if (!newDetails[idx]) newDetails[idx] = {};
+                      if (!newDetails[idx]) {newDetails[idx] = {};}
                       newDetails[idx][`dynamic_${qIdx}`] = e.target.value;
                       setPth_treatmentDetails(newDetails);
                     }}
@@ -1092,92 +1096,6 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             ))}
           </div>
         )}
-        
-        {/* Default questions (always shown) */}
-        {/* Pattern: Currently using or used previously? */}
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-            Are you currently using this treatment?
-          </label>
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            <input
-              type="radio"
-              name={`pattern_${idx}`}
-              value="ongoing"
-              checked={details.pattern === 'ongoing'}
-              onChange={(e) => {
-                const newDetails = { ...pth_treatmentDetails };
-                if (!newDetails[idx]) newDetails[idx] = {};
-                newDetails[idx].pattern = e.target.value;
-                setPth_treatmentDetails(newDetails);
-              }}
-            />
-            {' '}Yes, currently using
-          </label>
-          <label style={{ display: 'block' }}>
-            <input
-              type="radio"
-              name={`pattern_${idx}`}
-              value="used previously"
-              checked={details.pattern === 'used previously'}
-              onChange={(e) => {
-                const newDetails = { ...pth_treatmentDetails };
-                if (!newDetails[idx]) newDetails[idx] = {};
-                newDetails[idx].pattern = e.target.value;
-                setPth_treatmentDetails(newDetails);
-              }}
-            />
-            {' '}No, used previously
-          </label>
-        </div>
-        
-        {/* Timeframe (if used previously) */}
-        {details.pattern === 'used previously' && (
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-              When did you last use this treatment?
-            </label>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <input
-                type="number"
-                placeholder="Number"
-                value={details.timeframe_weeks || ''}
-                onChange={(e) => {
-                  const newDetails = { ...pth_treatmentDetails };
-                  if (!newDetails[idx]) newDetails[idx] = {};
-                  newDetails[idx].timeframe_weeks = e.target.value;
-                  setPth_treatmentDetails(newDetails);
-                }}
-                style={{ width: '80px', padding: '6px' }}
-              />
-              <span>weeks ago</span>
-            </div>
-          </div>
-        )}
-        
-        {/* Treatment Response */}
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontWeight: '500', display: 'block', marginBottom: '8px' }}>
-            How did you respond to this treatment?
-          </label>
-          <select
-            value={details.response || 'not_specified'}
-            onChange={(e) => {
-              const newDetails = { ...pth_treatmentDetails };
-              if (!newDetails[idx]) newDetails[idx] = {};
-              newDetails[idx].response = e.target.value;
-              setPth_treatmentDetails(newDetails);
-            }}
-            style={{ width: '100%', padding: '6px' }}
-          >
-            <option value="not_specified">Not specified</option>
-            <option value="good_response">Good response</option>
-            <option value="partial_response">Partial response</option>
-            <option value="no_response">No response</option>
-            <option value="lost_response">Lost response over time</option>
-            <option value="intolerant">Could not tolerate (side effects)</option>
-          </select>
-        </div>
       </div>
     );
   }
@@ -1373,10 +1291,10 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     );
   }
   
-  function renderNPVCluster() {
+  function renderDITCluster() {
     return (
       <div style={{ padding: '20px' }}>
-        <h2>Non-Plaque Psoriasis Variants</h2>
+        <h2>Disease Type</h2>
         <p style={{ fontSize: '18px', marginBottom: '20px', fontWeight: '500' }}>
           {clusters[5].primary_question}
         </p>
@@ -1386,8 +1304,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="chronic_plaque"
-              checked={npv_variant === 'chronic_plaque'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'chronic_plaque'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Chronic Plaque Psoriasis
           </label>
@@ -1398,8 +1316,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="guttate"
-              checked={npv_variant === 'guttate'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'guttate'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Guttate Psoriasis
           </label>
@@ -1410,8 +1328,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="pustular"
-              checked={npv_variant === 'pustular'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'pustular'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Pustular Psoriasis
           </label>
@@ -1422,8 +1340,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="erythrodermic"
-              checked={npv_variant === 'erythrodermic'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'erythrodermic'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Erythrodermic Psoriasis
           </label>
@@ -1434,8 +1352,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="inverse"
-              checked={npv_variant === 'inverse'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'inverse'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Inverse Psoriasis
           </label>
@@ -1446,8 +1364,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="nail"
-              checked={npv_variant === 'nail'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'nail'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Nail Psoriasis
           </label>
@@ -1458,8 +1376,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="radio"
               value="scalp"
-              checked={npv_variant === 'scalp'}
-              onChange={(e) => setNpv_variant(e.target.value)}
+              checked={dit_variant === 'scalp'}
+              onChange={(e) => setDit_variant(e.target.value)}
             />
             {' '}Scalp Psoriasis
           </label>
@@ -1468,10 +1386,10 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     );
   }
   
-  function renderCPDCluster() {
+  function renderDDCluster() {
     return (
       <div style={{ padding: '20px' }}>
-        <h2>Chronic Plaque Psoriasis Duration</h2>
+        <h2>Disease Duration</h2>
         <p style={{ fontSize: '18px', marginBottom: '20px', fontWeight: '500' }}>
           {clusters[6].primary_question}
         </p>
@@ -1484,14 +1402,14 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
             <input
               type="number"
               min="0"
-              value={cpd_duration}
-              onChange={(e) => setCpd_duration(e.target.value)}
+              value={dd_duration}
+              onChange={(e) => setDd_duration(e.target.value)}
               placeholder="Enter duration"
               style={{ width: '120px', padding: '6px' }}
             />
             <select
-              value={cpd_unit}
-              onChange={(e) => setCpd_unit(e.target.value)}
+              value={dd_unit}
+              onChange={(e) => setDd_unit(e.target.value)}
               style={{ padding: '6px' }}
             >
               <option value="months">months</option>
@@ -1732,6 +1650,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     if (cmb_hasConditions === 'yes') {
       cmb_selectedConditions.forEach((condition, idx) => {
         const details = cmb_conditionDetails[idx] || {};
+        const dynamicData = cmb_dynamicQuestions[idx];
+        
         builder.addComorbidCondition(
           [condition],
           details.pattern || [],
@@ -1744,6 +1664,24 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
           } : null,
           []
         );
+        
+        // Get the response and add dynamic questions to the last entry
+        const response = builder.getResponse();
+        if (response.responses.CMB && response.responses.CMB.length > 0) {
+          const lastEntry = response.responses.CMB[response.responses.CMB.length - 1];
+          
+          // Include AI-generated questions and answers
+          if (dynamicData?.questions && dynamicData.aiGenerated) {
+            lastEntry.dynamicQuestions = dynamicData.questions;
+            // Include answers to dynamic questions
+            dynamicData.questions.forEach((q, qIdx) => {
+              const answerKey = `dynamic_${qIdx}`;
+              if (details[answerKey]) {
+                lastEntry[q.id] = details[answerKey];
+              }
+            });
+          }
+        }
       });
     }
     
@@ -1751,6 +1689,8 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     if (pth_hasTreatment === 'yes') {
       pth_selectedTreatments.forEach((treatment, idx) => {
         const details = pth_treatmentDetails[idx] || {};
+        const dynamicData = pth_dynamicQuestions[idx];
+        
         builder.addTreatmentHistory(
           [treatment],
           [details.pattern || 'not_specified'],
@@ -1762,6 +1702,24 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
           } : null,
           null // Drug classification would come from medication database lookup
         );
+        
+        // Get the response and add dynamic questions to the last entry
+        const response = builder.getResponse();
+        if (response.responses.PTH && response.responses.PTH.length > 0) {
+          const lastEntry = response.responses.PTH[response.responses.PTH.length - 1];
+          
+          // Include AI-generated questions and answers
+          if (dynamicData?.questions && dynamicData.aiGenerated) {
+            lastEntry.dynamicQuestions = dynamicData.questions;
+            // Include answers to dynamic questions
+            dynamicData.questions.forEach((q, qIdx) => {
+              const answerKey = `dynamic_${qIdx}`;
+              if (details[answerKey]) {
+                lastEntry[q.id] = details[answerKey];
+              }
+            });
+          }
+        }
       });
     }
     
@@ -1780,9 +1738,9 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
     
     // AAO - Affected Area
     if (aao_bsa || aao_pasi || aao_pga) {
-      if (aao_bsa) builder.addAffectedArea('BSA', parseFloat(aao_bsa), null);
-      if (aao_pasi) builder.addAffectedArea('PASI', parseFloat(aao_pasi), null);
-      if (aao_pga) builder.addAffectedArea('PGA', parseFloat(aao_pga), null);
+      if (aao_bsa) {builder.addAffectedArea('BSA', parseFloat(aao_bsa), null);}
+      if (aao_pasi) {builder.addAffectedArea('PASI', parseFloat(aao_pasi), null);}
+      if (aao_pga) {builder.addAffectedArea('PGA', parseFloat(aao_pga), null);}
     }
     
     // AGE
@@ -1790,20 +1748,20 @@ const ClinicalTrialEligibilityQuestionnaire = ({ onSubmit }) => {
       builder.setAge(parseInt(age_value));
     }
     
-    // NPV
-    if (npv_variant) {
-      builder.setPsoriasisVariant(npv_variant);
+    // DIT (Disease Type)
+    if (dit_variant) {
+      builder.setDiseaseVariant(dit_variant);
     }
     
-    // CPD
-    if (cpd_duration) {
-      builder.setDiseaseDuration(parseInt(cpd_duration), cpd_unit);
+    // DD (Disease Duration)
+    if (dd_duration) {
+      builder.setDiseaseDuration(parseInt(dd_duration), dd_unit);
     }
     
     // SEV
-    if (sev_pasiValue) builder.setSeverityScore('PASI', parseFloat(sev_pasiValue));
-    if (sev_bsaValue) builder.setSeverityScore('BSA', parseFloat(sev_bsaValue));
-    if (sev_pgaValue) builder.setSeverityScore('PGA', parseFloat(sev_pgaValue));
+    if (sev_pasiValue) {builder.setSeverityScore('PASI', parseFloat(sev_pasiValue));}
+    if (sev_bsaValue) {builder.setSeverityScore('BSA', parseFloat(sev_bsaValue));}
+    if (sev_pgaValue) {builder.setSeverityScore('PGA', parseFloat(sev_pgaValue));}
     
     // BMI
     if (bmi_weight && bmi_height) {

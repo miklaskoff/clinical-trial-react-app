@@ -264,20 +264,51 @@ Respond ONLY with valid JSON in this exact format:
     try {
       const response = await this.#client.messages.create({
         model: this.#model,
-        max_tokens: 1024,
+        max_tokens: 2048,  // Increased to avoid truncation
         messages: [{ role: 'user', content: prompt }]
       });
 
       const text = response.content[0]?.text || '{}';
       
       // Parse JSON from response - handle potential markdown code blocks
-      let jsonText = text;
+      let jsonText = text.trim();
+      
+      // Try to extract from markdown code blocks (with or without closing ```)
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
-        jsonText = jsonMatch[1];
+        jsonText = jsonMatch[1].trim();
+      } else if (text.startsWith('```')) {
+        // Handle case where response starts with ``` but doesn't close
+        // Remove the opening ```json or ```
+        jsonText = text.replace(/^```(?:json)?\s*/, '').trim();
+        // If it ends with ``` remove that too
+        if (jsonText.endsWith('```')) {
+          jsonText = jsonText.slice(0, -3).trim();
+        }
       }
       
       const result = JSON.parse(jsonText);
+      
+      // Log raw AI response for debugging criterion IDs
+      console.log('📋 Raw AI response questions:', JSON.stringify(result.questions?.slice(0, 2), null, 2));
+      
+      // Normalize criterionId/criterionIds format for backward compatibility
+      if (result.questions && Array.isArray(result.questions)) {
+        result.questions.forEach(q => {
+          // If old format (single criterionId), convert to array
+          if (q.criterionId && !q.criterionIds) {
+            q.criterionIds = [q.criterionId];
+            delete q.criterionId;
+          }
+          // If criterionIds is not an array, wrap it
+          if (q.criterionIds && !Array.isArray(q.criterionIds)) {
+            q.criterionIds = [q.criterionIds];
+          }
+        });
+      }
+      
+      // Log normalized questions
+      console.log('✅ Normalized questions:', JSON.stringify(result.questions?.slice(0, 2), null, 2));
 
       // Cache the result
       this.#setCache(cacheKey, result);
@@ -288,6 +319,72 @@ Respond ONLY with valid JSON in this exact format:
       console.error('Claude API question generation error:', error.message);
       // Return aiGenerated: false so frontend knows AI failed
       return { questions: [], aiGenerated: false };
+    }
+  }
+
+  /**
+   * Generic completion for 100% LLM parsing
+   * Used by UniversalParserV2 for criteria parsing
+   * 
+   * Uses Anthropic prompt caching to reduce costs:
+   * - System prompt (FIELD_CATALOG ~75KB) is cached with cache_control
+   * - First call creates cache (25% extra cost)
+   * - Subsequent calls get 90% discount on cached tokens
+   * 
+   * @param {Object} options - Completion options
+   * @param {string} options.system - System prompt (contains FIELD_CATALOG)
+   * @param {string} options.prompt - User prompt (criterion to parse)
+   * @param {number} [options.maxTokens=4096] - Max tokens for response
+   * @returns {Promise<string>} Raw response text from Claude
+   */
+  async complete({ system, prompt, maxTokens = 4096, returnUsage = false }) {
+    if (!this.#client) {
+      throw new Error('Claude client not configured. Set ANTHROPIC_API_KEY or configure via admin.');
+    }
+
+    try {
+      const response = await this.#client.messages.create({
+        model: this.#model,
+        max_tokens: maxTokens,
+        // Use cache_control for prompt caching - saves ~70% on batch parsing
+        system: [
+          {
+            type: 'text',
+            text: system,
+            cache_control: { type: 'ephemeral' }
+          }
+        ],
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      // Log cache statistics for monitoring
+      const usage = response.usage;
+      if (usage?.cache_creation_input_tokens) {
+        console.log(`📝 Cache created: ${usage.cache_creation_input_tokens} tokens cached`);
+      }
+      if (usage?.cache_read_input_tokens) {
+        console.log(`⚡ Cache HIT: ${usage.cache_read_input_tokens} tokens saved!`);
+      }
+
+      const text = response.content[0]?.text || '';
+      
+      // Return usage stats if requested (for cost tracking)
+      if (returnUsage) {
+        return {
+          text,
+          usage: {
+            input_tokens: usage?.input_tokens || 0,
+            output_tokens: usage?.output_tokens || 0,
+            cache_read_input_tokens: usage?.cache_read_input_tokens || 0,
+            cache_creation_input_tokens: usage?.cache_creation_input_tokens || 0
+          }
+        };
+      }
+      
+      return text;
+    } catch (error) {
+      console.error('Claude API complete() error:', error.message);
+      throw error;
     }
   }
 

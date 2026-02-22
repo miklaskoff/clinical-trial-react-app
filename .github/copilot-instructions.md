@@ -1,5 +1,52 @@
 # Copilot Instructions — Clinical Trial Matching System
 
+## ⛔ EXECUTE ALL INSTRUCTIONS — КРИТИЧЕСКИ ВАЖНО
+
+**Правило #0: Выполняй ВСЕ инструкции по пунктам**
+
+1. **ПЕРЕД началом работы** — прочитай ВСЕ релевантные инструкции
+2. **ВО ВРЕМЯ работы** — сверяйся с чеклистами
+3. **ПОСЛЕ завершения** — проверь ДВАЖДЫ: все ли пункты выполнены?
+4. **НЕ говори "готово"** — пока не убедился что ВСЕ пункты отмечены ✅
+
+**Запрещено:**
+- ❌ Пропускать "неудобные" или "медленные" пункты
+- ❌ Выполнять только часть чеклиста
+- ❌ Говорить "готово" без двойной проверки
+- ❌ Cherry-picking — выбирать только легкие пункты
+
+**Если пункт не выполнен — НЕ ПРОДОЛЖАЙ. Сначала выполни.**
+
+---
+
+## 📋 CUSTOM COMMANDS — Используй в чате
+
+Полная документация команд: `.vscode/copilot-commands.md`
+
+| Команда | Описание | Использование |
+|---------|----------|---------------|
+| `@plan` | Покажи план, НЕ реализуй | `@plan добавить фичу X` |
+| `@check` | Проверь документацию и код | `@check перед коммитом` |
+| `@standards` | Проверь соответствие правилам | `@standards` |
+| `@review` | Полный code review | `@review компонент Y` |
+| `@fix` | TDD подход к исправлению бага | `@fix баг Z` |
+| `@commit` | Чеклист перед коммитом | `@commit` |
+
+### Как использовать в чате:
+```
+@workspace смотри .vscode/copilot-commands.md @plan - [твоя задача]
+```
+
+### Поиск по истории чатов:
+- **Экспорт Continue.dev**: `node scripts/export-chat.js --continue`
+- **Поиск**: `node scripts/export-chat.js --search "API key"`
+- **Ручная запись**: `node scripts/export-chat.js -i`
+- **Файлы для CTRL+F**:
+  - `.vscode/CONTINUE_HISTORY.md` — экспорт Continue.dev
+  - `.vscode/CHAT_LOG.md` — ручные записи
+
+---
+
 ## ⚠️ MANDATORY DEVELOPMENT RULES — КРИТИЧЕСКИ ВАЖНО
 
 ### TDD (Test-Driven Development) — СТРОГО ОБЯЗАТЕЛЬНО
@@ -10,6 +57,132 @@
 4. **Тесты прошли?** — Проверь результат **ДВАЖДЫ**, потом коммить
 5. **Нельзя заканчивать работу** — пока ВСЕ тесты не пройдены
 6. **Каждое изменение = набор тестов** — добавляй в соответствующую тестовую группу
+
+---
+
+## ⛔ КРИТИЧЕСКИ ВАЖНО: БЭКАПЫ И БЕЗОПАСНОСТЬ ДАННЫХ
+
+### ⚠️ Правило #1: БЭКАП ПЕРЕД ЛЮБЫМИ ИЗМЕНЕНИЯМИ
+
+**ПЕРЕД началом каждой сессии или любых изменений:**
+
+```powershell
+# ОБЯЗАТЕЛЬНО - создать бэкап базы данных
+$timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+Copy-Item "server/data/clinical-trials.db" "server/data/clinical-trials.db.backup.$timestamp"
+```
+
+**База данных НЕ в Git!** Файл `server/data/clinical-trials.db` в `.gitignore` — git restore НЕ ВОССТАНОВИТ!
+
+### ⚠️ Правило #2: ОСТАНОВИТЬ СЕРВЕРЫ ПЕРЕД GIT ОПЕРАЦИЯМИ
+
+**ПЕРЕД git reset, git checkout, git pull:**
+
+```powershell
+# ОБЯЗАТЕЛЬНО - остановить ВСЕ Node процессы
+taskkill /F /IM node.exe 2>$null
+Start-Sleep -Seconds 2
+
+# Проверить что порты свободны
+Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue
+# Должно быть ПУСТО!
+
+# ТОЛЬКО ПОТОМ выполнять git операции
+git reset --hard <commit>
+```
+
+**Почему:** Git reset при работающем сервере = повреждение SQLite базы!
+
+### ⚠️ Правило #3: НЕ ПЕРЕЗАПИСЫВАТЬ ФАЙЛЫ БЕЗ ЧТЕНИЯ
+
+**ПЕРЕД созданием или изменением файла:**
+
+```markdown
+1. [ ] Прочитал существующий файл ПОЛНОСТЬЮ (read_file tool)
+2. [ ] Понял что он делает и его зависимости
+3. [ ] Сделал бэкап (если критичный файл)
+4. [ ] ТОЛЬКО ПОТОМ меняю
+```
+
+**Запрещено:** Создавать файл с тем же именем как существующий без чтения!
+
+### ⚠️ Правило #4: НИКОГДА НЕ УДАЛЯТЬ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
+
+**ЗАПРЕЩЕНО удалять без явного разрешения пользователя:**
+- ❌ Базы данных (*.db, *.sqlite)
+- ❌ Конфигурационные файлы (.env, config.*)
+- ❌ Файлы с данными пользователя
+- ❌ Кэш с важными данными
+
+**Если файл повреждён:**
+```markdown
+1. СПРОСИТЬ пользователя что делать
+2. ПРЕДЛОЖИТЬ варианты восстановления
+3. ДОЖДАТЬСЯ разрешения
+4. ТОЛЬКО ПОТОМ действовать
+```
+
+### ⚠️ Правило #5: ФАЙЛЫ В .GITIGNORE = РУЧНЫЕ БЭКАПЫ
+
+Эти файлы НЕ восстанавливаются через git:
+
+| Файл | Восстановление |
+|------|----------------|
+| `server/data/clinical-trials.db` | РУЧНОЙ БЭКАП |
+| `server/.env` | РУЧНОЙ БЭКАП |
+| `node_modules/` | `npm install` |
+
+### ⚠️ Правило #6: BACKUP_CATALOG.md — ОБЯЗАТЕЛЬНО ОБНОВЛЯТЬ
+
+**При создании бэкапа ОБЯЗАТЕЛЬНО добавить в `docs/BACKUP_CATALOG.md`:**
+
+1. [ ] Запись в таблицу **Backup Inventory** (ID, Date, Name, Description, Type)
+2. [ ] Раздел **Backup Details** с полным описанием:
+   - Created (дата/время)
+   - Location (полный путь)
+   - Type (DB / Full)
+   - Contents (список файлов)
+   - Version (версия из CHANGELOG)
+   - Why (причина бэкапа)
+   - Restore (команды восстановления)
+3. [ ] Запись в таблицу **Version Correlation**
+
+**Шаблон для Backup Details:**
+```markdown
+### Backup #N: NAME_TIMESTAMP
+
+- **Created**: YYYY-MM-DD HH:MM:SS
+- **Location**: `c:\Users\lasko\Downloads\clinical-trial-backups\NAME_TIMESTAMP\`
+- **Type**: DB / Full
+- **Contents**: [list files]
+- **Version**: [CHANGELOG version]
+- **Why**: [reason for backup]
+- **Restore**: [specific commands]
+```
+
+### Команды Для Ежедневного Бэкапа
+
+```powershell
+# В начале КАЖДОЙ сессии работы:
+function Backup-ClinicalTrialDB {
+    $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $src = "c:\Users\lasko\Downloads\clinical-trial-react-app\server\data\clinical-trials.db"
+    $dst = "c:\Users\lasko\Downloads\clinical-trial-backups\clinical-trials.db.$timestamp"
+    
+    if (!(Test-Path "c:\Users\lasko\Downloads\clinical-trial-backups")) {
+        New-Item -ItemType Directory -Path "c:\Users\lasko\Downloads\clinical-trial-backups" -Force
+    }
+    
+    if (Test-Path $src) {
+        Copy-Item $src $dst
+        Write-Host "✅ Backup created: $dst"
+    } else {
+        Write-Host "⚠️ Database not found: $src"
+    }
+}
+
+Backup-ClinicalTrialDB
+```
 
 ---
 
@@ -115,8 +288,147 @@ npm run verify
 1. npm run verify         ← ОБЯЗАТЕЛЬНО, не пропускай!
 2. Открой браузер         ← Manual verification
 3. Проверь каждый пункт   ← Screenshot как доказательство
-4. git add -A && git commit -m "..."  ← ТОЛЬКО после шагов 1-3
+4. ОБНОВИ ДОКУМЕНТАЦИЮ    ← CHANGELOG.md, lesson learned.md (если баг)
+5. git add -A && git commit -m "..."  ← ТОЛЬКО после шагов 1-4
+6. git push               ← НЕ ЗАБУДЬ! Иначе изменения не в GitHub
 ```
+
+### ⚠️ DOCUMENTATION MUST BE UPDATED WITH CODE
+
+**Every code change MUST include:**
+- [ ] CHANGELOG.md entry (if user-facing change)
+- [ ] lesson learned.md entry (if bug fix or learned something)
+- [ ] copilot-instructions.md update (if new pattern/rule)
+- [ ] Architecture docs update (if design change)
+- [ ] Regenerate auto-generated docs (if schema changed)
+
+**Why?** Documentation that lags behind code becomes useless.
+
+### ⚠️ DOCUMENTATION ENFORCEMENT — АВТОМАТИЗАЦИЯ
+
+**При изменении кода/структур данных ОБЯЗАТЕЛЬНО:**
+
+1. **Обновить релевантную документацию**
+2. **Добавить ссылки на документацию в коде** (JSDoc `@see`)
+3. **Регенерировать auto-docs при изменении схем**
+
+#### Ссылки на Документацию в Коде — ОБЯЗАТЕЛЬНО
+
+```javascript
+/**
+ * Evaluates patient against trial criteria
+ * 
+ * @see docs/ARCHITECTURE_AND_MATCHING_GUIDE.md#matching-algorithm
+ * @see server/config/FIELD_CATALOG_v2.1.md
+ * @see docs/output_schemas.md#cluster_age
+ */
+async function evaluateTrial(patient, trial) {
+  // ...
+}
+```
+
+#### Auto-Generated Documentation
+
+| Source File | Generated Doc | Regenerate Command |
+|-------------|---------------|-------------------|
+| `server/config/output-schemas.json` | `docs/output_schemas.md` | `npm run docs:schemas` |
+
+**После изменения source file → ОБЯЗАТЕЛЬНО регенерировать doc:**
+
+```bash
+# После изменения output-schemas.json
+npm run docs:schemas
+
+# Автоматический TOC для всех .md файлов
+npm run docs:toc
+
+# Проверка битых ссылок
+npm run docs:check-links
+```
+
+#### Pre-Commit Hook — ENFORCEMENT
+
+Файл `.husky/pre-commit` выполняет проверки автоматически:
+
+```bash
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# 1. Lint
+npm run lint --quiet
+
+# 2. Tests
+npm run test:ci
+
+# 3. Check if output-schemas.json changed but output_schemas.md not regenerated
+if git diff --cached --name-only | grep -q "output-schemas.json"; then
+  if ! git diff --cached --name-only | grep -q "output_schemas.md"; then
+    echo "❌ ERROR: output-schemas.json changed but output_schemas.md not regenerated"
+    echo "   Run: npm run docs:schemas"
+    exit 1
+  fi
+fi
+
+# 4. Verify docs links
+npm run docs:check-links --quiet 2>/dev/null || true
+```
+
+#### Добавление Ссылок в Код — Чеклист
+
+При добавлении/изменении функции:
+
+- [ ] Добавлен JSDoc с `@see` ссылкой на документацию
+- [ ] Ссылка ведёт на правильный раздел (с `#anchor`)
+- [ ] Документация существует (проверить что ссылка не битая)
+
+```javascript
+// ✅ ПРАВИЛЬНО — есть @see ссылки
+/**
+ * Parses age criterion into structured format
+ * @see server/config/FIELD_CATALOG_v2.1.md#cluster_age
+ * @see docs/output_schemas.md#age-schema
+ */
+function parseAgeCriterion(raw) { ... }
+
+// ❌ НЕПРАВИЛЬНО — нет ссылок на документацию
+function parseAgeCriterion(raw) { ... }
+```
+
+### ⚠️ CHANGELOG.md — ДЕТАЛЬНЫЕ ТРЕБОВАНИЯ
+
+**Каждая запись CHANGELOG ДОЛЖНА содержать:**
+
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+
+### Changed/Added/Removed/Fixed
+- Описание изменения
+
+### Files Modified
+
+**Backend:**
+- `server/file.js` — что изменилось
+
+**Frontend:**  
+- `src/Component.jsx` — что изменилось
+
+**Data:**
+- `src/data/file.json` — что изменилось
+
+**Tests:**
+- `src/__tests__/file.test.js` — что изменилось
+
+### Migration Notes (если нужна ручная работа)
+- Шаги для миграции
+
+### Technical Details
+- Количество тестов, backup location и т.д.
+```
+
+**ЗАПРЕЩЕНО:**
+- ❌ "9 files modified" — перечисли КАЖДЫЙ файл
+- ❌ "Updated tests" — укажи КАКИЕ тесты
+- ❌ Пропускать Migration Notes если нужна ручная работа
 
 ### Contract Report — ГЕНЕРИРУЙ ПОСЛЕ КАЖДОЙ ФИЧИ
 
@@ -246,6 +558,175 @@ If I deliver something as "done" that is not actually implemented:
 
 ---
 
+## ⚠️ ENVIRONMENT & TROUBLESHOOTING — ОБЯЗАТЕЛЬНО
+
+### Server Management Rules
+
+**ALWAYS verify servers are running before debugging:**
+
+```powershell
+# Check if both servers are listening
+Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue
+
+# Expected output (both running):
+LocalPort  State   OwningProcess
+3000       Listen  12345          # Frontend (Vite)
+3001       Listen  67890          # Backend (Express)
+
+# If port missing → start that server
+```
+
+**Starting Servers:**
+
+```bash
+# Option 1: Use the batch file (starts both)
+start-dev.bat
+
+# Option 2: Use npm script
+npm run dev:all
+
+# Option 3: Manual (two terminals)
+# Terminal 1: npm run dev
+# Terminal 2: npm run dev:backend
+```
+
+**⚠️ After Git Operations:** Always verify servers are still running. Git commits and terminal operations can stop background processes.
+
+### Git Workflow — COMPLETE (Including Push)
+
+```bash
+# 1. Verify all tests pass
+npm test
+
+# 2. Commit changes
+git add -A
+git commit -m "feat/fix/refactor: description"
+
+# 3. PUSH TO REMOTE — Don't forget!
+git push
+
+# 4. Verify servers still running
+Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue
+```
+
+**⚠️ Files not showing in GitHub = forgot `git push`**
+
+### Cache Clearing — ОБЯЗАТЕЛЬНО после API изменений
+
+```bash
+# Clear backend follow-up cache (SQLite)
+npm run cache:clear
+
+# Clear browser cache (in browser)
+Ctrl+Shift+R  # Hard refresh
+
+# Clear Vite cache (if HMR issues)
+rm -rf node_modules/.vite
+npm run dev
+```
+
+**When to clear cache:**
+- After changing AI/follow-up question generation logic
+- After modifying database schema
+- When seeing stale API responses
+- After API key configuration changes
+
+### Long-Running Processes (Parser) — VS Code Terminal Kills Idle Processes
+
+**Symptom:** Parser stops mid-execution without error, output file has partial results
+
+**Root Cause:** VS Code kills idle processes when many terminals are open (~90+)
+
+**Solution — Run in External CMD Window:**
+```powershell
+# Launch parser in independent process
+Start-Process cmd -ArgumentList "/c cd /d c:\Users\lasko\Downloads\clinical-trial-react-app\server && node parse-aic-cluster.js && pause"
+```
+
+**Or use batch file:**
+```
+server\run-parser.bat   # Double-click to run
+```
+
+**Why This Works:**
+- External CMD window is NOT managed by VS Code
+- Process stays alive regardless of VS Code terminal count
+- `pause` at end keeps window open to see results
+
+**Prevention:**
+- Close unused terminals (don't accumulate 90+ terminals)
+- Use batch files for long processes
+- Always verify output count, not just "script finished"
+
+### Dynamic Import Fetch Error — Troubleshooting
+
+**Symptom:** `Failed to fetch dynamically imported module` in browser console
+
+**Causes & Solutions:**
+
+1. **Vite HMR issue** — Restart Vite dev server
+   ```bash
+   # Stop server, then:
+   npm run dev
+   ```
+
+2. **Browser cache** — Hard refresh
+   ```
+   Ctrl+Shift+R  (or Cmd+Shift+R on Mac)
+   ```
+
+3. **Stale Vite cache** — Clear and restart
+   ```bash
+   rm -rf node_modules/.vite
+   npm run dev
+   ```
+
+4. **Build artifacts conflict** — Clean rebuild
+   ```bash
+   rm -rf build dist
+   npm run build
+   npm run preview
+   ```
+
+### PowerShell Encoding Issues
+
+**Symptom:** Commands fail with Cyrillic characters prepended (e.g., `с` before command)
+
+**Quick Fix:**
+```powershell
+chcp 437
+```
+
+**Permanent Fix:** Add to PowerShell profile or restart terminal
+
+### Browser Cache Issues
+
+**Symptom:** Code changes not visible even after server restart
+
+**Solution:** Hard refresh (bypasses browser cache)
+```
+Windows/Linux: Ctrl+Shift+R
+Mac: Cmd+Shift+R
+```
+
+**When to hard refresh:**
+- After any frontend code change
+- After CSS updates
+- When UI doesn't match expected behavior
+- Before reporting "feature not working"
+
+### Terminal Reuse Issues
+
+**Symptom:** Commands run in wrong directory or with stale environment
+
+**Solution:**
+1. Check current directory: `pwd` or `Get-Location`
+2. Use absolute paths in commands
+3. Open new terminal if issues persist
+4. Verify environment: `echo $env:PATH` (PowerShell)
+
+---
+
 ### Async/Parallel Execution — СТРОГО ОБЯЗАТЕЛЬНО
 
 1. **ВСЁ что может быть async — ДОЛЖНО быть async**
@@ -269,6 +750,36 @@ git commit -m "feat/fix/refactor: краткое описание"
 4. **Тесты на каждую функцию** — минимум unit test
 5. **TypeScript types** — предпочтительны JSDoc или .d.ts файлы
 6. **База данных** — SQLite с индексами, async операции
+
+### Refactoring Rules — СТРОГО ОБЯЗАТЕЛЬНО
+
+**ПЕРЕД удалением/переименованием переменной, функции или класса:**
+
+```bash
+# 1. НАЙТИ ВСЕ ИСПОЛЬЗОВАНИЯ
+grep -r "variableName" --include="*.js" --include="*.jsx"
+# или в VS Code: Ctrl+Shift+F → поиск по проекту
+
+# 2. ОБНОВИТЬ КАЖДОЕ ИСПОЛЬЗОВАНИЕ
+# Не пропускать console.log, комментарии, тесты!
+
+# 3. ТОЛЬКО ПОТОМ УДАЛЯТЬ ОПРЕДЕЛЕНИЕ
+
+# 4. ЗАПУСТИТЬ ТЕСТЫ
+npm test
+```
+
+**❌ ЗАПРЕЩЕНО:**
+- Удалять переменную без grep/find references
+- Коммитить без проверки что код запускается
+- Полагаться на "я помню все места где это используется"
+
+**Пример ошибки (2026-02-03):**
+```javascript
+// Удалил определение maxIndex
+// Забыл про console.log где она используется
+console.log(`Parsing ${i}/${maxIndex}`);  // ReferenceError!
+```
 
 ### Database Optimization Rules
 
@@ -295,6 +806,37 @@ const drugs = await db.getAllAsync('SELECT * FROM approved_drugs');
 const cache = await db.getAsync('SELECT * FROM followup_cache WHERE drug_class = ?', [drugClass]);
 ```
 
+### Anthropic Prompt Caching — Cost Optimization (v5.1)
+
+```javascript
+// ✅ CORRECT - with cache_control for large system prompts
+const response = await client.messages.create({
+  model,
+  max_tokens,
+  system: [{
+    type: 'text',
+    text: largeSystemPrompt,  // e.g., 75KB FIELD_CATALOG
+    cache_control: { type: 'ephemeral' }  // 5-min cache TTL
+  }],
+  messages
+});
+
+// ❌ WRONG - no caching for repeated large prompts
+const response = await client.messages.create({
+  model,
+  max_tokens,
+  system: largeSystemPrompt,  // Re-sent every call, no caching
+  messages
+});
+```
+
+**When to use prompt caching:**
+- System prompt >1000 tokens
+- Batch operations with same system prompt
+- Repeated API calls within 5 minutes
+
+**Savings:** ~70% on input tokens for cached prompts
+
 ---
 
 ## Project Overview
@@ -303,7 +845,7 @@ const cache = await db.getAsync('SELECT * FROM followup_cache WHERE drug_class =
 **Type**: Full-Stack Web Application (React + Express Backend)  
 **Purpose**: Match patients with clinical trials using hybrid AI + rule-based matching  
 **Tech Stack**: React 19, Node.js/Express, SQLite, Anthropic Claude API, Vitest  
-**Version**: 5.0 (Full Backend Integration)
+**Version**: 5.1 (Parser Infrastructure Iteration 2.2)
 
 ---
 
@@ -316,15 +858,19 @@ clinical-trial-react-app/
 ├── server/                          # EXPRESS BACKEND
 │   ├── index.js                     # Entry point
 │   ├── db.js                        # SQLite setup + schema
+│   ├── parse-utils.js               # Disease folder organization (v5.1)
 │   ├── .env                         # ANTHROPIC_API_KEY, ADMIN_PASSWORD
 │   ├── routes/
 │   │   ├── match.js                 # /api/match
 │   │   ├── followups.js             # /api/followups/generate
 │   │   └── admin.js                 # /api/admin/*
 │   ├── services/
-│   │   ├── ClaudeClient.js          # Anthropic SDK wrapper
+│   │   ├── ClaudeClient.js          # Anthropic SDK wrapper + prompt cache
 │   │   ├── FollowUpGenerator.js     # AI question generation
 │   │   └── DrugCategoryResolver.js  # Drug → category mapping
+│   ├── config/
+│   │   ├── output-validator.js      # Consistency validation (v5.1)
+│   │   └── FIELD_CATALOG.md         # Slot-filled field definitions
 │   ├── middleware/
 │   │   └── rateLimiter.js           # Rate limiting
 │   ├── data/
@@ -506,6 +1052,75 @@ TrialCard.propTypes = {
 export default TrialCard;
 ```
 
+### Drug-to-Criteria Search Pattern (v5.0.5)
+
+When searching for drug-related criteria in treatment history, use **three-level matching**:
+
+```javascript
+// File: server/services/FollowUpGenerator.js
+
+import { 
+  resolveDrugCategory, 
+  getClassSearchTerms, 
+  getGenericSearchTerms 
+} from './DrugCategoryResolver.js';
+
+function findMatchingCriteria(database, drugName, drugClass, targetCluster = 'CLUSTER_PTH') {
+  // 1. Get drug information
+  const drugInfo = resolveDrugCategory(drugName);
+
+  // 2. Build comprehensive search terms (3 levels)
+  const baseTerms = [
+    drugName.toLowerCase(),                      // Level 1: Direct name match
+    ...getClassSearchTerms(drugClass),           // Level 2: Drug class terms
+    ...getGenericSearchTerms(drugInfo)           // Level 3: Generic categories
+  ];
+
+  // 3. Expand IL subtypes and deduplicate
+  const searchTerms = [...new Set(
+    baseTerms.flatMap(term => expandILTerms(term))
+  )];
+
+  // 4. Search in target cluster only
+  const clusterData = database[targetCluster];
+  return clusterData.criteria.filter(criterion => 
+    searchTerms.some(term => 
+      criterion.raw_text.toLowerCase().includes(term)
+    )
+  );
+}
+```
+
+**Generic Categories by Drug Type:**
+
+```javascript
+// Biologics → includes these terms:
+['biologic', 'biologic agent', 'biological therapy', 
+ 'monoclonal antibody', 'antibody', 'mAb']
+
+// bDMARDs (biologic DMARDs) → includes:
+['bDMARD', 'DMARD', 'biologic DMARD']
+
+// csDMARDs (conventional synthetic DMARDs) → includes:
+['csDMARD', 'conventional DMARD', 'conventional synthetic DMARD']
+
+// Small molecules → includes:
+['small molecule', 'targeted synthetic', 'tsDMARD']
+
+// Immunosuppressants → includes:
+['immunosuppressive', 'immunosuppressant']
+```
+
+**Why Three Levels?**
+- Criteria may mention "TNF inhibitor" without naming specific drugs
+- Criteria may mention "biologic therapy" without specifying class
+- Ensures ALL relevant criteria are found for AI question generation
+
+**Results:**
+- adalimumab: 23 search terms → 10 PTH criteria matched
+- methotrexate: 9 search terms → 3 PTH criteria matched
+- IL-17A inhibitor: 6 search terms → 2 PTH criteria matched
+
 ---
 
 ## Testing Requirements
@@ -586,6 +1201,8 @@ VITE_LOG_LEVEL=info
 - [ ] Commit made with clear message
 - [ ] Documentation updated (if needed)
 - [ ] CHANGELOG.md updated
+- [ ] lesson learned.md updated (if bug fix)
+- [ ] **git push executed** (changes must be in GitHub!)
 
 ---
 

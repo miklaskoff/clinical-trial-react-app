@@ -274,4 +274,67 @@ export function getClassSearchTerms(drugClass) {
   return termMap[drugClass] || [drugClass];
 }
 
+/**
+ * Generic search terms based on drug properties
+ * Returns higher-level classification terms like "biologic", "DMARD", "monoclonal antibody"
+ * These match criteria that use general terminology rather than specific drug names
+ * 
+ * @param {{ drugClass: string, drugType: string, isBiologic: boolean, found: boolean }} drugInfo 
+ * @returns {string[]}
+ */
+export function getGenericSearchTerms(drugInfo) {
+  if (!drugInfo || !drugInfo.found) {
+    return [];
+  }
+
+  const terms = [];
+
+  // Biologic drugs - monoclonal antibodies
+  if (drugInfo.isBiologic) {
+    terms.push(
+      'biologic',
+      'biologic agent',
+      'biological therapy',
+      'biological agent',
+      'biologic treatment',
+      'biologic drug',
+      'monoclonal antibody',
+      'antibody',
+      'mAb'
+    );
+  }
+
+  // Small molecule drugs
+  if (drugInfo.drugType === 'small_molecule') {
+    terms.push('small molecule');
+  }
+
+  // DMARD classification based on drug class
+  const biologicDMARDClasses = [
+    'TNF_inhibitors',
+    'IL17_inhibitors', 
+    'IL23_inhibitors',
+    'IL12_23_inhibitors'
+  ];
+
+  const conventionalDMARDClasses = [
+    'systemic_immunosuppressants'
+  ];
+
+  if (biologicDMARDClasses.includes(drugInfo.drugClass)) {
+    terms.push('bDMARD', 'DMARD', 'biologic DMARD', 'disease-modifying');
+  }
+
+  if (conventionalDMARDClasses.includes(drugInfo.drugClass)) {
+    terms.push('csDMARD', 'DMARD', 'conventional DMARD', 'immunosuppressive', 'immunosuppressant');
+  }
+
+  // JAK inhibitors are targeted synthetic DMARDs
+  if (drugInfo.drugClass === 'JAK_inhibitors') {
+    terms.push('tsDMARD', 'DMARD', 'targeted synthetic DMARD');
+  }
+
+  return terms;
+}
+
 export { DRUG_DATABASE };
